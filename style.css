@@ -1,4 +1,3 @@
-
 body {
   font-family: 'Segoe UI', sans-serif;
   margin: 0;
@@ -6,4 +5,104 @@ body {
   color: #fff;
   overflow-x: hidden;
 }
-/* Other CSS is omitted for brevity, assuming it was already detailed previously */
+header {
+  background: #1a1a1a;
+  padding: 20px;
+  position: relative;
+  text-align: center;
+}
+#menu-toggle {
+  position: absolute;
+  left: 20px;
+  top: 20px;
+  cursor: pointer;
+  font-size: 1.5em;
+}
+#profile-box {
+  position: absolute;
+  right: 20px;
+  top: 20px;
+}
+#profile-avatar {
+  width: 32px;
+  height: 32px;
+  background: #00ccff;
+  border-radius: 50%;
+  text-align: center;
+  line-height: 32px;
+  color: black;
+  font-weight: bold;
+}
+#menu-panel {
+  display: none;
+  position: fixed;
+  left: 0;
+  top: 0;
+  background: #222;
+  width: 200px;
+  height: 100%;
+  padding-top: 60px;
+  flex-direction: column;
+  z-index: 1000;
+}
+#menu-panel.active {
+  display: flex;
+}
+#menu-panel a {
+  padding: 10px 20px;
+  color: #fff;
+  text-decoration: none;
+}
+#menu-panel a:hover {
+  background: #333;
+}
+#tab-buttons {
+  text-align: center;
+  margin-top: 20px;
+}
+.tab-btn {
+  margin: 5px;
+  padding: 10px 20px;
+  border: none;
+  background: #444;
+  color: white;
+  border-radius: 6px;
+  cursor: pointer;
+}
+.tab-btn.active {
+  background: #00ffcc;
+  color: #000;
+}
+.tab-section {
+  padding: 20px;
+  margin: 10px;
+  background: #1e1e1e;
+  border-radius: 8px;
+}
+ul#plugin-list {
+  list-style: none;
+  padding: 0;
+}
+ul#plugin-list li {
+  background: #2a2a2a;
+  margin-bottom: 10px;
+  padding: 10px;
+  border-radius: 6px;
+}
+form input, form textarea {
+  width: 100%;
+  padding: 10px;
+  margin: 8px 0;
+  background: #2a2a2a;
+  color: white;
+  border: none;
+  border-radius: 6px;
+}
+form button {
+  padding: 10px 20px;
+  background: #00ffcc;
+  border: none;
+  color: #000;
+  font-weight: bold;
+  cursor: pointer;
+}
