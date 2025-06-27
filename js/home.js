@@ -1,44 +1,85 @@
 document.addEventListener("DOMContentLoaded", () => {
-  const tabs = ["info", "status", "plugins", "youtube"];
-  tabs.forEach(t => {
-    document.getElementById(`btn-${t}`).addEventListener("click", () => {
-      tabs.forEach(x => document.getElementById(`btn-${x}`).classList.remove("active"));
-      document.getElementById(`btn-${t}`).classList.add("active");
-      showHome(t);
-    });
+  const tabs = ['serverDetails', 'plugins', 'howTo'];
+  tabs.forEach(tab => {
+    document.getElementById(`btn-${tab}`)
+      .addEventListener("click", () => switchTab(tab));
   });
-  showHome("info");
+  switchTab('serverDetails');
+  loadHomeProfile();
 });
 
-function showHome(view) {
-  const container = document.getElementById("content-home");
-  container.innerHTML = "";
-  if (view === "info") {
+function switchTab(tab) {
+  document.querySelectorAll('.btn-group button').forEach(btn => btn.classList.remove('active'));
+  document.getElementById(`btn-${tab}`).classList.add('active');
+  renderHome(tab);
+}
+
+function renderHome(tab) {
+  const container = document.getElementById('content-home');
+  container.innerHTML = '';
+  if (tab === 'serverDetails') {
     container.innerHTML = `
       <h2>🌍 Server Info</h2>
       <p><strong>IP:</strong> mc1524209.fmcs.cloud</p>
       <p><strong>Port:</strong> 47112</p>
-      <p><strong>Version:</strong> Java 1.21.4 + Bedrock</p>`;
-  } else if (view === "status") {
-    container.innerHTML = `<h2>📊 Status</h2><p id="statusMsg">Loading...</p>`;
+      <h2>📊 Status</h2>
+      <p id="statusMsg">Loading...</p>`;
     fetch("https://api.mcstatus.io/v2/status/java/mc1524209.fmcs.cloud")
       .then(r => r.json())
       .then(d => {
-        document.getElementById("statusMsg").innerHTML = 
-          d.online ? `✅ Online — ${d.players.online} players` : `❌ Offline`;
+        document.getElementById("statusMsg").innerText = d.online
+          ? `✅ Online — ${d.players.online} players: ${d.players.list.join(', ')}`
+          : '❌ Offline';
       });
-  } else if (view === "plugins") {
-    const plugins = [
-      { name: "LuckPerms", url: "https://modrinth.com/plugin/luckperms" },
-      { name: "ViaVersion", url: "https://modrinth.com/plugin/viaversion" },
-      // add more...
+  } else if (tab === 'plugins') {
+    const pluginList = [
+      {name:'LuckPerms',url:'https://modrinth.com/plugin/luckperms', yt: ''},
+      {name:'ViaVersion',url:'https://modrinth.com/plugin/viaversion', yt:''}
     ];
-    container.innerHTML = `<h2>🔌 Plugins</h2><ul id="plugin-list">${
-      plugins.map(p => `<li>${p.name} <a href="${p.url}" target="_blank">Details ↗</a></li>`).join("")
-    }</ul>`;
-  } else if (view === "youtube") {
+    container.innerHTML = `<h2>🔌 Plugins</h2><ul id="plugin-list"></ul>`;
+    const ul = document.getElementById('plugin-list');
+    pluginList.forEach(p => {
+      const li = document.createElement('li');
+      li.innerHTML = `<span>${p.name}</span>
+        <span>
+          <a href="${p.url}" target="_blank">Details ↗</a>
+          ${p.yt 
+            ? `<a class="link-btn" href="${p.yt}" target="_blank">Watch</a>`
+            : `<span style="margin-left:8px;color:${'var(--text-muted)'}">No tutorial</span>`
+          }
+        </span>`;
+      ul.append(li);
+    });
+  } else {
     container.innerHTML = `
-      <h2>▶ Watch Tutorials</h2>
-      <p><a href="https://youtu.be/example" target="_blank" class="link-btn">Watch on YouTube</a></p>`;
+      <h2>🎮 How to Play & Start</h2>
+      <ol>
+        <li>Open Minecraft → Multiplayer → Add Server</li>
+        <li>IP: mc1524209.fmcs.cloud | Port: 47112</li>
+        <li>Click “Join”</li>
+        <li>If offline → Click “Start Server” on FreeMcServer page</li>
+      </ol>`;
+  }
+}
+
+function loadHomeProfile() {
+  const acc = JSON.parse(localStorage.getItem('account') || 'null');
+  document.getElementById('welcomeMsg').innerText = acc
+    ? `Welcome, ${acc.minecraftId}!`
+    : `Welcome, guest!`;
+  const box = document.getElementById('profilePicBox');
+  box.style.width = box.style.height = '50px';
+  if (acc?.profilePic) {
+    box.style.backgroundImage = `url(${acc.profilePic})`;
+  } else if (acc?.minecraftId) {
+    const c = acc.minecraftId.charAt(0).toUpperCase();
+    box.innerText = c;
+    box.style.background = '#444';
+    box.style.color = '#fff';
+    box.style.display = 'flex';
+    box.style.alignItems = 'center';
+    box.style.justifyContent = 'center';
+    box.style.fontSize = '1.5rem';
+    box.style.borderRadius = '50%';
   }
 }
