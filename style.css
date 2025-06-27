@@ -1,0 +1,79 @@
+:root {
+  --bg-gradient: linear-gradient(120deg, #1f1f2e, #121212);
+  --box-bg: #1e1e1e;
+  --accent: #00ffe1;
+  --accent-dark: #00ccb3;
+  --text-light: #eee;
+  --text-muted: #888;
+}
+html {
+  scroll-behavior: smooth;
+  -webkit-overflow-scrolling: touch;
+}
+body {
+  margin: 0;
+  padding: 20px;
+  font-family: 'Inter', sans-serif;
+  background: var(--bg-gradient);
+  background-size: 400% 400%;
+  color: var(--text-light);
+}
+header {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+}
+.menu-btn {
+  background: var(--accent); border: none; padding: 8px 12px;
+  border-radius: 6px; color: #000; cursor: pointer;
+}
+nav.sidebar {
+  position: fixed; top: 0; left: -260px; width: 240px;
+  height: 100%; background: var(--box-bg); padding: 20px;
+  box-shadow: 2px 0 12px rgba(0,0,0,0.5); transition: left .3s;
+  z-index: 100;
+}
+nav.sidebar.open { left: 0; }
+nav.sidebar ul { list-style: none; padding: 0; }
+nav.sidebar li { margin: 12px 0; }
+nav.sidebar a {
+  color: var(--text-light); text-decoration: none;
+  font-weight: 500;
+}
+nav.sidebar a:hover { color: var(--accent); }
+.container { max-width: 900px; margin: 60px auto 0; }
+.section { display: none; background: var(--box-bg);
+  padding: 20px; margin-bottom: 20px; border-radius: 12px;
+  box-shadow: 0 8px 24px rgba(0,0,0,0.4);
+}
+.section.active { display: block; }
+.btn-group { display: flex; gap: 12px; justify-content: center; margin-bottom: 20px; }
+.btn-group button {
+  flex: 1; padding: 10px; background: var(--box-bg);
+  border: none; border-radius: 8px; color: var(--text-light);
+  cursor: pointer; transition: background .3s;
+}
+.btn-group button.active, .btn-group button:hover {
+  background: var(--accent); color: #000;
+}
+ul#plugin-list { list-style: none; padding: 0; }
+ul#plugin-list li {
+  display: flex; justify-content: space-between; margin: 8px 0;
+  background: #2a2a2a; border-radius: 8px; padding: 10px;
+}
+ul#plugin-list a { color: var(--accent); text-decoration: underline; }
+form input, form textarea, input, select {
+  width: 100%; padding: 10px; background: #2a2a2a;
+  border: none; border-radius: 6px; color: var(--text-light);
+  margin-bottom: 12px;
+}
+form button, .link-btn {
+  background: var(--accent); color: #000;
+  border: none; padding: 10px 16px; border-radius: 6px;
+  cursor: pointer; text-decoration: none;
+  display: inline-block; margin-top: 8px;
+}
+form button:hover, .link-btn:hover { background: var(--accent-dark); }
+footer {
+  text-align: center; color: var(--text-muted); margin-top: 40px;
+}
