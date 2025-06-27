@@ -1,55 +1,87 @@
 <!DOCTYPE html>
 <html lang="en">
 <head>
-  <meta charset="UTF-8"/>
-  <meta name="viewport" content="width=device-width, initial-scale=1"/>
-  <title>Minecraft Server Panel</title>
-  <link rel="stylesheet" href="style.css"/>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0"/>
+  <title>Minecraft Server Portal</title>
+  <link rel="stylesheet" href="style.css">
 </head>
 <body>
 
-<header>
-  <h1>🔥 Minecraft Panel</h1>
-  <button class="menu-btn" id="menuToggle">☰ Menu</button>
-</header>
+  <!-- Top Navigation -->
+  <header>
+    <h1>🔥 Minecraft Server Portal</h1>
+    <nav>
+      <a href="#" onclick="showHome()">Home</a>
+      <a href="#" onclick="showMenu()">☰ Menu</a>
+    </nav>
+  </header>
 
-<nav class="sidebar" id="sidebar">
-  <ul>
-    <li><a href="#" id="homeMenu">Home</a></li>
-    <li><a href="#" id="themeMenu">Theme</a></li>
-    <li><a href="https://minecraft2613.github.io/joining-form/" target="_blank">Join Form</a></li>
-    <li><a href="https://minecraft2613.github.io/taxess/" target="_blank">View Your Tax</a></li>
-    <li><a href="#" id="contactMenu">Contact Us</a></li>
-    <li><a href="#" id="playersMenu">Players</a></li>
-    <li><a href="#" id="accountMenu">Account</a></li>
-  </ul>
-</nav>
+  <!-- Profile Section -->
+  <section id="profile-box" style="margin-bottom: 20px;"></section>
+  <div id="profile-edit" style="display: none; margin-top: 20px;"></div>
+  <div id="account-form"></div>
 
-<div class="container">
-  <section id="home" class="section active">
-    <div style="display:flex; justify-content: space-between; align-items:center;">
-      <div id="profilePicBox"></div>
-      <h2 id="welcomeMsg"></h2>
-    </div>
-    <div class="btn-group">
-      <button id="btn-serverDetails" class="active">Server Details</button>
-      <button id="btn-plugins">Plugins</button>
-      <button id="btn-howTo">How To Play & Start</button>
-    </div>
-    <div id="content-home"></div>
+  <!-- Main Content (Home Page) -->
+  <main id="home-content">
+    <section>
+      <h2>🌐 Server Details</h2>
+      <p><strong>Java & Bedrock IP:</strong> <span id="server-ip">mc1524209.fmcs.cloud</span></p>
+      <p><strong>Port:</strong> 47112</p>
+      <p><strong>Version:</strong> Java 1.21.4+ | Bedrock 1.21.70+</p>
+    </section>
+
+    <section>
+      <h2>📶 Server Status</h2>
+      <p id="server-status">Checking status...</p>
+      <div id="player-list"></div>
+    </section>
+
+    <section>
+      <h2>🔌 Plugins</h2>
+      <ul id="plugin-list">
+        <!-- Loaded by home.js -->
+      </ul>
+    </section>
+
+    <section>
+      <h2>🎮 How to Play & Start</h2>
+      <p>Instructions loaded by home.js</p>
+    </section>
+  </main>
+
+  <!-- Menu Panel -->
+  <section id="menu-panel" style="display: none;">
+    <h2>📋 Menu</h2>
+    <ul class="menu-options">
+      <li onclick="showEditProfile()">👤 Edit Account</li>
+      <li onclick="toggleThemePanel()">🎨 Theme Settings</li>
+      <li><a href="https://minecraft2613.github.io/joining-form/" target="_blank">📄 Forms</a></li>
+      <li><a href="https://minecraft2613.github.io/taxess/" target="_blank">💰 View Your Tax</a></li>
+      <li onclick="document.getElementById('contact-form-box').scrollIntoView()">📬 Contact Us</li>
+      <li onclick="showAllPlayers()">👥 All Players</li>
+    </ul>
   </section>
 
-  <section id="account" class="section"></section>
-  <section id="themeSettings" class="section"></section>
-  <section id="contact" class="section"></section>
-  <section id="players" class="section"></section>
-</div>
+  <!-- Contact Form -->
+  <section id="contact-form-box">
+    <h2>📬 Contact Us</h2>
+    <form id="contact-form">
+      <input type="text" id="contact-mcid" placeholder="Your Minecraft ID" required><br>
+      <input type="text" id="contact-discord" placeholder="Discord or Instagram ID" required><br>
+      <textarea id="contact-msg" placeholder="What's your issue?" rows="4" required></textarea><br>
+      <button type="submit">Send</button>
+    </form>
+    <p id="contact-status"></p>
+  </section>
 
-<footer>&copy; 2025 Minecraft Server</footer>
+  <footer>
+    <p>&copy; 2025 Minecraft2613. Powered by FreeMcServer.net</p>
+  </footer>
 
-<script src="js/home.js"></script>
-<script src="js/account.js"></script>
-<script src="js/menu.js"></script>
-
+  <!-- External JS -->
+  <script src="js/home.js"></script>
+  <script src="js/menu.js"></script>
+  <script src="js/acc.js"></script>
 </body>
 </html>
