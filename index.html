@@ -1,0 +1,49 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" /><meta name="viewport" content="width=device-width,initial-scale=1"/>
+  <title>Minecraft Server Panel</title>
+  <link rel="stylesheet" href="style.css">
+</head>
+<body>
+
+  <header>
+    <h1>🔥 Minecraft Panel</h1>
+    <button class="menu-btn" id="menuToggle">☰ Menu</button>
+  </header>
+
+  <nav class="sidebar" id="sidebar">
+    <ul>
+      <li><a href="#" id="accountMenu">Account</a></li>
+      <li><a href="#" id="themeMenu">Theme Settings</a></li>
+      <li><a href="https://minecraft2613.github.io/joining-form/" target="_blank">Join Form</a></li>
+      <li><a href="https://minecraft2613.github.io/taxess/" target="_blank">View Your Tax</a></li>
+      <li><a href="#" id="contactMenu">Contact Us</a></li>
+      <li><a href="#" id="playersMenu">Player Lists</a></li>
+    </ul>
+  </nav>
+
+  <div class="container">
+    <section id="home" class="section active">
+      <div class="btn-group">
+        <button id="btn-info" class="active">Server Info</button>
+        <button id="btn-status">Status</button>
+        <button id="btn-plugins">Plugins</button>
+        <button id="btn-youtube">Watch</button>
+      </div>
+      <div id="content-home"></div>
+    </section>
+
+    <section id="account" class="section"></section>
+    <section id="menu-theme" class="section"></section>
+    <section id="contact" class="section"></section>
+    <section id="players" class="section"></section>
+  </div>
+
+  <footer>&copy; 2025 Minecraft Server</footer>
+
+  <script src="js/home.js"></script>
+  <script src="js/account.js"></script>
+  <script src="js/menu.js"></script>
+</body>
+</html>
