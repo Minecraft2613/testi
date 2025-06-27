@@ -1,85 +1,76 @@
+
 <!DOCTYPE html>
 <html lang="en">
 <head>
   <meta charset="UTF-8" />
   <meta name="viewport" content="width=device-width, initial-scale=1.0"/>
-  <title>Minecraft Server Portal</title>
-  <link rel="stylesheet" href="style.css">
+  <title>Minecraft Server</title>
+  <link rel="stylesheet" href="style.css" />
 </head>
 <body>
-
-  <!-- Top Navigation -->
   <header>
-    <h1>🔥 Minecraft Server Portal</h1>
-    <nav>
-      <a href="#" onclick="showHome()">Home</a>
-      <a href="#" onclick="showMenu()">☰ Menu</a>
-    </nav>
+    <div id="menu-toggle">☰</div>
+    <div id="profile-box">
+      <div id="profile-avatar"></div>
+    </div>
+    <h1>Minecraft Server</h1>
   </header>
 
-  <!-- Profile Section -->
-  <section id="profile-box" style="margin-bottom: 20px;"></section>
-  <div id="profile-edit" style="display: none; margin-top: 20px;"></div>
-  <div id="account-form"></div>
+  <div id="menu-panel">
+    <a href="#" onclick="loadTab('home')">🏠 Home</a>
+    <a href="#" onclick="loadTab('account')">👤 Account</a>
+    <a href="#" onclick="toggleThemePanel()">🎨 Theme</a>
+    <a href="https://minecraft2613.github.io/joining-form/" target="_blank">📝 Forms</a>
+    <a href="https://minecraft2613.github.io/taxess/" target="_blank">💰 View Your Tax</a>
+    <a href="#contact">📬 Contact Us</a>
+    <a href="#players">👥 All Players</a>
+  </div>
 
-  <!-- Main Content (Home Page) -->
-  <main id="home-content">
-    <section>
-      <h2>🌐 Server Details</h2>
-      <p><strong>Java & Bedrock IP:</strong> <span id="server-ip">mc1524209.fmcs.cloud</span></p>
-      <p><strong>Port:</strong> 47112</p>
-      <p><strong>Version:</strong> Java 1.21.4+ | Bedrock 1.21.70+</p>
-    </section>
+  <main>
+    <div id="tab-buttons">
+      <button class="tab-btn active" data-target="server-details">Server Details</button>
+      <button class="tab-btn" data-target="plugin-list-section">Plugins</button>
+      <button class="tab-btn" data-target="how-to-play">How to Play & Start</button>
+    </div>
 
-    <section>
-      <h2>📶 Server Status</h2>
+    <section id="server-details" class="tab-section">
+      <h2>Server Info</h2>
+      <p><strong>IP:</strong> mc1524209.fmcs.cloud</p>
+      <p><strong>Port:</strong> 38762</p>
       <p id="server-status">Checking status...</p>
-      <div id="player-list"></div>
+      <p id="player-count"></p>
     </section>
 
-    <section>
-      <h2>🔌 Plugins</h2>
+    <section id="plugin-list-section" class="tab-section" style="display:none;">
+      <h2>Plugins</h2>
       <ul id="plugin-list">
-        <!-- Loaded by home.js -->
+        <li>ViaVersion <a href="https://modrinth.com/plugin/viaversion">Tutorial</a></li>
+        <li>LuckPerms <a href="https://youtu.be/3LJjCiB5-f0">Watch</a></li>
+        <li>Vault <a href="https://youtu.be/Y4iVjJCK4XE">Watch</a></li>
+        <li>Geyser <a href="https://youtu.be/vXg3CF8kJKU">Watch</a></li>
       </ul>
     </section>
 
-    <section>
-      <h2>🎮 How to Play & Start</h2>
-      <p>Instructions loaded by home.js</p>
+    <section id="how-to-play" class="tab-section" style="display:none;">
+      <h2>How to Join</h2>
+      <ol>
+        <li>Open Minecraft</li>
+        <li>Click Multiplayer</li>
+        <li>Add Server</li>
+      </ol>
+    </section>
+
+    <section id="contact">
+      <h2>Contact Us</h2>
+      <form id="contact-form">
+        <input type="text" placeholder="Your MC Username" required>
+        <input type="text" placeholder="Discord or Instagram" required>
+        <textarea placeholder="Describe your issue..." required></textarea>
+        <button type="submit">Send</button>
+      </form>
     </section>
   </main>
 
-  <!-- Menu Panel -->
-  <section id="menu-panel" style="display: none;">
-    <h2>📋 Menu</h2>
-    <ul class="menu-options">
-      <li onclick="showEditProfile()">👤 Edit Account</li>
-      <li onclick="toggleThemePanel()">🎨 Theme Settings</li>
-      <li><a href="https://minecraft2613.github.io/joining-form/" target="_blank">📄 Forms</a></li>
-      <li><a href="https://minecraft2613.github.io/taxess/" target="_blank">💰 View Your Tax</a></li>
-      <li onclick="document.getElementById('contact-form-box').scrollIntoView()">📬 Contact Us</li>
-      <li onclick="showAllPlayers()">👥 All Players</li>
-    </ul>
-  </section>
-
-  <!-- Contact Form -->
-  <section id="contact-form-box">
-    <h2>📬 Contact Us</h2>
-    <form id="contact-form">
-      <input type="text" id="contact-mcid" placeholder="Your Minecraft ID" required><br>
-      <input type="text" id="contact-discord" placeholder="Discord or Instagram ID" required><br>
-      <textarea id="contact-msg" placeholder="What's your issue?" rows="4" required></textarea><br>
-      <button type="submit">Send</button>
-    </form>
-    <p id="contact-status"></p>
-  </section>
-
-  <footer>
-    <p>&copy; 2025 Minecraft2613. Powered by FreeMcServer.net</p>
-  </footer>
-
-  <!-- External JS -->
   <script src="js/home.js"></script>
   <script src="js/menu.js"></script>
   <script src="js/acc.js"></script>
