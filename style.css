@@ -1,108 +1,467 @@
+:root {
+    --primary-color: #4a90e2;
+    --primary-hover: #357abd;
+    --secondary-color: #50e3c2;
+    --background-color: #1e2a38;
+    --surface-color: #2a3b4c;
+    --text-color: #e0e0e0;
+    --text-muted-color: #a0a0a0;
+    --border-color: #3a4b5c;
+    --danger-color: #e94b3c;
+    --success-color: #7ed321;
+    --font-family: 'Roboto', sans-serif;
+}
+
+* {
+    box-sizing: border-box;
+    margin: 0;
+    padding: 0;
+}
+
 body {
-  font-family: 'Segoe UI', sans-serif;
-  margin: 0;
-  background: linear-gradient(135deg, #121212, #1f1f1f);
-  color: #fff;
-  overflow-x: hidden;
+    font-family: var(--font-family);
+    background-color: var(--background-color);
+    color: var(--text-color);
+    display: flex;
+    justify-content: center;
+    align-items: center;
+    min-height: 100vh;
+    overflow: hidden; /* Hide scrollbars from body */
 }
-header {
-  background: #1a1a1a;
-  padding: 20px;
-  position: relative;
-  text-align: center;
+
+.hidden {
+    display: none !important;
 }
-#menu-toggle {
-  position: absolute;
-  left: 20px;
-  top: 20px;
-  cursor: pointer;
-  font-size: 1.5em;
+
+/* ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~ */
+/* ~~~~~~~~ AUTH CONTAINER ~~~~~~~~~~ */
+/* ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~ */
+
+.auth-container {
+    width: 100%;
+    max-width: 400px;
+    padding: 2rem;
 }
-#profile-box {
-  position: absolute;
-  right: 20px;
-  top: 20px;
+
+.auth-form {
+    background-color: var(--surface-color);
+    padding: 2rem;
+    border-radius: 8px;
+    box-shadow: 0 10px 25px rgba(0,0,0,0.3);
 }
-#profile-avatar {
-  width: 32px;
-  height: 32px;
-  background: #00ccff;
-  border-radius: 50%;
-  text-align: center;
-  line-height: 32px;
-  color: black;
-  font-weight: bold;
+
+.auth-form h2 {
+    text-align: center;
+    margin-bottom: 1.5rem;
+    color: var(--primary-color);
 }
-#menu-panel {
-  display: none;
-  position: fixed;
-  left: 0;
-  top: 0;
-  background: #222;
-  width: 200px;
-  height: 100%;
-  padding-top: 60px;
-  flex-direction: column;
-  z-index: 1000;
+
+.input-group {
+    margin-bottom: 1.25rem;
 }
-#menu-panel.active {
-  display: flex;
+
+.input-group label {
+    display: block;
+    margin-bottom: 0.5rem;
+    font-weight: 500;
+    color: var(--text-muted-color);
 }
-#menu-panel a {
-  padding: 10px 20px;
-  color: #fff;
-  text-decoration: none;
+
+.input-group input,
+.input-group select {
+    width: 100%;
+    padding: 0.75rem;
+    background-color: var(--background-color);
+    border: 1px solid var(--border-color);
+    border-radius: 4px;
+    color: var(--text-color);
+    font-size: 1rem;
 }
-#menu-panel a:hover {
-  background: #333;
+
+.input-group input:focus {
+    outline: none;
+    border-color: var(--primary-color);
+    box-shadow: 0 0 0 2px rgba(74, 144, 226, 0.5);
 }
-#tab-buttons {
-  text-align: center;
-  margin-top: 20px;
+
+.radio-group {
+    display: flex;
+    gap: 1rem;
+    align-items: center;
 }
-.tab-btn {
-  margin: 5px;
-  padding: 10px 20px;
-  border: none;
-  background: #444;
-  color: white;
-  border-radius: 6px;
-  cursor: pointer;
+
+.radio-group input[type="radio"] {
+    accent-color: var(--primary-color);
 }
-.tab-btn.active {
-  background: #00ffcc;
-  color: #000;
+
+.btn-primary {
+    width: 100%;
+    padding: 0.85rem;
+    background-color: var(--primary-color);
+    border: none;
+    border-radius: 4px;
+    color: white;
+    font-size: 1.1rem;
+    font-weight: 700;
+    cursor: pointer;
+    transition: background-color 0.3s ease;
 }
-.tab-section {
-  padding: 20px;
-  margin: 10px;
-  background: #1e1e1e;
-  border-radius: 8px;
+
+.btn-primary:hover {
+    background-color: var(--primary-hover);
 }
-ul#plugin-list {
-  list-style: none;
-  padding: 0;
+
+.auth-switch {
+    text-align: center;
+    margin-top: 1.5rem;
 }
-ul#plugin-list li {
-  background: #2a2a2a;
-  margin-bottom: 10px;
-  padding: 10px;
-  border-radius: 6px;
+
+.auth-switch a {
+    color: var(--primary-color);
+    text-decoration: none;
+    font-weight: 500;
 }
-form input, form textarea {
-  width: 100%;
-  padding: 10px;
-  margin: 8px 0;
-  background: #2a2a2a;
-  color: white;
-  border: none;
-  border-radius: 6px;
+
+.auth-switch a:hover {
+    text-decoration: underline;
 }
-form button {
-  padding: 10px 20px;
-  background: #00ffcc;
-  border: none;
-  color: #000;
-  font-weight: bold;
-  cursor: pointer;
+
+#mc-username-inputs {
+    display: flex;
+    gap: 0.5rem;
+}
+
+#mc-username-inputs .bedrock-prefix {
+    width: 20%;
+    text-align: center;
+}
+
+#mc-username-inputs .bedrock-main {
+    width: 80%;
+}
+
+.generated-id-wrapper {
+    display: flex;
+    align-items: center;
+    gap: 0.5rem;
+}
+
+#generated-bank-id {
+    background-color: #e0e0e0;
+    color: #111;
+    font-weight: bold;
+}
+
+#copy-bank-id-btn {
+    padding: 0.5rem;
+    background: var(--border-color);
+    border: none;
+    color: var(--text-color);
+    cursor: pointer;
+    border-radius: 4px;
+}
+
+/* ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~ */
+/* ~~~~~~~~ APP CONTAINER ~~~~~~~~~~~ */
+/* ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~ */
+
+.app-container {
+    display: flex;
+    width: 100vw;
+    height: 100vh;
+}
+
+/* ~~~~~~~ SIDEBAR ~~~~~~~ */
+.sidebar {
+    width: 250px;
+    background-color: var(--surface-color);
+    padding: 1.5rem 0;
+    display: flex;
+    flex-direction: column;
+    transition: transform 0.3s ease-in-out;
+    transform: translateX(-100%);
+    position: fixed; /* Changed to fixed */
+    height: 100%;
+    z-index: 1000;
+}
+
+.sidebar.open {
+    transform: translateX(0);
+}
+
+.sidebar-header {
+    padding: 0 1.5rem 1rem;
+    border-bottom: 1px solid var(--border-color);
+    margin-bottom: 1rem;
+}
+
+.sidebar-links {
+    list-style: none;
+}
+
+.sidebar-links li a {
+    display: flex;
+    align-items: center;
+    gap: 1rem;
+    padding: 1rem 1.5rem;
+    color: var(--text-muted-color);
+    text-decoration: none;
+    font-weight: 500;
+    transition: background-color 0.2s, color 0.2s;
+}
+
+.sidebar-links li a:hover {
+    background-color: var(--background-color);
+    color: var(--text-color);
+}
+
+.sidebar-links li a.active {
+    background-color: var(--primary-color);
+    color: white;
+}
+
+.sidebar-links .emoji {
+    font-size: 1.2rem;
+}
+
+/* ~~~~~~~ MAIN CONTENT ~~~~~~~ */
+.main-content {
+    flex-grow: 1;
+    display: flex;
+    flex-direction: column;
+    height: 100vh;
+    padding-left: 0; /* Start with no padding */
+    transition: padding-left 0.3s ease-in-out;
+}
+
+.main-content.sidebar-open {
+    padding-left: 250px; /* Add padding when sidebar is open */
+}
+
+/* ~~~~~~~ HEADER ~~~~~~~ */
+.header {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    padding: 1rem 1.5rem;
+    background-color: var(--surface-color);
+    border-bottom: 1px solid var(--border-color);
+}
+
+#menu-toggle-btn {
+    background: none;
+    border: none;
+    color: var(--text-color);
+    font-size: 1.5rem;
+    cursor: pointer;
+}
+
+.header-left {
+    display: flex;
+    align-items: center;
+    gap: 1.5rem;
+}
+
+.main-nav-buttons .nav-btn {
+    background: none;
+    border: 2px solid transparent;
+    color: var(--text-muted-color);
+    padding: 0.5rem 1rem;
+    border-radius: 20px;
+    cursor: pointer;
+    font-weight: 500;
+    transition: all 0.3s ease;
+}
+
+.main-nav-buttons .nav-btn.active {
+    color: var(--primary-color);
+    border-color: var(--primary-color);
+}
+
+.header-right {
+    display: flex;
+    align-items: center;
+    gap: 1rem;
+}
+
+.profile-pic {
+    width: 40px;
+    height: 40px;
+    border-radius: 50%;
+    background-color: var(--primary-color);
+    display: flex;
+    justify-content: center;
+    align-items: center;
+    font-weight: bold;
+    font-size: 1.2rem;
+    color: white;
+    background-image: url('https://www.transparenttextures.com/patterns/cubes.png');
+}
+
+/* ~~~~~~~ PAGE CONTAINER ~~~~~~~ */
+.page-container {
+    flex-grow: 1;
+    padding: 2rem;
+    overflow-y: auto;
+}
+
+.page {
+    display: none;
+}
+
+.page.active {
+    display: block;
+}
+
+.card-container {
+    display: grid;
+    grid-template-columns: repeat(auto-fit, minmax(250px, 1fr));
+    gap: 1.5rem;
+    margin-bottom: 2rem;
+}
+
+.card {
+    background-color: var(--surface-color);
+    padding: 1.5rem;
+    border-radius: 8px;
+    border-left: 4px solid var(--primary-color);
+}
+
+.card h4 {
+    color: var(--text-muted-color);
+    margin-bottom: 0.5rem;
+}
+
+.card p {
+    font-size: 1.5rem;
+    font-weight: 500;
+}
+
+.card .balance {
+    color: var(--success-color);
+}
+
+.transaction-buttons {
+    display: flex;
+    gap: 1rem;
+    margin-top: 1rem;
+}
+
+.btn-secondary {
+    padding: 0.75rem 1.5rem;
+    background-color: var(--border-color);
+    border: none;
+    border-radius: 4px;
+    color: var(--text-color);
+    cursor: pointer;
+    transition: background-color 0.3s ease;
+}
+
+.btn-secondary:hover {
+    background-color: #4a5b6c;
+}
+
+/* ~~~~~~~ TAX PAGE ~~~~~~~ */
+.tax-main-card {
+    background: var(--surface-color);
+    border-radius: 8px;
+    padding: 2rem;
+}
+
+.tax-header {
+    display: flex;
+    align-items: center;
+    gap: 1.5rem;
+    padding-bottom: 1.5rem;
+    border-bottom: 1px solid var(--border-color);
+}
+
+.tax-profile-pic {
+    width: 80px;
+    height: 80px;
+    border-radius: 50%;
+    background-color: var(--primary-color);
+    display: flex;
+    justify-content: center;
+    align-items: center;
+    font-size: 2.5rem;
+    font-weight: bold;
+    color: white;
+    background-image: url('https://i.imgur.com/s3RGs3C.png'); /* Minecraft grass block style */
+    background-size: cover;
+    border: 3px solid var(--border-color);
+}
+
+.tax-details-grid {
+    display: grid;
+    grid-template-columns: 1fr 1fr;
+    gap: 1.5rem;
+    margin: 1.5rem 0;
+}
+
+.tax-details-grid > div {
+    background: var(--background-color);
+    padding: 1rem;
+    border-radius: 6px;
+}
+
+.tax-details-grid p {
+    color: var(--text-muted-color);
+    margin-bottom: 0.25rem;
+}
+
+.tax-details-grid span {
+    font-size: 1.5rem;
+    font-weight: 500;
+}
+
+.tax-details-grid .total-due {
+    color: var(--danger-color);
+}
+
+.tax-actions {
+    display: flex;
+    gap: 1rem;
+    margin-bottom: 2rem;
+}
+
+.tax-history h4 {
+    margin-bottom: 1rem;
+}
+
+#tax-chart {
+    margin-bottom: 2rem;
+}
+
+#tax-history-list {
+    list-style: none;
+    margin-bottom: 1rem;
+}
+
+#tax-history-list li {
+    background: var(--background-color);
+    padding: 0.75rem;
+    border-radius: 4px;
+    margin-bottom: 0.5rem;
+}
+
+.full-history-link {
+    color: var(--primary-color);
+    text-decoration: none;
+}
+
+/* ~~~~~~~ LOAN PAGE ~~~~~~~ */
+.loan-form {
+    max-width: 600px;
+}
+
+.loan-summary {
+    margin-top: 1.5rem;
+    margin-bottom: 1.5rem;
+    border-color: var(--secondary-color);
+}
+
+.loan-summary span {
+    font-size: 1.2rem;
+    color: var(--text-color);
 }
