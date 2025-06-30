@@ -53,6 +53,7 @@ document.addEventListener('DOMContentLoaded', () => {
     const taxChartCanvas = document.getElementById('tax-chart').getContext('2d');
 
     // --- Loan Page ---
+    const loanAmount = document.getElementById('loan-amount');
     const loanType = document.getElementById('loan-type');
     const loanDuration = document.getElementById('loan-duration');
     const loanFieldsContainer = document.getElementById('loan-fields-container');
@@ -411,20 +412,25 @@ document.addEventListener('DOMContentLoaded', () => {
         const type = loanType.value;
         const durationIndex = loanDuration.value - 1;
         const rate = loanInterestRates[type][durationIndex];
+        const principal = parseFloat(loanAmount.value) || 0;
 
         loanInterestRate.textContent = `${rate}%`;
-        // Dummy calculation for display
-        const principal = 1000; // Assume a dummy principal for calculation display
-        const total = principal * (1 + rate / 100);
-        const perDay = total / (loanDuration.value * 7);
 
-        loanPerDay.textContent = `$ ${perDay.toFixed(2)}`;
-        loanTotalRepayment.textContent = `$ ${total.toFixed(2)} (on a $1000 loan)`;
+        if (principal > 0) {
+            const total = principal * (1 + rate / 100);
+            const perDay = total / (loanDuration.value * 7);
+            loanPerDay.textContent = `$ ${perDay.toFixed(2)}`;
+            loanTotalRepayment.textContent = `$ ${total.toFixed(2)}`;
+        } else {
+            loanPerDay.textContent = '---';
+            loanTotalRepayment.textContent = '---';
+        }
     }
 
     function setupEventListeners() {
         loanType.addEventListener('change', updateLoanUI);
         loanDuration.addEventListener('change', updateLoanSummary);
+        loanAmount.addEventListener('input', updateLoanSummary);
     }
 
     // ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~ //
