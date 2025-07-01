@@ -545,12 +545,26 @@
                 setFormData({ ...formData, [e.target.name]: e.target.value });
             };
 
-            const handleSubmit = (e) => {
+            const handleSubmit = async (e) => {
                 e.preventDefault();
-                // Simulate sending data to a webhook
-                console.log('Contact Form Submitted:', formData);
-                showModal('Message Sent!', 'Your message has been sent. We will get back to you soon!', 'success');
-                setFormData({ platform: 'discord', username: '', language: 'english', problem: '' }); // Reset form
+                try {
+                    const response = await fetch(API_ENDPOINTS.CONTACT, {
+                        method: 'POST',
+                        headers: { 'Content-Type': 'application/json' },
+                        body: JSON.stringify(formData),
+                    });
+
+                    if (response.ok) {
+                        showModal('Message Sent!', 'Your message has been sent. We will get back to you soon!', 'success');
+                        setFormData({ platform: 'discord', username: '', language: 'english', problem: '' });
+                    } else {
+                        const errorData = await response.json();
+                        showModal('Error', errorData.message || 'Failed to send message. Please try again.', 'error');
+                    }
+                } catch (error) {
+                    console.error("Contact form submission error:", error);
+                    showModal('Error', 'Could not connect to the contact service. Please try again later.', 'error');
+                }
             };
 
             return (
@@ -704,94 +718,196 @@
             const showModal = (title, message, type = 'info', callback = null) => setModal({ isOpen: true, title, message, type, callback });
             const closeModal = () => { if (modal.callback) modal.callback(); setModal({ isOpen: false, title: '', message: '', type: 'info', callback: null }); };
 
-            const getAllAccounts = () => JSON.parse(localStorage.getItem('geminiBankAccounts') || '[]');
-            const saveAllAccounts = (accounts) => localStorage.setItem('geminiBankAccounts', JSON.stringify(accounts));
+            const getAllAccounts = async () => {
+                try {
+                    const response = await fetch(`${API_ENDPOINTS.ACCOUNTS}/accounts`);
+                    if (!response.ok) throw new Error('Failed to fetch accounts');
+                    return await response.json();
+                } catch (error) {
+                    console.error("Error fetching accounts:", error);
+                    showModal('Error', 'Could not load accounts from server.', 'error');
+                    return [];
+                }
+            };
+            const saveAllAccounts = async (accounts) => {
+                // This function is now handled by the Cloudflare Worker on update-account/create-account
+                // For initial setup, we might still use it to populate the GitHub JSON if it's empty
+                // but subsequent saves will go through the worker.
+                console.log("Save all accounts called. This should ideally go through a worker.", accounts);
+            };
 
             // Initial app load effect
             useEffect(() => {
-                const accounts = getAllAccounts();
-                if (accounts.length === 0) {
-                    saveAllAccounts([{
-                        bankName: 'Gemini Test Bank', accountId: 'tester', email: 'tester@gemini.com', password: '26', edition: 'java', bankId: 'BANK006443',
-                        balance: 10000, jobType: 'Diamond Miner', jobPerDayIncome: 250, businessType: 'Potion Shop', businessPerDayIncome: 150, businessIncomeUnit: 'day',
-                        taxData: { totalTax: 390, taxPaid: 0, advanceTaxPaid: 0, dailyTaxCharges: [30, 50, 20, 60, 80, 50, 100].map((amount, i) => ({ date: new Date(Date.now() - (6-i) * 86400000).toISOString(), amount })) },
-                        loans: [], transactions: []
-                    }]);
-                }
-                setTimeout(() => {
-                    setLoading(false);
-                    setCurrentPage('login');
-                }, 2500); // Initial app load simulation
+                const initializeApp = async () => {
+                    let accounts = await getAllAccounts();
+                    if (accounts.length === 0) {
+                        // Populate initial data if no accounts exist on GitHub
+                        const initialAccount = {
+                            bankName: 'Gemini Test Bank', accountId: 'tester', email: 'tester@gemini.com', password: '26', edition: 'java', bankId: 'BANK006443',
+                            balance: 10000, jobType: 'Diamond Miner', jobPerDayIncome: 250, businessType: 'Potion Shop', businessPerDayIncome: 150, businessIncomeUnit: 'day',
+                            taxData: { totalTax: 390, taxPaid: 0, advanceTaxPaid: 0, dailyTaxCharges: [30, 50, 20, 60, 80, 50, 100].map((amount, i) => ({ date: new Date(Date.now() - (6-i) * 86400000).toISOString(), amount })) },
+                            loans: [], transactions: []
+                        };
+                        // This initial save would go through the worker as well in a real app
+                        // For this simulation, we'll just add it to the in-memory accounts for now
+                        // and rely on the create-account endpoint for persistence.
+                        accounts.push(initialAccount);
+                        // In a real app, you'd call the worker to create this initial account
+                        // await fetch(`${API_ENDPOINTS.ACCOUNTS}/create-account`, { method: 'POST', body: JSON.stringify(initialAccount) });
+                    }
+                    // Simulate initial loading time
+                    setTimeout(() => {
+                        setLoading(false);
+                        setCurrentPage('login');
+                    }, 2500);
+                };
+                initializeApp();
             }, []);
 
-            const handleLogin = (identifier, password) => {
+            const handleLogin = async (identifier, password) => {
                 setLoading(true);
-                const dataLoading = new Promise(resolve => {
-                    const accounts = getAllAccounts();
-                    resolve(accounts.find(acc => (acc.bankId.toLowerCase() === identifier.toLowerCase() || acc.accountId.toLowerCase() === identifier.toLowerCase() || acc.email.toLowerCase() === identifier.toLowerCase()) && acc.password === password));
-                });
-                Promise.all([new Promise(res => setTimeout(res, 4000)), dataLoading]).then(([_, foundAccount]) => {
-                    if (foundAccount) {
+                setLoginSuccess(false); 
+
+                try {
+                    const response = await fetch(`${API_ENDPOINTS.ACCOUNTS}/login`, {
+                        method: 'POST',
+                        headers: { 'Content-Type': 'application/json' },
+                        body: JSON.stringify({ identifier, password })
+                    });
+
+                    if (response.ok) {
+                        const data = await response.json();
                         setLoginSuccess(true);
                         setTimeout(() => {
                             setLoading(false);
-                            setCurrentUserAccount(foundAccount);
+                            setCurrentUserAccount(data.account); 
                             setCurrentPage('home');
                             setLoginSuccess(false);
                         }, 1500);
                     } else {
+                        const errorData = await response.json();
                         setLoading(false);
-                        showModal('Login Failed', 'Invalid credentials. Please try again.', 'error');
+                        showModal('Login Failed', errorData.message || 'Invalid credentials. Please try again.', 'error');
                     }
-                });
+                } catch (error) {
+                    console.error("Login API error:", error);
+                    setLoading(false);
+                    showModal('Error', 'Could not connect to the server. Please try again later.', 'error');
+                }
             };
 
-            const handleCreateAccount = (newData) => {
-                const accounts = getAllAccounts();
-                if (accounts.some(acc => acc.accountId.toLowerCase() === newData.accountId.toLowerCase() || acc.email.toLowerCase() === newData.email.toLowerCase() || acc.bankId === newData.bankId)) {
-                    showModal('Creation Failed', 'An account with this Minecraft Name, Email, or Bank ID already exists.', 'error');
+            const handleCreateAccount = async (newData) => {
+                try {
+                    const response = await fetch(`${API_ENDPOINTS.ACCOUNTS}/create-account`, {
+                        method: 'POST',
+                        headers: { 'Content-Type': 'application/json' },
+                        body: JSON.stringify(newData),
+                    });
+
+                    if (response.ok) {
+                        const data = await response.json();
+                        // No need to update local storage here, worker handles persistence
+                        return true;
+                    } else {
+                        const errorData = await response.json();
+                        showModal('Creation Failed', errorData.message || 'Failed to create account.', 'error');
+                        return false;
+                    }
+                } catch (error) {
+                    console.error("Create account API error:", error);
+                    showModal('Error', 'Could not connect to the server to create account.', 'error');
                     return false;
                 }
-                const newAccount = { ...newData, balance: 1000, jobType: '', jobPerDayIncome: 0, businessType: '', businessPerDayIncome: 0, businessIncomeUnit: 'day', taxData: { totalTax: 390, taxPaid: 0, advanceTaxPaid: 0, dailyTaxCharges: [30, 50, 20, 60, 80, 50, 100].map((amount, i) => ({ date: new Date(Date.now() - (6-i) * 86400000).toISOString(), amount })) }, loans: [], transactions: [{ type: 'credit', amount: 1000, date: new Date().toISOString(), description: 'Initial account deposit' }] };
-                saveAllAccounts([...accounts, newAccount]);
-                return true;
             };
 
             const handleLogout = () => { setCurrentUserAccount(null); setCurrentPage('login'); showModal('Logged Out', 'You have been successfully logged out.', 'info'); };
-            const updateCurrentUser = (updatedAccount) => {
-                setCurrentUserAccount(updatedAccount);
-                const accounts = getAllAccounts();
-                const index = accounts.findIndex(acc => acc.bankId === updatedAccount.bankId);
-                if (index !== -1) { accounts[index] = updatedAccount; saveAllAccounts(accounts); }
+            
+            const updateCurrentUser = async (updatedAccount) => {
+                try {
+                    const response = await fetch(`${API_ENDPOINTS.ACCOUNTS}/update-account`, {
+                        method: 'POST',
+                        headers: { 'Content-Type': 'application/json' },
+                        body: JSON.stringify(updatedAccount),
+                    });
+
+                    if (response.ok) {
+                        const data = await response.json();
+                        setCurrentUserAccount(data.account); // Update with fresh data from worker
+                        return true;
+                    } else {
+                        const errorData = await response.json();
+                        showModal('Update Failed', errorData.message || 'Failed to update account.', 'error');
+                        return false;
+                    }
+                } catch (error) {
+                    console.error("Update account API error:", error);
+                    showModal('Error', 'Could not connect to the server to update account.', 'error');
+                    return false;
+                }
             };
 
-            const handleUpdateProfile = (profileData) => {
-                const updatedAccount = { ...currentUserAccount, jobType: profileData.jobType, jobPerDayIncome: parseFloat(profileData.jobPerDayIncome) || 0, businessType: profileData.hasBusiness ? profileData.businessType : '', businessPerDayIncome: profileData.hasBusiness ? parseFloat(profileData.businessPerDayIncome) || 0 : 0, businessIncomeUnit: profileData.hasBusiness ? profileData.businessIncomeUnit : 'day' };
-                updateCurrentUser(updatedAccount);
+            const handleUpdateProfile = async (profileData) => {
+                const updatedAccount = { ...currentUserAccount, ...profileData };
+                await updateCurrentUser(updatedAccount);
                 showModal('Success', 'Your profile has been updated.', 'success');
             };
 
-            const handleChangePassword = (oldPass, newPass) => {
+            const handleChangePassword = async (oldPass, newPass) => {
                 if (currentUserAccount.password !== oldPass) { showModal('Error', 'Old password is incorrect.', 'error'); return; }
-                updateCurrentUser({ ...currentUserAccount, password: newPass });
+                const updatedAccount = { ...currentUserAccount, password: newPass };
+                await updateCurrentUser(updatedAccount);
                 showModal('Success', 'Password changed successfully!', 'success');
             };
 
-            const handlePayTax = (amount) => {
+            const handlePayTax = async (amount) => {
                 if (currentUserAccount.balance < amount) { showModal('Error', 'Insufficient balance.', 'error'); return; }
-                const updatedAccount = { ...currentUserAccount, balance: currentUserAccount.balance - amount, taxData: { ...currentUserAccount.taxData, totalTax: currentUserAccount.taxData.totalTax - amount, taxPaid: currentUserAccount.taxData.taxPaid + amount }, transactions: [...currentUserAccount.transactions, { type: 'debit', amount: -amount, date: new Date().toISOString(), description: 'Tax payment' }] };
-                updateCurrentUser(updatedAccount);
-                showModal('Success', `Paid $${amount.toFixed(2)} in tax.`, 'success');
+                try {
+                    const response = await fetch(`${API_ENDPOINTS.TAX}/pay-tax`, {
+                        method: 'POST',
+                        headers: { 'Content-Type': 'application/json' },
+                        body: JSON.stringify({ bankId: currentUserAccount.bankId, amount: amount }),
+                    });
+                    if (response.ok) {
+                        const data = await response.json();
+                        // Assuming worker returns updated user data or just success
+                        // For simplicity, we'll refetch user data or update locally
+                        const updatedAccount = { ...currentUserAccount, balance: currentUserAccount.balance - amount, taxData: data.taxData, transactions: [...currentUserAccount.transactions, { type: 'debit', amount: -amount, date: new Date().toISOString(), description: 'Tax payment' }] };
+                        updateCurrentUser(updatedAccount);
+                        showModal('Success', `Paid $${amount.toFixed(2)} in tax.`, 'success');
+                    } else {
+                        const errorData = await response.json();
+                        showModal('Error', errorData.message || 'Failed to pay tax.', 'error');
+                    }
+                } catch (error) {
+                    console.error("Pay tax API error:", error);
+                    showModal('Error', 'Could not connect to the tax service.', 'error');
+                }
             };
 
-            const handleAdvanceTax = (amount) => {
+            const handleAdvanceTax = async (amount) => {
                 if (currentUserAccount.balance < amount) { showModal('Error', 'Insufficient balance.', 'error'); return; }
-                const updatedAccount = { ...currentUserAccount, balance: currentUserAccount.balance - amount, taxData: { ...currentUserAccount.taxData, advanceTaxPaid: (currentUserAccount.taxData.advanceTaxPaid || 0) + amount }, transactions: [...currentUserAccount.transactions, { type: 'debit', amount: -amount, date: new Date().toISOString(), description: 'Advance tax payment' }] };
-                updateCurrentUser(updatedAccount);
-                showModal('Success', `Paid $${amount.toFixed(2)} in advance tax.`, 'success');
+                try {
+                    const response = await fetch(`${API_ENDPOINTS.TAX}/advance-tax`, {
+                        method: 'POST',
+                        headers: { 'Content-Type': 'application/json' },
+                        body: JSON.stringify({ bankId: currentUserAccount.bankId, amount: amount }),
+                    });
+                    if (response.ok) {
+                        const data = await response.json();
+                        const updatedAccount = { ...currentUserAccount, balance: currentUserAccount.balance - amount, taxData: data.taxData, transactions: [...currentUserAccount.transactions, { type: 'debit', amount: -amount, date: new Date().toISOString(), description: 'Advance tax payment' }] };
+                        updateCurrentUser(updatedAccount);
+                        showModal('Success', `Paid $${amount.toFixed(2)} in advance tax.`, 'success');
+                    } else {
+                        const errorData = await response.json();
+                        showModal('Error', errorData.message || 'Failed to pay advance tax.', 'error');
+                    }
+                } catch (error) {
+                    console.error("Advance tax API error:", error);
+                    showModal('Error', 'Could not connect to the tax service.', 'error');
+                }
             };
 
-            const handleApplyLoan = ({ amount, duration, type, ...details }) => {
+            const handleApplyLoan = async ({ amount, duration, type, ...details }) => {
                 const jobIncome = currentUserAccount.jobPerDayIncome || 0;
                 const bizIncome = currentUserAccount.businessPerDayIncome || 0;
                 const maxDailyRepayment = (jobIncome * 0.55) + (bizIncome * (currentUserAccount.businessIncomeUnit === 'hour' ? 0.70 * 8 : 0.70));
@@ -818,22 +934,22 @@
                 showModal('Application Submitted', `Your ${type} loan application for $${amount.toFixed(2)} has been submitted for admin approval.`, 'success');
             };
 
-            const handleCancelLoan = (loanId) => {
+            const handleCancelLoan = async (loanId) => {
                 const updatedLoans = currentUserAccount.loans.filter(loan => loan.id !== loanId);
                 const updatedAccount = { ...currentUserAccount, loans: updatedLoans, transactions: [...currentUserAccount.transactions, { type: 'info', amount: 0, date: new Date().toISOString(), description: `Loan application ${loanId} cancelled` }] };
-                updateCurrentUser(updatedAccount);
+                await updateCurrentUser(updatedAccount);
                 showModal('Success', 'Loan application has been cancelled.', 'success');
             };
 
-            const handleAdminApproveLoan = (loanId) => {
+            const handleAdminApproveLoan = async (loanId) => {
                 const loans = currentUserAccount.loans.map(loan => loan.id === loanId ? { ...loan, loanStatus: 'active' } : loan);
                 const approvedLoan = loans.find(loan => loan.id === loanId);
                 const updatedAccount = { ...currentUserAccount, loans, balance: currentUserAccount.balance + approvedLoan.loanAmount, transactions: [...currentUserAccount.transactions, { type: 'credit', amount: approvedLoan.loanAmount, date: new Date().toISOString(), description: `Loan ${loanId} approved` }] };
-                updateCurrentUser(updatedAccount);
+                await updateCurrentUser(updatedAccount);
                 showModal('Admin Action', 'Loan has been approved!', 'success');
             };
 
-            const handlePayLoan = (loanId, customAmount = null) => {
+            const handlePayLoan = async (loanId, customAmount = null) => {
                 const loan = currentUserAccount.loans.find(l => l.id === loanId);
                 if (!loan) return;
 
@@ -871,7 +987,7 @@
                 }
                 
                 const updatedAccount = { ...currentUserAccount, loans: updatedLoans, balance: currentUserAccount.balance - effectiveAmountToPay, transactions: [...currentUserAccount.transactions, { type: 'debit', amount: -effectiveAmountToPay, date: new Date().toISOString(), description: transactionDescription }] };
-                updateCurrentUser(updatedAccount);
+                await updateCurrentUser(updatedAccount);
             };
 
             const renderPage = () => {
