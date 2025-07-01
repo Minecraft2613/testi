@@ -3,314 +3,902 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Gemini Bank</title>
-    <link rel="stylesheet" href="style.css">
+    <title>Minecraft Server Bank</title>
+    <script src="https://cdn.tailwindcss.com"></script>
+    <script src="https://unpkg.com/react@18/umd/react.development.js"></script>
+    <script src="https://unpkg.com/react-dom@18/umd/react-dom.development.js"></script>
+    <script src="https://unpkg.com/@babel/standalone/babel.min.js"></script>
+    <script src="https://cdn.jsdelivr.net/npm/chart.js@4.4.3/dist/chart.umd.min.js"></script>
+    <style>
+        @import url('https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700;800&display=swap');
+        body { font-family: var(--font-family, 'Inter'), sans-serif; margin: 0; padding: 0; box-sizing: border-box; overflow-x: hidden; background-color: var(--background-color-body, #1a202c); color: var(--text-color, #e2e8f0); }
+        .shadow-minecraft { box-shadow: 4px 4px 0px var(--shadow-color, rgba(0, 0, 0, 0.4)); border: 3px solid var(--block-border-color, #2c3e50); }
+        .hover\:shadow-minecraft-lg:hover { box-shadow: 6px 6px 0px var(--shadow-color-lg, rgba(0, 0, 0, 0.6)); }
+        .bg-minecraft-world { background-image: var(--background-image-url, linear-gradient(to bottom right, #4CAF50, #8BC34A, #FFEB3B, #FFC107)); background-size: cover; background-position: center; animation: minecraftGradient 15s ease infinite; }
+        @keyframes minecraftGradient { 0% { background-position: 0% 50%; } 50% { background-position: 100% 50%; } 100% { background-position: 0% 50%; } }
+        .animate-fade-in { animation: fadeIn 0.5s ease-in-out; }
+        @keyframes fadeIn { from { opacity: 0; transform: translateY(10px); } to { opacity: 1; transform: translateY(0); } }
+        .loading-screen { position: fixed; top: 0; left: 0; width: 100%; height: 100%; background-color: var(--loading-bg-color, #1a202c); z-index: 100; display: flex; align-items: center; justify-content: center; flex-direction: column; color: white; text-shadow: 2px 2px 4px rgba(0,0,0,0.7); }
+        .loading-container { perspective: 1000px; }
+        .giant-cube { width: 100px; height: 100px; position: relative; transform-style: preserve-3d; animation: rotate 8s infinite linear; }
+        @keyframes rotate { from { transform: rotateY(0deg) rotateX(0deg); } to { transform: rotateY(360deg) rotateX(360deg); } }
+        .cube { position: absolute; width: 50px; height: 50px; background: rgba(255, 165, 0, 0.8); border: 1px solid rgba(255, 255, 255, 0.5); transform-style: preserve-3d; }
+        .cube .face { position: absolute; width: 50px; height: 50px; background: inherit; border: inherit; }
+        .front  { transform: translateZ(25px); } .back   { transform: rotateY(180deg) translateZ(25px); } .right  { transform: rotateY(90deg) translateZ(25px); } .left   { transform: rotateY(-90deg) translateZ(25px); } .top    { transform: rotateX(90deg) translateZ(25px); } .bottom { transform: rotateX(-90deg) translateZ(25px); }
+        .cube-1 { animation: join-1 2.5s forwards; } .cube-2 { animation: join-2 2.5s forwards; } .cube-3 { animation: join-3 2.5s forwards; } .cube-4 { animation: join-4 2.5s forwards; }
+        @keyframes join-1 { 0% { transform: translate(-200vw, -200vh, -200px) rotateY(-90deg); } 70%, 100% { transform: translate(-25px, -25px, 0) rotateY(0deg); } }
+        @keyframes join-2 { 0% { transform: translate(200vw, -200vh, -200px) rotateY(90deg); } 70%, 100% { transform: translate(25px, -25px, 0) rotateY(0deg); } }
+        @keyframes join-3 { 0% { transform: translate(-200vw, 200vh, -200px) rotateY(90deg); } 70%, 100% { transform: translate(-25px, 25px, 0) rotateY(0deg); } }
+        @keyframes join-4 { 0% { transform: translate(200vw, 200vh, -200px) rotateY(-90deg); } 70%, 100% { transform: translate(25px, 25px, 0) rotateY(0deg); } }
+    </style>
 </head>
-<body>
-    <div id="app">
-        <!-- Login Page -->
-        <div id="login-page" class="page active">
-            <div class="auth-container">
-                <h2>Login 🏦</h2>
-                <div class="input-group">
-                    <label for="login-id-type">Login with:</label>
-                    <select id="login-id-type">
-                        <option value="bank-id">Bank ID</option>
-                        <option value="minecraft-username">Minecraft Username</option>
-                    </select>
-                </div>
-                <div id="login-bank-id-group" class="input-group">
-                    <label for="login-bank-id">Bank ID</label>
-                    <input type="text" id="login-bank-id" placeholder="BANK006443">
-                </div>
-                <div id="login-minecraft-group" class="input-group" style="display: none;">
-                    <label for="login-minecraft-edition">Minecraft Edition</label>
-                    <select id="login-minecraft-edition">
-                        <option value="java">Java</option>
-                        <option value="bedrock">Bedrock</option>
-                    </select>
-                    <div id="login-minecraft-username-group" class="input-group">
-                        <label for="login-minecraft-username">Minecraft Username</label>
-                        <input type="text" id="login-minecraft-username" placeholder="Enter your Minecraft name">
+<body class="bg-gray-900 text-gray-100 antialiased">
+    <div id="root"></div>
+
+    <script type="text/babel">
+        const { useState, useEffect, useMemo, useRef } = React;
+
+        // --- CONFIGURATION (Cloudflare Worker URLs) ---
+        const API_ENDPOINTS = {
+            ACCOUNTS: 'https://account-for-bank.1987sakshamsingh.workers.dev',
+            TAX: 'https://tax-for-bank.1987sakshamsingh.workers.dev',
+            CONTACT: 'https://contact-from-bank.1987sakshamsingh.workers.dev',
+        };
+
+        // --- UTILITY & HELPER FUNCTIONS ---
+        const copyToClipboard = (text, showModal) => {
+            navigator.clipboard.writeText(text).then(() => showModal('Copied!', 'Bank ID copied to clipboard!', 'success'), () => showModal('Error', 'Failed to copy Bank ID.', 'error'));
+        };
+
+        // --- UI Components ---
+        const Modal = ({ isOpen, title, message, onClose, type }) => {
+            if (!isOpen) return null;
+            const colors = { success: 'border-green-500', error: 'border-red-500', info: 'border-blue-500' };
+            return (
+                <div className="fixed inset-0 bg-black bg-opacity-70 flex items-center justify-center p-4 z-50">
+                    <div className={`bg-gray-800 rounded-lg shadow-2xl p-6 max-w-sm w-full border-t-4 ${colors[type] || colors.info}`}>
+                        <h3 className="text-xl font-bold text-white mb-2">{title}</h3>
+                        <p className="text-gray-300 mb-6">{message}</p>
+                        <div className="flex justify-end"><button onClick={onClose} className="px-5 py-2 bg-green-600 text-white font-semibold rounded-md hover:bg-green-700 focus:outline-none focus:ring-2 focus:ring-green-500 focus:ring-opacity-75 transition duration-200">Close</button></div>
                     </div>
-                     <div id="login-bedrock-username-group" class="input-group" style="display: none;">
-                        <label for="login-bedrock-username">Minecraft Username</label>
-                        <div class="bedrock-input">
-                            <span class="bedrock-prefix">.</span>
-                            <input type="text" id="login-bedrock-username-input" placeholder="Enter your Minecraft name">
+                </div>
+            );
+        };
+
+        const LoadingScreen = ({ loginSuccess, message }) => (
+            <div className="loading-screen">
+                {loginSuccess ? 
+                    <h1 className="text-4xl font-bold animate-fade-in">{message}</h1> :
+                    <><div className="loading-container"><div className="giant-cube">{'cube-1,cube-2,cube-3,cube-4'.split(',').map(c => <div key={c} className={`cube ${c}`}><div className="face front"></div><div className="face back"></div><div className="face right"></div><div className="face left"></div><div className="face top"></div><div className="face bottom"></div></div>)}</div></div><h2 className="text-2xl font-bold mt-12 animate-pulse">{message}</h2></>
+                }
+            </div>
+        );
+
+        // --- Authentication Pages ---
+        const AuthPageLayout = ({ children, title, footerText, footerButtonText, onFooterClick }) => (
+            <div className="flex flex-col items-center justify-center min-h-screen bg-gray-900 p-4">
+                <div className="bg-gray-800 p-8 rounded-xl w-full max-w-md shadow-minecraft">
+                    <h2 className="text-3xl font-bold text-green-400 mb-6 text-center">{title}</h2>
+                    {children}
+                    <div className="text-center mt-6"><p className="text-gray-400">{footerText}</p><button onClick={onFooterClick} className="text-green-400 hover:underline font-semibold mt-1 focus:outline-none">{footerButtonText}</button></div>
+                </div>
+            </div>
+        );
+
+        const LoginPage = ({ setCurrentPage, handleLogin }) => {
+            const [identifier, setIdentifier] = useState('');
+            const [password, setPassword] = useState('');
+            return (
+                <AuthPageLayout title="Minecraft Bank Login 🏦" footerText="Don't have an account?" footerButtonText="Create one!" onFooterClick={() => setCurrentPage('create-account')}>
+                    <form onSubmit={(e) => { e.preventDefault(); handleLogin(identifier, password); }} className="space-y-4">
+                        <input type="text" value={identifier} onChange={(e) => setIdentifier(e.target.value)} placeholder="Bank ID / MC Name / Email" required className="w-full p-3 bg-gray-700 text-gray-200 border border-gray-600 rounded-md focus:outline-none focus:ring-2 focus:ring-green-500" />
+                        <input type="password" value={password} onChange={(e) => setPassword(e.target.value)} placeholder="********" required className="w-full p-3 bg-gray-700 text-gray-200 border border-gray-600 rounded-md focus:outline-none focus:ring-2 focus:ring-green-500" />
+                        <button type="submit" className="w-full bg-green-600 hover:bg-green-700 text-white font-bold py-3 px-6 rounded-md transition duration-200 shadow-md transform hover:scale-105">Login</button>
+                    </form>
+                </AuthPageLayout>
+            );
+        };
+
+        const CreateAccountPage = ({ setCurrentPage, handleCreateAccount, showModal }) => {
+            const [formState, setFormState] = useState({ bankName: '', accountId: '', email: '', password: '', edition: 'java' });
+            const [generatedBankId, setGeneratedBankId] = useState('');
+            useEffect(() => { setGeneratedBankId(`BANK${Math.floor(100000 + Math.random() * 900000)}`); }, []);
+            const handleChange = (e) => setFormState({ ...formState, [e.target.name]: e.target.value });
+            const onSubmit = (e) => {
+                e.preventDefault();
+                const success = handleCreateAccount({ ...formState, bankId: generatedBankId });
+                if (success) showModal('Account Created!', `Your Bank ID is: ${generatedBankId}. Please copy it and keep it safe!`, 'success', () => setCurrentPage('login'));
+            };
+            return (
+                <AuthPageLayout title="Create Minecraft Bank Account 📝" footerText="Already have an account?" footerButtonText="Login here!" onFooterClick={() => setCurrentPage('login')}>
+                    <form onSubmit={onSubmit} className="space-y-4">
+                        <input name="bankName" value={formState.bankName} onChange={handleChange} placeholder="Bank Name" required className="w-full p-3 bg-gray-700 text-gray-200 border border-gray-600 rounded-md focus:outline-none focus:ring-2 focus:ring-green-500" />
+                        <input name="email" type="email" value={formState.email} onChange={handleChange} placeholder="Email Address" required className="w-full p-3 bg-gray-700 text-gray-200 border border-gray-600 rounded-md focus:outline-none focus:ring-2 focus:ring-green-500" />
+                        <select name="edition" value={formState.edition} onChange={handleChange} className="w-full p-3 bg-gray-700 text-gray-200 border border-gray-600 rounded-md focus:outline-none focus:ring-2 focus:ring-green-500"><option value="java">Java</option><option value="bedrock">Bedrock</option></select>
+                        <div className="flex"><input name="accountId" value={formState.accountId} onChange={handleChange} placeholder="Your in-game name" required className={`w-full p-3 bg-gray-700 text-gray-200 border border-gray-600 focus:outline-none focus:ring-2 focus:ring-green-500 ${formState.edition === 'bedrock' ? 'rounded-l-none rounded-r-md' : 'rounded-md'}`} /></div>
+                        <input name="password" type="password" value={formState.password} onChange={handleChange} placeholder="Password" required className="w-full p-3 bg-gray-700 text-gray-200 border border-gray-600 rounded-md focus:outline-none focus:ring-2 focus:ring-green-500" />
+                        {generatedBankId && <div className="p-3 bg-gray-700 rounded-md border border-green-500 flex items-center justify-between"><span className="text-green-300 text-sm font-mono break-all pr-2">Your Bank ID: <span className="font-bold text-lg">{generatedBankId}</span></span><button type="button" onClick={() => copyToClipboard(generatedBankId, showModal)} className="bg-green-500 hover:bg-green-600 text-white text-sm font-semibold py-1 px-3 rounded-md">Copy</button></div>}
+                        <button type="submit" className="w-full bg-green-600 hover:bg-green-700 text-white font-bold py-3 px-6 rounded-md">Create Account</button>
+                    </form>
+                </AuthPageLayout>
+            );
+        };
+
+        // --- Main Application Layout ---
+        const MainLayout = ({ children, currentUserAccount, setCurrentPage, handleLogout }) => {
+            const [isSidebarOpen, setIsSidebarOpen] = useState(false);
+            return (
+                <div className="flex min-h-screen bg-gray-900 text-gray-100">
+                    <Sidebar isOpen={isSidebarOpen} setIsOpen={setIsSidebarOpen} setCurrentPage={setCurrentPage} handleLogout={handleLogout} />
+                    <div className="flex-1 flex flex-col transition-all duration-300 ease-in-out">
+                        <TopBar setIsSidebarOpen={setIsSidebarOpen} currentUserAccount={currentUserAccount} />
+                        <main className="flex-1 p-4 sm:p-6 lg:p-8 overflow-y-auto">{children}</main>
+                    </div>
+                </div>
+            );
+        };
+
+        const TopBar = ({ setIsSidebarOpen, currentUserAccount }) => (
+            <div className="bg-gray-800 p-4 flex items-center justify-between shadow-lg sticky top-0 z-10 border-b-2 border-gray-700">
+                <button onClick={() => setIsSidebarOpen(true)} className="text-green-400 text-3xl focus:outline-none p-2 rounded-md hover:bg-gray-700">☰</button>
+                {currentUserAccount && <div className="flex items-center space-x-4"><span className="text-md font-semibold text-gray-200 hidden sm:block">{currentUserAccount.accountId}</span><div className="w-10 h-10 bg-green-700 rounded-full flex items-center justify-center text-white text-lg font-bold border-2 border-green-500 shadow-md">{currentUserAccount.accountId.charAt(0).toUpperCase()}</div></div>}
+            </div>
+        );
+
+        const Sidebar = ({ isOpen, setIsOpen, setCurrentPage, handleLogout }) => {
+            const sidebarClass = isOpen ? 'translate-x-0' : '-translate-x-full';
+            const navigateAndClose = (page) => { setCurrentPage(page); setIsOpen(false); };
+            const menuItems = [
+                { page: 'home', label: 'Home', icon: '🏠' }, { page: 'account-settings', label: 'Account Settings', icon: '⚙️' },
+                { page: 'top-tax-payers', label: 'Top Tax Payers', icon: '🏆' }, { page: 'top-advance-tax-payers', label: 'Top Advance Tax Payers', icon: '🥇' },
+                { page: 'contact-us', label: 'Contact Us', icon: '📞' }, { page: 'theme-setting', label: 'Theme Settings', icon: '🎨' },
+            ];
+            return (
+                <>
+                    {isOpen && <div className="fixed inset-0 bg-black opacity-50 z-20" onClick={() => setIsOpen(false)}></div>}
+                    <div className={`fixed inset-y-0 left-0 w-64 bg-gray-800 p-6 transform ${sidebarClass} transition-transform duration-300 ease-in-out shadow-xl z-30 flex flex-col border-r-4 border-gray-700`}>
+                        <div className="flex justify-between items-center mb-10"><h2 className="text-2xl font-extrabold text-green-400">Menu</h2><button onClick={() => setIsOpen(false)} className="text-gray-400 text-3xl hover:text-white">&times;</button></div>
+                        <nav className="flex-grow space-y-2">
+                            {menuItems.map(item => <button key={item.page} onClick={() => navigateAndClose(item.page)} className="w-full text-left py-2.5 px-4 rounded-md text-md font-semibold text-gray-300 hover:bg-gray-700 hover:text-white transition duration-200 flex items-center gap-3">{item.icon} {item.label}</button>)}
+                        </nav>
+                        <div className="mt-8"><button onClick={handleLogout} className="w-full text-left py-2.5 px-4 rounded-md text-md font-semibold text-gray-300 hover:bg-red-700 hover:text-white transition duration-200 flex items-center gap-3 bg-red-600">🚪 Logout</button></div>
+                    </div>
+                </>
+            );
+        };
+
+        // --- Dashboard Pages ---
+        const Dashboard = (props) => {
+            const [activePage, setActivePage] = useState('bank-status');
+            const renderActivePage = () => {
+                switch (activePage) {
+                    case 'bank-status': return <BankStatusPage {...props} />;
+                    case 'tax-page': return <TaxPage {...props} />;
+                    case 'apply-loan': return <ApplyLoanPage {...props} />;
+                    default: return <BankStatusPage {...props} />;
+                }
+            };
+            return (
+                <div className="animate-fade-in">
+                    <div className="flex flex-col sm:flex-row gap-4 mb-6">
+                        <TopNavButton title="Bank Status" icon="🏦" isActive={activePage === 'bank-status'} onClick={() => setActivePage('bank-status')} />
+                        <TopNavButton title="View Tax" icon="🧾" isActive={activePage === 'tax-page'} onClick={() => setActivePage('tax-page')} />
+                        <TopNavButton title="Apply for Loan" icon="💰" isActive={activePage === 'apply-loan'} onClick={() => setActivePage('apply-loan')} />
+                    </div>
+                    <div className="animate-fade-in">{renderActivePage()}</div>
+                </div>
+            );
+        };
+
+        const TopNavButton = ({ title, icon, isActive, onClick }) => (
+            <button onClick={onClick} className={`flex-1 p-4 rounded-xl text-left transition-all duration-300 transform hover:-translate-y-1 shadow-minecraft hover:shadow-minecraft-lg ${isActive ? 'bg-green-600 text-white' : 'bg-gray-800 text-gray-200'}`}>
+                <div className="text-3xl mb-2">{icon}</div><span className="text-lg font-semibold">{title}</span>
+            </button>
+        );
+
+        const BankStatusPage = ({ currentUserAccount, handleCancelLoan, handleAdminApproveLoan, handlePayLoan }) => {
+            if (!currentUserAccount) return null;
+            const { bankName, balance, loans = [], transactions = [], jobPerDayIncome = 0, businessPerDayIncome = 0, businessIncomeUnit = 'day' } = currentUserAccount;
+            const totalPerDayIncome = jobPerDayIncome + (businessIncomeUnit === 'hour' ? businessPerDayIncome * 8 : businessPerDayIncome); // Assuming 8 hours/day for business
+            return (
+                <div className="space-y-6">
+                    <div className="bg-gray-800 p-6 rounded-lg shadow-minecraft"><h2 className="text-xl font-bold text-green-400 mb-4">Account Overview</h2><p className="text-gray-300"><strong>Bank Name:</strong> {bankName}</p><p className="text-2xl font-bold">Balance: <span className="text-green-400">${balance?.toFixed(2) || '0.00'}</span></p><p className="text-lg font-semibold mt-2">Total Income: <span className="text-yellow-400">${totalPerDayIncome}/day</span></p><p className="text-sm text-gray-400">Job: ${jobPerDayIncome}/day | Business: ${businessPerDayIncome}/{businessIncomeUnit}</p></div>
+                    <div className="bg-gray-800 p-6 rounded-lg shadow-minecraft"><h2 className="text-xl font-bold text-green-400 mb-4">Loans ({loans.length})</h2>{loans.length > 0 ? <div className="space-y-4">{loans.map((loan) => <div key={loan.id} className="p-4 border border-gray-700 rounded-md bg-gray-700"><div className="flex justify-between items-start"><div className="flex-grow"><p className="font-bold capitalize text-yellow-400">{loan.loanType} Loan</p><p className="text-gray-300">Amount: ${loan.loanAmount.toFixed(2)} | Total Due: ${loan.loanAmountDue.toFixed(2)}</p><p className="text-gray-300">Status: <span className={`font-semibold ${loan.loanStatus === 'pending' ? 'text-yellow-400' : 'text-green-400'}`}>{loan.loanStatus}</span></p></div><div className="flex flex-col items-end gap-2">{loan.loanStatus === 'pending' && <><button onClick={() => handleCancelLoan(loan.id)} className="text-xs bg-red-600 hover:bg-red-700 text-white font-bold py-1 px-2 rounded">Cancel</button><button onClick={() => handleAdminApproveLoan(loan.id)} className="text-xs bg-blue-600 hover:bg-blue-700 text-white font-bold py-1 px-2 rounded">Admin Approve</button></>}{loan.loanStatus === 'active' && <button onClick={() => handlePayLoan(loan.id)} className="text-xs bg-green-600 hover:bg-green-700 text-white font-bold py-1 px-2 rounded">Pay Full Amount</button>}</div></div></div>)}</div> : <p className="text-gray-400">No active loans.</p>}</div>
+                    <div className="bg-gray-800 p-6 rounded-lg shadow-minecraft"><h2 className="text-xl font-bold text-green-400 mb-4">Transaction History</h2>{transactions.length > 0 ? <div className="max-h-80 overflow-y-auto"><table className="min-w-full text-sm text-left"><thead className="bg-gray-700 sticky top-0"><tr><th className="p-2 text-gray-300">Date</th><th className="p-2 text-gray-300">Description</th><th className="p-2 text-right text-gray-300">Amount</th></tr></thead><tbody>{transactions.slice().reverse().map((tx, index) => <tr key={index} className="border-b border-gray-700 hover:bg-gray-700/50"><td className="p-2 text-gray-400">{new Date(tx.date).toLocaleDateString()}</td><td className="p-2 text-gray-300">{tx.description}</td><td className={`p-2 text-right font-semibold ${tx.amount < 0 ? 'text-red-400' : 'text-green-400'}`}>{tx.amount < 0 ? '-' : '+'}${Math.abs(tx.amount).toFixed(2)}</td></tr>)}</tbody></table></div> : <p className="text-gray-400">No transactions yet.</p>}</div>
+                </div>
+            );
+        };
+
+        const TaxPage = ({ currentUserAccount, handlePayTax, handleAdvanceTax, showModal }) => {
+            const chartRef = useRef(null);
+            const chartInstanceRef = useRef(null); // Use a ref to store the chart instance
+            const [chartDataType, setChartDataType] = useState('applied'); // Renamed from chartData to avoid confusion
+            const [customTaxAmount, setCustomTaxAmount] = useState('');
+            if (!currentUserAccount) return null;
+            const { taxData = {}, accountId, transactions = [] } = currentUserAccount;
+            
+            // Ensure dailyTaxCharges is an array of objects with date and amount
+            const dailyCharges = taxData.dailyTaxCharges || [];
+            
+            // Filter tax payments, ensuring amount is positive for display
+            const taxPayments = transactions.filter(tx => tx.description.includes('tax payment'))
+                                        .map(tx => ({ date: tx.date, amount: Math.abs(tx.amount), description: tx.description }));
+
+            const dataToDisplay = chartDataType === 'applied' ? dailyCharges : taxPayments;
+
+            useEffect(() => {
+                if (!chartRef.current) {
+                    // If canvas ref is not available, or component unmounted, do nothing
+                    return;
+                }
+
+                // Destroy existing chart instance before creating a new one
+                if (chartInstanceRef.current) {
+                    chartInstanceRef.current.destroy();
+                    chartInstanceRef.current = null;
+                }
+
+                if (dataToDisplay.length > 0) {
+                    const ctx = chartRef.current.getContext('2d');
+                    if (!ctx) { // Defensive check for context
+                        console.error("Could not get 2D context for canvas.");
+                        return;
+                    }
+                    chartInstanceRef.current = new Chart(ctx, {
+                        type: 'line',
+                        data: {
+                            labels: dataToDisplay.map(c => new Date(c.date).toLocaleDateString()),
+                            datasets: [{
+                                label: `Daily Tax ${chartDataType === 'applied' ? 'Applied' : 'Paid'} ($)`,
+                                data: dataToDisplay.map(c => c.amount),
+                                borderColor: '#2dd4bf',
+                                backgroundColor: 'rgba(45, 212, 191, 0.2)',
+                                fill: true,
+                                tension: 0.4,
+                                pointRadius: 5,
+                                pointHoverRadius: 8,
+                                pointBackgroundColor: '#2dd4bf'
+                            }]
+                        },
+                        options: {
+                            responsive: true,
+                            maintainAspectRatio: false,
+                            plugins: {
+                                legend: {
+                                    labels: {
+                                        color: '#d1d5db'
+                                    }
+                                },
+                                tooltip: {
+                                    callbacks: {
+                                        label: (context) => `Amount: $${context.raw.toFixed(2)}`,
+                                        afterLabel: (context) => dataToDisplay[context.dataIndex].description ? `Info: ${dataToDisplay[context.dataIndex].description}` : ''
+                                    }
+                                }
+                            },
+                            scales: {
+                                x: {
+                                    ticks: { color: '#9ca3af' },
+                                    grid: { color: 'rgba(107, 114, 128, 0.3)' }
+                                },
+                                y: {
+                                    ticks: { color: '#9ca3af' },
+                                    grid: { color: 'rgba(107, 114, 128, 0.3)' }
+                                }
+                            }
+                        }
+                    });
+                }
+                // Cleanup function to destroy chart on unmount or data change
+                return () => {
+                    if (chartInstanceRef.current) {
+                        chartInstanceRef.current.destroy();
+                        chartInstanceRef.current = null;
+                    }
+                };
+            }, [dataToDisplay, chartDataType]); // Re-render chart when dataToDisplay or chartDataType changes
+
+            const downloadReport = () => {
+                if (!chartRef.current || !chartInstanceRef.current) {
+                    showModal('Error', 'Chart not rendered yet. Please view the chart before downloading.', 'error');
+                    return;
+                }
+
+                const chartImage = chartRef.current.toDataURL('image/png');
+                const link = document.createElement('a');
+                link.href = chartImage;
+                link.download = `tax-chart-${accountId}-${chartDataType}.png`;
+                document.body.appendChild(link); // Append to body to make it clickable
+                link.click();
+                document.body.removeChild(link); // Clean up
+                showModal('Download Complete', 'Tax chart downloaded successfully!', 'success');
+            };
+
+            return (
+                <div className="space-y-6">
+                    <div className="bg-gray-800 p-6 rounded-lg shadow-minecraft flex items-center justify-between">
+                        <div><h2 className="text-xl font-bold text-green-400 mb-2">Tax Summary</h2><p className="text-gray-300">Total Due: <span className="font-bold text-red-400">${taxData.totalTax?.toFixed(2) || '0.00'}</span></p><p className="text-gray-300">Advance Paid: <span className="font-bold text-blue-400">${taxData.advanceTaxPaid?.toFixed(2) || '0.00'}</span></p>{taxData.totalTax > 0 ? (<><button onClick={() => handlePayTax(taxData.totalTax)} className="mt-4 bg-green-600 text-white font-bold py-2 px-4 rounded-md hover:bg-green-700">Pay Full Amount</button><input type="number" value={customTaxAmount} onChange={(e) => setCustomTaxAmount(e.target.value)} placeholder="Custom Amount" className="ml-2 p-2 bg-gray-700 border border-gray-600 rounded-md" /><button onClick={() => handlePayTax(parseFloat(customTaxAmount))} className="ml-2 bg-green-600 text-white font-bold py-2 px-4 rounded-md hover:bg-green-700">Pay Custom</button></>) : (<div className="mt-4"><input type="number" value={customTaxAmount} onChange={(e) => setCustomTaxAmount(e.target.value)} placeholder="Advance Amount" className="p-2 bg-gray-700 border border-gray-600 rounded-md" /><button onClick={() => handleAdvanceTax(parseFloat(customTaxAmount))} className="ml-2 bg-blue-600 text-white font-bold py-2 px-4 rounded-md hover:bg-blue-700">Pay Advance</button></div>)}</div>
+                        <div className="w-24 h-24 rounded-full flex items-center justify-center text-white text-4xl font-bold shadow-md border-4 border-green-500 bg-minecraft-world overflow-hidden"><span className="relative z-10">{accountId.charAt(0).toUpperCase()}</span></div>
+                    </div>
+                    <div className="bg-gray-800 p-6 rounded-lg shadow-minecraft">
+                        <div className="flex justify-between items-center mb-4"><h2 className="text-xl font-bold text-green-400">Tax Trend</h2><div className="flex gap-2"><button onClick={() => setChartDataType('applied')} className={`px-3 py-1 text-sm rounded-md ${chartDataType === 'applied' ? 'bg-green-600 text-white' : 'bg-gray-700'}`}>Applied</button><button onClick={() => setChartDataType('paid')} className={`px-3 py-1 text-sm rounded-md ${chartDataType === 'paid' ? 'bg-green-600 text-white' : 'bg-gray-700'}`}>Paid</button><button onClick={downloadReport} className="px-3 py-1 text-sm rounded-md bg-blue-600 text-white">Download</button></div></div>
+                        <div className="relative h-60">{dataToDisplay.length > 0 ? <canvas ref={chartRef}></canvas> : <p className="text-gray-400">No tax data to display.</p>}</div>
+                    </div>
+                </div>
+            );
+        };
+        
+        const ApplyLoanPage = ({ currentUserAccount, showModal, handleApplyLoan }) => {
+            const [loanDetails, setLoanDetails] = useState({ amount: '', duration: 1, type: 'personal', purpose: '', coord1: '', coord2: '', repayment: 'daily' });
+            const hasIncomeProfile = (currentUserAccount.jobPerDayIncome > 0 || currentUserAccount.businessPerDayIncome > 0);
+            const loanDurationLimits = { personal: 5, home: 3, business: 6, homeStartup: 4, bizStartup: 6 };
+            const maxDuration = loanDurationLimits[loanDetails.type];
+
+            const { perPaymentAmount, principalPerPayment, interestPerPayment, totalInterestAmount, weeklyInterestRateDisplay } = useMemo(() => {
+                const amount = parseFloat(loanDetails.amount) || 0;
+                const durationWeeks = parseInt(loanDetails.duration) || 0;
+                if (!amount || !durationWeeks) return { perPaymentAmount: 0, principalPerPayment: 0, interestPerPayment: 0, totalInterestAmount: 0, weeklyInterestRateDisplay: 0 };
+
+                const weeklyInterestRates = { personal: 0.06, home: 0.02, business: 0.05, bizStartup: 0.05, homeStartup: 0.04 }; // These are WEEKLY rates
+                const isCompound = !loanDetails.type.includes('Startup');
+                const weeklyRate = weeklyInterestRates[loanDetails.type];
+                
+                let totalLoanAmountDue;
+                let calculatedTotalInterest = 0;
+
+                if (isCompound) {
+                    // Compound interest: calculate total amount due based on daily compounding
+                    const dailyRate = Math.pow(1 + weeklyRate, 1/7) - 1; // Convert weekly rate to daily
+                    totalLoanAmountDue = amount * Math.pow(1 + dailyRate, durationWeeks * 7);
+                    calculatedTotalInterest = totalLoanAmountDue - amount;
+                } else {
+                    // Simple interest for the whole period (duration in weeks)
+                    calculatedTotalInterest = amount * weeklyRate * durationWeeks;
+                    totalLoanAmountDue = amount + calculatedTotalInterest;
+                }
+
+                const numberOfPayments = loanDetails.repayment === 'daily' ? durationWeeks * 7 : durationWeeks;
+                const perPaymentAmount = totalLoanAmountDue / numberOfPayments;
+                const principalPerPayment = amount / numberOfPayments;
+                const interestPerPayment = calculatedTotalInterest / numberOfPayments;
+
+                return {
+                    perPaymentAmount: perPaymentAmount,
+                    principalPerPayment: principalPerPayment,
+                    interestPerPayment: interestPerPayment,
+                    totalInterestAmount: calculatedTotalInterest,
+                    weeklyInterestRateDisplay: weeklyRate * 100 // Display as percentage
+                };
+            }, [loanDetails.amount, loanDetails.duration, loanDetails.type, loanDetails.repayment]);
+
+            const handleChange = (e) => {
+                const { name, value } = e.target;
+                if (name === 'duration' && parseInt(value) > maxDuration) return;
+                if (name === 'type') setLoanDetails({ ...loanDetails, duration: 1, [name]: value });
+                else setLoanDetails({ ...loanDetails, [name]: value });
+            };
+
+            const onSubmitLoan = (e) => {
+                e.preventDefault();
+                if (!hasIncomeProfile) { showModal('Profile Incomplete', 'Please set your income in Account Settings before applying.', 'error'); return; }
+                handleApplyLoan({ ...loanDetails, amount: parseFloat(loanDetails.amount), duration: parseInt(loanDetails.duration) });
+                setLoanDetails({ amount: '', duration: 1, type: 'personal', purpose: '', coord1: '', coord2: '', repayment: 'daily' });
+            };
+
+            const showLoanSpecificFields = loanDetails.type === 'home' || loanDetails.type === 'business' || loanDetails.type.includes('Startup');
+
+            return (
+                <div className="bg-gray-800 p-6 rounded-lg shadow-minecraft max-w-lg mx-auto">
+                    <h2 className="text-xl font-bold text-green-400 mb-4">New Loan Application</h2>
+                    <form onSubmit={onSubmitLoan} className="space-y-4">
+                        <select name="type" value={loanDetails.type} onChange={handleChange} className="w-full p-3 bg-gray-700 text-gray-200 border border-gray-600 rounded-md"><option value="personal">Personal</option><option value="home">Home</option><option value="business">Business</option><option value="homeStartup">Home Startup</option><option value="bizStartup">Business Startup</option></select>
+                        <input name="amount" type="number" value={loanDetails.amount} onChange={handleChange} placeholder="Loan Amount ($" required className="w-full p-3 bg-gray-700 text-gray-200 border border-gray-600 rounded-md" />
+                        <input name="duration" type="number" value={loanDetails.duration} onChange={handleChange} placeholder={`Duration (Weeks, max ${maxDuration})`} min="1" max={maxDuration} required className="w-full p-3 bg-gray-700 text-gray-200 border border-gray-600 rounded-md" />
+                        <select name="repayment" value={loanDetails.repayment} onChange={handleChange} className="w-full p-3 bg-gray-700 text-gray-200 border border-gray-600 rounded-md"><option value="daily">Daily</option><option value="weekly" disabled={loanDetails.duration < 2}>Weekly (2+ weeks)</option></select>
+                        <textarea name="purpose" value={loanDetails.purpose} onChange={handleChange} placeholder="What is the purpose of this loan?" required className="w-full p-3 bg-gray-700 text-gray-200 border border-gray-600 rounded-md h-24"></textarea>
+                        {showLoanSpecificFields && <div className="space-y-4 pt-2 border-t border-gray-700"><h3 className="text-lg font-semibold text-yellow-400">Property/Startup Details</h3><input name="coord1" value={loanDetails.coord1} onChange={handleChange} placeholder="Start Coordinates (X, Y, Z)" className="w-full p-3 bg-gray-700 text-gray-200 border border-gray-600 rounded-md" /><input name="coord2" value={loanDetails.coord2} onChange={handleChange} placeholder="End Coordinates (X, Y, Z)" className="w-full p-3 bg-gray-700 text-gray-200 border border-gray-600 rounded-md" /><label className="block"><span className="text-gray-300">Upload Picture (Mock)</span><input type="file" onChange={() => showModal('File Selected', 'This is a mock upload. No file was actually sent.', 'info')} className="block w-full text-sm text-gray-400 file:mr-4 file:py-2 file:px-4 file:rounded-full file:border-0 file:text-sm file:font-semibold file:bg-green-600 file:text-white hover:file:bg-green-700" /></label></div>}
+                        <div className="p-3 bg-gray-700 rounded-md text-center"><p className="text-gray-300">Payment per {loanDetails.repayment === 'daily' ? 'Day' : 'Week'}: <span className="font-bold text-yellow-400">${perPaymentAmount.toFixed(2)}</span></p><p className="text-gray-300 text-sm">(Principal: ${principalPerPayment.toFixed(2)}, Interest: ${interestPerPayment.toFixed(2)})</p><p className="text-gray-300">Total Interest: <span className="font-bold text-red-400">${totalInterestAmount.toFixed(2)}</span></p><p className="text-xs text-gray-400">Weekly Interest Rate: {weeklyInterestRateDisplay.toFixed(2)}%</p></div>
+                        <button type="submit" className="w-full bg-green-600 hover:bg-green-700 text-white font-bold py-3 px-6 rounded-md">Submit Application</button>
+                        {!hasIncomeProfile && <p className="text-red-400 mt-4 text-sm text-center">Your income profile is not set up. You must set your income in Account Settings to apply for a loan.</p>}
+                    </form>
+                </div>
+            );
+        };
+
+        const AccountSettingsPage = ({ currentUserAccount, handleChangePassword, handleUpdateProfile }) => {
+            if (!currentUserAccount) return null;
+            const [oldPassword, setOldPassword] = useState('');
+            const [newPassword, setNewPassword] = useState('');
+            const [profile, setProfile] = useState({ 
+                jobType: currentUserAccount.jobType || '', 
+                jobPerDayIncome: currentUserAccount.jobPerDayIncome || '', 
+                businessType: currentUserAccount.businessType || '', 
+                businessPerDayIncome: currentUserAccount.businessPerDayIncome || '', 
+                businessIncomeUnit: currentUserAccount.businessIncomeUnit || 'day', 
+                hasBusiness: !!currentUserAccount.businessType 
+            });
+            const [editMode, setEditMode] = useState({ job: false, business: false, password: false });
+
+            const handleProfileChange = (e) => setProfile({ ...profile, [e.target.name]: e.target.value });
+            const onProfileSubmit = (e) => { e.preventDefault(); handleUpdateProfile(profile); setEditMode({ ...editMode, job: false, business: false }); };
+            const onPasswordSubmit = (e) => { e.preventDefault(); handleChangePassword(oldPassword, newPassword); setOldPassword(''); setNewPassword(''); setEditMode(prev => ({...prev, password: false})); };
+
+            return (
+                <div className="space-y-8">
+                    <h1 className="text-3xl font-bold text-green-400">Account Settings</h1>
+                    <div className="flex flex-col md:flex-row gap-8">
+                        <div className="flex-shrink-0 md:w-1/3 flex flex-col items-center text-center">
+                            <div className="w-32 h-32 rounded-full flex items-center justify-center text-white text-6xl font-bold shadow-md border-4 border-green-500 bg-minecraft-world overflow-hidden"><span className="relative z-10">{currentUserAccount.accountId.charAt(0).toUpperCase()}</span></div>
+                            <h3 className="text-2xl font-bold mt-4">{currentUserAccount.accountId}</h3>
+                            <p className="text-gray-400"><strong>Email:</strong> {currentUserAccount.email}</p>
+                            <p className="text-gray-400"><strong>Bank ID:</strong> {currentUserAccount.bankId}</p>
+                            <p className="text-gray-400"><strong>Edition:</strong> {currentUserAccount.edition}</p>
+                            <p className="text-gray-400"><strong>Bank Name:</strong> {currentUserAccount.bankName}</p>
                         </div>
+                        <div className="flex-1 space-y-6">
+                            <div className="bg-gray-800 p-6 rounded-lg shadow-minecraft">
+                                <h2 className="text-xl font-bold text-green-400 mb-4">Income Profile</h2>
+                                <form onSubmit={onProfileSubmit} className="space-y-4">
+                                    <div>
+                                        <label className="text-gray-300">Job Type: </label>
+                                        {editMode.job ? <input name="jobType" value={profile.jobType} onChange={handleProfileChange} className="w-full p-3 bg-gray-700 text-gray-200 border border-gray-600 rounded-md" /> : <span className="text-gray-200">{profile.jobType || 'N/A'}</span>}
+                                        <button type="button" onClick={() => setEditMode(prev => ({ ...prev, job: !prev.job }))} className="ml-2 bg-blue-600 hover:bg-blue-700 text-white font-bold py-1 px-2 rounded-md">{editMode.job ? 'Cancel' : 'Edit'}</button>
+                                    </div>
+                                    <div>
+                                        <label className="text-gray-300">Job Income per Day: </label>
+                                        {editMode.job ? <input name="jobPerDayIncome" type="number" value={profile.jobPerDayIncome} onChange={handleProfileChange} className="w-full p-3 bg-gray-700 text-gray-200 border border-gray-600 rounded-md" /> : <span className="text-gray-200">${profile.jobPerDayIncome || '0'}/day</span>}
+                                    </div>
+                                    <div className="flex items-center gap-4 mt-4"><label className="text-gray-300">Have a business?</label><input type="checkbox" checked={profile.hasBusiness} onChange={(e) => setProfile({...profile, hasBusiness: e.target.checked})} className="h-5 w-5 rounded bg-gray-700 border-gray-600 text-green-500 focus:ring-green-500" /></div>
+                                    {profile.hasBusiness && <>
+                                        <div>
+                                            <label className="text-gray-300">Business Type: </label>
+                                            {editMode.business ? <input name="businessType" value={profile.businessType} onChange={handleProfileChange} className="w-full p-3 bg-gray-700 text-gray-200 border border-gray-600 rounded-md" /> : <span className="text-gray-200">{profile.businessType || 'N/A'}</span>}
+                                            <button type="button" onClick={() => setEditMode(prev => ({ ...prev, business: !prev.business }))} className="ml-2 bg-blue-600 hover:bg-blue-700 text-white font-bold py-1 px-2 rounded-md">{editMode.business ? 'Cancel' : 'Edit'}</button>
+                                        </div>
+                                        <div>
+                                            <label className="text-gray-300">Business Income: </label>
+                                            {editMode.business ? <input name="businessPerDayIncome" type="number" value={profile.businessPerDayIncome} onChange={handleProfileChange} className="w-full p-3 bg-gray-700 text-gray-200 border border-gray-600 rounded-md" /> : <span className="text-gray-200">${profile.businessPerDayIncome || '0'}/{profile.businessIncomeUnit}</span>}
+                                        </div>
+                                        <div>
+                                            <label className="text-gray-300">Income Unit: </label>
+                                            {editMode.business ? <select name="businessIncomeUnit" value={profile.businessIncomeUnit} onChange={handleProfileChange} className="w-full p-3 bg-gray-700 text-gray-200 border border-gray-600 rounded-md"><option value="day">Per Day</option><option value="hour">Per Hour</option></select> : <span className="text-gray-200">{profile.businessIncomeUnit}</span>}
+                                        </div>
+                                    </>}
+                                    {(editMode.job || editMode.business) && <button type="submit" className="bg-green-600 hover:bg-green-700 text-white font-bold py-2 px-4 rounded-md">Save Changes</button>}
+                                </form>
+                            </div>
+                            <div className="bg-gray-800 p-6 rounded-lg shadow-minecraft"><h2 className="text-xl font-bold text-green-400 mb-4">Change Password</h2><form onSubmit={onPasswordSubmit} className="space-y-4 max-w-sm"><input type="password" value={oldPassword} onChange={(e) => setOldPassword(e.target.value)} placeholder="Old Password" required className="w-full p-3 bg-gray-700 text-gray-200 border border-gray-600 rounded-md" /><input type="password" value={newPassword} onChange={(e) => setNewPassword(e.target.value)} placeholder="New Password" required className="w-full p-3 bg-gray-700 text-gray-200 border border-gray-600 rounded-md" /><button type="submit" className="bg-green-600 text-white font-bold py-2 px-4 rounded-md hover:bg-green-700">Change Password</button></form></div></div>
                     </div>
                 </div>
-                <div class="input-group">
-                    <label for="login-password">Password</label>
-                    <input type="password" id="login-password" placeholder="Enter your password">
-                </div>
-                <button id="login-btn">Login</button>
-                <p>Don't have an account? <a href="#" id="show-register">Create one</a></p>
-            </div>
-        </div>
+            );
+        };
+        
+        const TopTaxPayersPage = ({ getAllAccounts }) => {
+            const [topTaxPayers, setTopTaxPayers] = useState([]);
+            useEffect(() => {
+                const accounts = getAllAccounts();
+                const sorted = accounts.sort((a, b) => (b.taxData?.taxPaid || 0) - (a.taxData?.taxPaid || 0)).slice(0, 3);
+                setTopTaxPayers(sorted);
+            }, [getAllAccounts]);
 
-        <!-- Registration Page -->
-        <div id="register-page" class="page">
-            <div class="auth-container">
-                <h2>Create Account 📝</h2>
-                <div class="input-group">
-                    <label for="register-bank-name">Bank Name</label>
-                    <input type="text" id="register-bank-name" placeholder="Enter your bank name">
+            return (
+                <div className="bg-gray-800 p-6 rounded-lg shadow-minecraft animate-fade-in">
+                    <h1 className="text-3xl font-bold text-green-400 mb-6">🏆 Top 3 Tax Payers</h1>
+                    {topTaxPayers.length > 0 ? (
+                        <ul className="space-y-4">
+                            {topTaxPayers.map((player, index) => (
+                                <li key={player.bankId} className="flex items-center bg-gray-700 p-4 rounded-md shadow-md">
+                                    <span className="text-2xl font-bold mr-4">{index + 1}.</span>
+                                    <div className="flex-grow">
+                                        <p className="text-lg font-semibold">{player.accountId}</p>
+                                        <p className="text-gray-400">Paid: ${player.taxData?.taxPaid?.toFixed(2) || '0.00'}</p>
+                                    </div>
+                                </li>
+                            ))}
+                        </ul>
+                    ) : (
+                        <p className="text-gray-400">No tax data available to display top payers.</p>
+                    )}
                 </div>
-                <div class="input-group">
-                    <label for="register-minecraft-edition">Minecraft Edition</label>
-                    <select id="register-minecraft-edition">
-                        <option value="java">Java</option>
-                        <option value="bedrock">Bedrock</option>
-                    </select>
-                </div>
-                <div id="register-java-username-group" class="input-group">
-                    <label for="register-java-username">Minecraft Username (Java)</label>
-                    <input type="text" id="register-java-username" placeholder="Enter your Java username">
-                </div>
-                <div id="register-bedrock-username-group" class="input-group" style="display: none;">
-                    <label for="register-bedrock-username">Minecraft Username (Bedrock)</label>
-                    <div class="bedrock-input">
-                        <span class="bedrock-prefix">.</span>
-                        <input type="text" id="register-bedrock-username-input" placeholder="Enter your Bedrock username">
-                    </div>
-                </div>
-                <div class="input-group">
-                    <label for="register-password">Password</label>
-                    <input type="password" id="register-password" placeholder="Create a password">
-                </div>
-                <div class="input-group">
-                    <label>Generated Bank ID</label>
-                    <div class="generated-id-container">
-                        <input type="text" id="generated-bank-id" readonly>
-                        <button id="copy-bank-id">Copy</button>
-                    </div>
-                </div>
-                <button id="register-btn">Create Account</button>
-                <p>Already have an account? <a href="#" id="show-login">Login</a></p>
-            </div>
-        </div>
+            );
+        };
 
-        <!-- Main App -->
-        <div id="main-app" class="page">
-            <div class="sidebar">
-                <div class="sidebar-header">
-                    <h3>Menu</h3>
-                    <button id="close-sidebar">✖</button>
+        const TopAdvanceTaxPayersPage = ({ getAllAccounts }) => {
+            const [topAdvanceTaxPayers, setTopAdvanceTaxPayers] = useState([]);
+            useEffect(() => {
+                const accounts = getAllAccounts();
+                const sorted = accounts.sort((a, b) => (b.taxData?.advanceTaxPaid || 0) - (a.taxData?.advanceTaxPaid || 0)).slice(0, 3);
+                setTopAdvanceTaxPayers(sorted);
+            }, [getAllAccounts]);
+
+            return (
+                <div className="bg-gray-800 p-6 rounded-lg shadow-minecraft animate-fade-in">
+                    <h1 className="text-3xl font-bold text-green-400 mb-6">🥇 Top 3 Advance Tax Payers</h1>
+                    {topAdvanceTaxPayers.length > 0 ? (
+                        <ul className="space-y-4">
+                            {topAdvanceTaxPayers.map((player, index) => (
+                                <li key={player.bankId} className="flex items-center bg-gray-700 p-4 rounded-md shadow-md">
+                                    <span className="text-2xl font-bold mr-4">{index + 1}.</span>
+                                    <div className="flex-grow">
+                                        <p className="text-lg font-semibold">{player.accountId}</p>
+                                        <p className="text-gray-400">Advance Paid: ${player.taxData?.advanceTaxPaid?.toFixed(2) || '0.00'}</p>
+                                    </div>
+                                </li>
+                            ))}
+                        </ul>
+                    ) : (
+                        <p className="text-gray-400">No advance tax data available to display top payers.</p>
+                    )}
                 </div>
-                <ul>
-                    <li><a href="#" class="nav-link" data-page="bank-status">🏦 Bank Status</a></li>
-                    <li><a href="#" class="nav-link" data-page="view-tax">📊 View Tax</a></li>
-                    <li><a href="#" class="nav-link" data-page="apply-loan">💰 Apply Loan</a></li>
-                    <li><a href="#" class="nav-link" data-page="account-settings">⚙️ Account Settings</a></li>
-                    <li><a href="#" class="nav-link" data-page="top-tax-payers">🏆 Top 3 Tax Payers</a></li>
-                    <li><a href="#" class="nav-link" data-page="top-adv-tax-payers">🥇 Top 3 Advance Tax Payers</a></li>
-                    <li><a href="#" class="nav-link" data-page="contact-us">📞 Contact Us</a></li>
-                    <li><a href="#" class="nav-link" data-page="theme-settings">🎨 Theme Settings</a></li>
-                    <li><a href="#" id="logout-btn">🚪 Logout</a></li>
-                </ul>
-            </div>
+            );
+        };
 
-            <div class="main-content">
-                <header>
-                    <button id="open-sidebar">☰</button>
-                    <div class="profile-pic">
-                        <span id="profile-initial"></span>
-                    </div>
-                </header>
+        const ContactUsPage = ({ showModal }) => {
+            const [formData, setFormData] = useState({
+                platform: 'discord',
+                username: '',
+                language: 'english',
+                problem: '',
+            });
 
-                <div id="bank-status-page" class="main-page active">
-                    <h2>Bank Status</h2>
-                    <div class="status-card">
-                        <h3>Bank Name: <span id="status-bank-name"></span></h3>
-                        <p>Bank Balance: <span id="status-bank-balance"></span></p>
-                        <p>Other Info: ...</p>
-                    </div>
-                    <div class="transaction-buttons">
-                        <button class="view-btn">Shop Transaction</button>
-                        <button class="view-btn">Job Transaction</button>
-                        <button class="view-btn">Player to Player Transaction</button>
-                    </div>
-                </div>
+            const handleChange = (e) => {
+                setFormData({ ...formData, [e.target.name]: e.target.value });
+            };
 
-                <div id="view-tax-page" class="main-page">
-                    <h2>View Tax</h2>
-                     <div class="tax-info-header">
-                        <div class="tax-profile-pic" style="background-image: url('https://www.minecraft.net/etc.clientlibs/minecraft/clientlibs/main/resources/img/minecraft-creeper-face.jpg');">
-                            <span id="tax-profile-initial"></span>
+            const handleSubmit = (e) => {
+                e.preventDefault();
+                // Simulate sending data to a webhook
+                console.log('Contact Form Submitted:', formData);
+                showModal('Message Sent!', 'Your message has been sent. We will get back to you soon!', 'success');
+                setFormData({ platform: 'discord', username: '', language: 'english', problem: '' }); // Reset form
+            };
+
+            return (
+                <div className="bg-gray-800 p-6 rounded-lg shadow-minecraft animate-fade-in max-w-lg mx-auto">
+                    <h1 className="text-3xl font-bold text-green-400 mb-6">📞 Contact Us</h1>
+                    <form onSubmit={handleSubmit} className="space-y-4">
+                        <div>
+                            <label htmlFor="platform" className="block text-gray-300 text-sm font-bold mb-2">Platform:</label>
+                            <select name="platform" value={formData.platform} onChange={handleChange} className="w-full p-3 bg-gray-700 text-gray-200 border border-gray-600 rounded-md focus:outline-none focus:ring-2 focus:ring-green-500">
+                                <option value="discord">Discord</option>
+                                <option value="instagram">Instagram</option>
+                            </select>
                         </div>
                         <div>
-                            <p>Bank Name: <span id="tax-bank-name"></span></p>
-                            <p>Minecraft Name: <span id="tax-minecraft-name"></span></p>
+                            <label htmlFor="username" className="block text-gray-300 text-sm font-bold mb-2">Your Username:</label>
+                            <input type="text" name="username" value={formData.username} onChange={handleChange} placeholder="Your social username" required className="w-full p-3 bg-gray-700 text-gray-200 border border-gray-600 rounded-md focus:outline-none focus:ring-2 focus:ring-green-500" />
                         </div>
-                    </div>
-                    <div class="tax-details">
-                        <p>Total Tax: <span id="total-tax"></span></p>
-                        <p>Selling Tax: <span id="selling-tax"></span></p>
-                        <p>Buying Tax: <span id="buying-tax"></span></p>
-                        <p>Tax Paid: <span id="tax-paid"></span></p>
-                    </div>
-                    <div class="tax-actions">
-                        <button id="pay-tax-btn">Pay Tax</button>
-                        <button id="adv-tax-btn">Advance Tax Pay</button>
-                        <button id="exit-tax-btn">Exit</button>
-                    </div>
-                    <div class="tax-history">
-                        <h3>Payment History (Last 5)</h3>
-                        <ul id="tax-history-list"></ul>
-                        <a href="#" id="full-history-link">Full History</a>
-                    </div>
-                    <div class="tax-chart">
-                        <h3>Weekly Tax Chart</h3>
-                        <canvas id="tax-chart-canvas"></canvas>
-                    </div>
-                </div>
-
-                <div id="apply-loan-page" class="main-page">
-                    <h2>Apply for a Loan</h2>
-                    <div class="loan-form">
-                        <div class="input-group">
-                            <label for="loan-type">Loan Type</label>
-                            <select id="loan-type">
-                                <option value="personal">Personal Loan</option>
-                                <option value="home">Home Loan</option>
-                                <option value="business">Business Loan</option>
-                                <option value="home-startup">Home Startup Loan</option>
-                                <option value="business-startup">Business Startup Loan</option>
+                        <div>
+                            <label htmlFor="language" className="block text-gray-300 text-sm font-bold mb-2">Preferred Language:</label>
+                            <select name="language" value={formData.language} onChange={handleChange} className="w-full p-3 bg-gray-700 text-gray-200 border border-gray-600 rounded-md focus:outline-none focus:ring-2 focus:ring-green-500">
+                                <option value="english">English</option>
+                                <option value="hindi">Hindi</option>
                             </select>
                         </div>
-                        <div class="input-group">
-                            <label for="loan-amount">Amount</label>
-                            <input type="number" id="loan-amount" placeholder="Enter loan amount">
+                        <div>
+                            <label htmlFor="problem" className="block text-gray-300 text-sm font-bold mb-2">Describe your problem:</label>
+                            <textarea name="problem" value={formData.problem} onChange={handleChange} placeholder="e.g., Account issue, Bug report, Suggestion" rows="5" required className="w-full p-3 bg-gray-700 text-gray-200 border border-gray-600 rounded-md focus:outline-none focus:ring-2 focus:ring-green-500"></textarea>
                         </div>
-                        <div class="input-group">
-                            <label for="loan-duration">Duration (in weeks)</label>
-                            <select id="loan-duration">
-                                <option value="1">1 Week</option>
-                                <option value="2">2 Weeks</option>
-                                <option value="3">3 Weeks</option>
-                                <option value="4">4 Weeks</option>
-                                <option value="5">5 Weeks</option>
-                            </select>
-                        </div>
-                        <div id="loan-details-personal" class="loan-details-group">
-                             <div class="input-group">
-                                <label for="personal-loan-name">Your Name</label>
-                                <input type="text" id="personal-loan-name" placeholder="Enter your name">
-                            </div>
-                            <div class="input-group">
-                                <label for="personal-loan-job">Job</label>
-                                <input type="text" id="personal-loan-job" placeholder="Enter your job">
-                            </div>
-                            <div class="input-group">
-                                <label for="personal-loan-income">Per Day Income</label>
-                                <input type="number" id="personal-loan-income" placeholder="Enter your daily income">
-                            </div>
-                        </div>
-                        <div id="loan-details-home" class="loan-details-group" style="display: none;">
-                            <div class="input-group">
-                                <label for="home-loan-pic">Upload Picture</label>
-                                <input type="file" id="home-loan-pic">
-                            </div>
-                            <div class="input-group">
-                                <label for="home-loan-coords1">End Coordinates 1</label>
-                                <input type="text" id="home-loan-coords1" placeholder="e.g., 100, 64, -200">
-                            </div>
-                            <div class="input-group">
-                                <label for="home-loan-coords2">End Coordinates 2</label>
-                                <input type="text" id="home-loan-coords2" placeholder="e.g., 200, 70, -100">
-                            </div>
-                        </div>
-                         <div id="loan-details-business" class="loan-details-group" style="display: none;">
-                            <div class="input-group">
-                                <label for="business-loan-pic">Upload Picture</label>
-                                <input type="file" id="business-loan-pic">
-                            </div>
-                            <div class="input-group">
-                                <label for="business-loan-coords1">End Coordinates 1</label>
-                                <input type="text" id="business-loan-coords1" placeholder="e.g., 100, 64, -200">
-                            </div>
-                            <div class="input-group">
-                                <label for="business-loan-coords2">End Coordinates 2</label>
-                                <input type="text" id="business-loan-coords2" placeholder="e.g., 200, 70, -100">
-                            </div>
-                        </div>
-                        <div id="loan-details-startup" class="loan-details-group" style="display: none;">
-                             <div class="input-group">
-                                <label for="startup-loan-job">Job</label>
-                                <input type="text" id="startup-loan-job" placeholder="Enter your job">
-                            </div>
-                            <div class="input-group">
-                                <label for="startup-loan-income">Per Day Income</label>
-                                <input type="number" id="startup-loan-income" placeholder="Enter your daily income">
-                            </div>
-                        </div>
-                        <div class="loan-summary">
-                            <p>Interest Rate: <span id="loan-interest-rate"></span>%</p>
-                            <p>Per Day Cost: <span id="loan-per-day-cost"></span></p>
-                        </div>
-                        <button id="apply-loan-btn">Apply Now</button>
+                        <button type="submit" className="w-full bg-green-600 hover:bg-green-700 text-white font-bold py-3 px-6 rounded-md transition duration-200 shadow-md transform hover:scale-105">Submit</button>
+                    </form>
+                </div>
+            );
+        };
+
+        const ThemeSettingsPage = ({ showModal }) => {
+            const [theme, setTheme] = useState(() => {
+                const savedTheme = localStorage.getItem('appTheme');
+                return savedTheme ? JSON.parse(savedTheme) : {
+                    primaryColor: '#4CAF50',
+                    secondaryColor: '#8BC34A',
+                    shadowColor: 'rgba(0, 0, 0, 0.4)',
+                    animationSpeed: '1s',
+                    brightness: '100%',
+                    fontFamily: 'Inter',
+                    buttonStyle: 'rounded',
+                    glowColor: '#00ff00',
+                    blockColor: '#1f2937',
+                    backgroundColorBody: '#f4f7fc',
+                    backgroundImageUrl: 'none',
+                    textColor: '#1a202c',
+                    blockBorderColor: '#2c3e50',
+                    loadingBgColor: '#1a202c',
+                };
+            });
+
+            useEffect(() => {
+                applyTheme(theme);
+            }, [theme]);
+
+            const applyTheme = (currentTheme) => {
+                const root = document.documentElement;
+                root.style.setProperty('--primary-color', currentTheme.primaryColor);
+                root.style.setProperty('--secondary-color', currentTheme.secondaryColor);
+                root.style.setProperty('--shadow-color', currentTheme.shadowColor);
+                root.style.setProperty('--shadow-color-lg', currentTheme.shadowColor.replace('0.4', '0.6'));
+                root.style.setProperty('--animation-speed', currentTheme.animationSpeed);
+                root.style.setProperty('--brightness', currentTheme.brightness);
+                root.style.setProperty('--font-family', currentTheme.fontFamily);
+                root.style.setProperty('--button-border-radius', currentTheme.buttonStyle === 'rounded' ? '0.375rem' : '0');
+                root.style.setProperty('--glow-color', currentTheme.glowColor);
+                root.style.setProperty('--block-color', currentTheme.blockColor);
+                root.style.setProperty('--background-color-body', currentTheme.backgroundColorBody);
+                root.style.setProperty('--background-image-url', currentTheme.backgroundImageUrl === 'none' ? 'none' : `url('${currentTheme.backgroundImageUrl}')`);
+                root.style.setProperty('--text-color', currentTheme.textColor);
+                root.style.setProperty('--block-border-color', currentTheme.blockBorderColor);
+                root.style.setProperty('--loading-bg-color', currentTheme.loadingBgColor);
+
+                // Apply to body directly for immediate effect on background
+                document.body.style.backgroundColor = currentTheme.backgroundColorBody;
+                document.body.style.color = currentTheme.textColor;
+            };
+
+            const handleChange = (e) => {
+                const { name, value } = e.target;
+                let newValue = value;
+                if (name === 'animationSpeed') newValue = `${value}s`;
+                if (name === 'brightness') newValue = `${value}%`;
+                setTheme(prev => ({ ...prev, [name]: newValue }));
+            };
+
+            const saveTheme = () => {
+                localStorage.setItem('appTheme', JSON.stringify(theme));
+                showModal('Theme Saved', 'Your theme settings have been saved!', 'success');
+            };
+
+            const resetTheme = () => {
+                const defaultTheme = {
+                    primaryColor: '#4CAF50',
+                    secondaryColor: '#8BC34A',
+                    shadowColor: 'rgba(0, 0, 0, 0.4)',
+                    animationSpeed: '1s',
+                    brightness: '100%',
+                    fontFamily: 'Inter',
+                    buttonStyle: 'rounded',
+                    glowColor: '#00ff00',
+                    blockColor: '#1f2937',
+                    backgroundColorBody: '#f4f7fc',
+                    backgroundImageUrl: 'none',
+                    textColor: '#1a202c',
+                    blockBorderColor: '#2c3e50',
+                    loadingBgColor: '#1a202c',
+                };
+                setTheme(defaultTheme);
+                localStorage.removeItem('appTheme');
+                showModal('Theme Reset', 'Theme settings have been reset to default.', 'info');
+            };
+
+            return (
+                <div className="bg-gray-800 p-6 rounded-lg shadow-minecraft animate-fade-in">
+                    <h1 className="text-3xl font-bold text-green-400 mb-6">Theme Settings</h1>
+                    <div className="space-y-4">
+                        <div><label className="block text-gray-300">Primary Color:</label><input type="color" name="primaryColor" value={theme.primaryColor} onChange={handleChange} className="w-full h-10" /></div>
+                        <div><label className="block text-gray-300">Secondary Color:</label><input type="color" name="secondaryColor" value={theme.secondaryColor} onChange={handleChange} className="w-full h-10" /></div>
+                        <div><label className="block text-gray-300">Shadow Color:</label><input type="color" name="shadowColor" value={theme.shadowColor} onChange={handleChange} className="w-full h-10" /></div>
+                        <div><label className="block text-gray-300">Glow Color:</label><input type="color" name="glowColor" value={theme.glowColor} onChange={handleChange} className="w-full h-10" /></div>
+                        <div><label className="block text-gray-300">Block Color:</label><input type="color" name="blockColor" value={theme.blockColor} onChange={handleChange} className="w-full h-10" /></div>
+                        <div><label className="block text-gray-300">Background Color:</label><input type="color" name="backgroundColorBody" value={theme.backgroundColorBody} onChange={handleChange} className="w-full h-10" /></div>
+                        <div><label className="block text-gray-300">Text Color:</label><input type="color" name="textColor" value={theme.textColor} onChange={handleChange} className="w-full h-10" /></div>
+                        <div><label className="block text-gray-300">Block Border Color:</label><input type="color" name="blockBorderColor" value={theme.blockBorderColor} onChange={handleChange} className="w-full h-10" /></div>
+                        <div><label className="block text-gray-300">Loading Screen Background Color:</label><input type="color" name="loadingBgColor" value={theme.loadingBgColor} onChange={handleChange} className="w-full h-10" /></div>
+                        <div><label className="block text-gray-300">Background Image URL:</label><input type="text" name="backgroundImageUrl" value={theme.backgroundImageUrl} onChange={handleChange} placeholder="Enter image URL or 'none'" className="w-full p-2 bg-gray-700 text-gray-200 border border-gray-600 rounded-md" /></div>
+                        <div><label className="block text-gray-300">Animation Speed (s):</label><input type="range" name="animationSpeed" min="0.1" max="5" step="0.1" value={parseFloat(theme.animationSpeed)} onChange={handleChange} className="w-full" /><span className="text-gray-400">{theme.animationSpeed}</span></div>
+                        <div><label className="block text-gray-300">Brightness (%):</label><input type="range" name="brightness" min="50" max="150" step="1" value={parseFloat(theme.brightness)} onChange={handleChange} className="w-full" /><span className="text-gray-400">{theme.brightness}</span></div>
+                        <div><label className="block text-gray-300">Font Family:</label><input type="text" name="fontFamily" value={theme.fontFamily} onChange={handleChange} placeholder="e.g., Inter" className="w-full p-2 bg-gray-700 text-gray-200 border border-gray-600 rounded-md" /></div>
+                        <div><label className="block text-gray-300">Button Style:</label><select name="buttonStyle" value={theme.buttonStyle} onChange={handleChange} className="w-full p-2 bg-gray-700 text-gray-200 border border-gray-600 rounded-md"><option value="rounded">Rounded</option><option value="square">Square</option></select></div>
+                        <button onClick={saveTheme} className="bg-green-600 hover:bg-green-700 text-white font-bold py-2 px-4 rounded-md mr-2">Save Theme</button>
+                        <button onClick={resetTheme} className="bg-red-600 hover:bg-red-700 text-white font-bold py-2 px-4 rounded-md">Reset Theme</button>
                     </div>
                 </div>
-                 <div id="account-settings-page" class="main-page">
-                    <h2>Account Settings</h2>
-                    <div class="settings-form">
-                        <div class="input-group">
-                            <label for="settings-bank-name">Bank Name</label>
-                            <input type="text" id="settings-bank-name">
-                        </div>
-                        <div class="input-group">
-                            <label for="settings-minecraft-username">Minecraft Username</label>
-                            <input type="text" id="settings-minecraft-username" readonly>
-                        </div>
-                        <div class="input-group">
-                            <label for="settings-social-info">Social Info</label>
-                            <input type="text" id="settings-social-info" placeholder="e.g., Discord, Twitter">
-                        </div>
-                        <button id="save-settings-btn">Save Changes</button>
-                        <hr>
-                        <h3>Change Password</h3>
-                        <div class="input-group">
-                            <label for="current-password">Current Password</label>
-                            <input type="password" id="current-password">
-                        </div>
-                        <div class="input-group">
-                            <label for="new-password">New Password</label>
-                            <input type="password" id="new-password">
-                        </div>
-                        <button id="change-password-btn">Change Password</button>
-                    </div>
-                </div>
-                 <div id="top-tax-payers-page" class="main-page">
-                    <h2>🏆 Top 3 Tax Payers</h2>
-                    <ol id="top-tax-payers-list"></ol>
-                </div>
+            );
+        };
 
-                <div id="top-adv-tax-payers-page" class="main-page">
-                    <h2>🥇 Top 3 Advance Tax Payers</h2>
-                    <ol id="top-adv-tax-payers-list"></ol>
-                </div>
+        // --- Main App Component ---
+        const App = () => {
+            const [currentPage, setCurrentPage] = useState('loading'); // Start with loading page
+            const [currentUserAccount, setCurrentUserAccount] = useState(null);
+            const [loading, setLoading] = useState(true);
+            const [loginSuccess, setLoginSuccess] = useState(false);
+            const [modal, setModal] = useState({ isOpen: false, title: '', message: '', type: 'info', callback: null });
 
-                <div id="contact-us-page" class="main-page">
-                    <h2>📞 Contact Us</h2>
-                    <p>For support, please contact us at <a href="mailto:support@geminibank.com">support@geminibank.com</a>.</p>
-                </div>
+            const showModal = (title, message, type = 'info', callback = null) => setModal({ isOpen: true, title, message, type, callback });
+            const closeModal = () => { if (modal.callback) modal.callback(); setModal({ isOpen: false, title: '', message: '', type: 'info', callback: null }); };
 
-                <div id="theme-settings-page" class="main-page">
-                    <h2>🎨 Theme Settings</h2>
-                    <div class="theme-options">
-                        <label for="theme-select">Select Theme:</label>
-                        <select id="theme-select">
-                            <option value="dark">Dark</option>
-                            <option value="light">Light</option>
-                        </select>
-                    </div>
-                </div>
-            </div>
-        </div>
-    </div>
-    <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
-    <script src="script.js"></script>
+            const getAllAccounts = () => JSON.parse(localStorage.getItem('geminiBankAccounts') || '[]');
+            const saveAllAccounts = (accounts) => localStorage.setItem('geminiBankAccounts', JSON.stringify(accounts));
+
+            // Initial app load effect
+            useEffect(() => {
+                const accounts = getAllAccounts();
+                if (accounts.length === 0) {
+                    saveAllAccounts([{
+                        bankName: 'Gemini Test Bank', accountId: 'tester', email: 'tester@gemini.com', password: '26', edition: 'java', bankId: 'BANK006443',
+                        balance: 10000, jobType: 'Diamond Miner', jobPerDayIncome: 250, businessType: 'Potion Shop', businessPerDayIncome: 150, businessIncomeUnit: 'day',
+                        taxData: { totalTax: 390, taxPaid: 0, advanceTaxPaid: 0, dailyTaxCharges: [30, 50, 20, 60, 80, 50, 100].map((amount, i) => ({ date: new Date(Date.now() - (6-i) * 86400000).toISOString(), amount })) },
+                        loans: [], transactions: []
+                    }]);
+                }
+                setTimeout(() => {
+                    setLoading(false);
+                    setCurrentPage('login');
+                }, 2500); // Initial app load simulation
+            }, []);
+
+            const handleLogin = (identifier, password) => {
+                setLoading(true);
+                const dataLoading = new Promise(resolve => {
+                    const accounts = getAllAccounts();
+                    resolve(accounts.find(acc => (acc.bankId.toLowerCase() === identifier.toLowerCase() || acc.accountId.toLowerCase() === identifier.toLowerCase() || acc.email.toLowerCase() === identifier.toLowerCase()) && acc.password === password));
+                });
+                Promise.all([new Promise(res => setTimeout(res, 4000)), dataLoading]).then(([_, foundAccount]) => {
+                    if (foundAccount) {
+                        setLoginSuccess(true);
+                        setTimeout(() => {
+                            setLoading(false);
+                            setCurrentUserAccount(foundAccount);
+                            setCurrentPage('home');
+                            setLoginSuccess(false);
+                        }, 1500);
+                    } else {
+                        setLoading(false);
+                        showModal('Login Failed', 'Invalid credentials. Please try again.', 'error');
+                    }
+                });
+            };
+
+            const handleCreateAccount = (newData) => {
+                const accounts = getAllAccounts();
+                if (accounts.some(acc => acc.accountId.toLowerCase() === newData.accountId.toLowerCase() || acc.email.toLowerCase() === newData.email.toLowerCase() || acc.bankId === newData.bankId)) {
+                    showModal('Creation Failed', 'An account with this Minecraft Name, Email, or Bank ID already exists.', 'error');
+                    return false;
+                }
+                const newAccount = { ...newData, balance: 1000, jobType: '', jobPerDayIncome: 0, businessType: '', businessPerDayIncome: 0, businessIncomeUnit: 'day', taxData: { totalTax: 390, taxPaid: 0, advanceTaxPaid: 0, dailyTaxCharges: [30, 50, 20, 60, 80, 50, 100].map((amount, i) => ({ date: new Date(Date.now() - (6-i) * 86400000).toISOString(), amount })) }, loans: [], transactions: [{ type: 'credit', amount: 1000, date: new Date().toISOString(), description: 'Initial account deposit' }] };
+                saveAllAccounts([...accounts, newAccount]);
+                return true;
+            };
+
+            const handleLogout = () => { setCurrentUserAccount(null); setCurrentPage('login'); showModal('Logged Out', 'You have been successfully logged out.', 'info'); };
+            const updateCurrentUser = (updatedAccount) => {
+                setCurrentUserAccount(updatedAccount);
+                const accounts = getAllAccounts();
+                const index = accounts.findIndex(acc => acc.bankId === updatedAccount.bankId);
+                if (index !== -1) { accounts[index] = updatedAccount; saveAllAccounts(accounts); }
+            };
+
+            const handleUpdateProfile = (profileData) => {
+                const updatedAccount = { ...currentUserAccount, jobType: profileData.jobType, jobPerDayIncome: parseFloat(profileData.jobPerDayIncome) || 0, businessType: profileData.hasBusiness ? profileData.businessType : '', businessPerDayIncome: profileData.hasBusiness ? parseFloat(profileData.businessPerDayIncome) || 0 : 0, businessIncomeUnit: profileData.hasBusiness ? profileData.businessIncomeUnit : 'day' };
+                updateCurrentUser(updatedAccount);
+                showModal('Success', 'Your profile has been updated.', 'success');
+            };
+
+            const handleChangePassword = (oldPass, newPass) => {
+                if (currentUserAccount.password !== oldPass) { showModal('Error', 'Old password is incorrect.', 'error'); return; }
+                updateCurrentUser({ ...currentUserAccount, password: newPass });
+                showModal('Success', 'Password changed successfully!', 'success');
+            };
+
+            const handlePayTax = (amount) => {
+                if (currentUserAccount.balance < amount) { showModal('Error', 'Insufficient balance.', 'error'); return; }
+                const updatedAccount = { ...currentUserAccount, balance: currentUserAccount.balance - amount, taxData: { ...currentUserAccount.taxData, totalTax: currentUserAccount.taxData.totalTax - amount, taxPaid: currentUserAccount.taxData.taxPaid + amount }, transactions: [...currentUserAccount.transactions, { type: 'debit', amount: -amount, date: new Date().toISOString(), description: 'Tax payment' }] };
+                updateCurrentUser(updatedAccount);
+                showModal('Success', `Paid $${amount.toFixed(2)} in tax.`, 'success');
+            };
+
+            const handleAdvanceTax = (amount) => {
+                if (currentUserAccount.balance < amount) { showModal('Error', 'Insufficient balance.', 'error'); return; }
+                const updatedAccount = { ...currentUserAccount, balance: currentUserAccount.balance - amount, taxData: { ...currentUserAccount.taxData, advanceTaxPaid: (currentUserAccount.taxData.advanceTaxPaid || 0) + amount }, transactions: [...currentUserAccount.transactions, { type: 'debit', amount: -amount, date: new Date().toISOString(), description: 'Advance tax payment' }] };
+                updateCurrentUser(updatedAccount);
+                showModal('Success', `Paid $${amount.toFixed(2)} in advance tax.`, 'success');
+            };
+
+            const handleApplyLoan = ({ amount, duration, type, ...details }) => {
+                const jobIncome = currentUserAccount.jobPerDayIncome || 0;
+                const bizIncome = currentUserAccount.businessPerDayIncome || 0;
+                const maxDailyRepayment = (jobIncome * 0.55) + (bizIncome * (currentUserAccount.businessIncomeUnit === 'hour' ? 0.70 * 8 : 0.70));
+                const interestRates = { personal: 0.06, home: 0.02, business: 0.05, bizStartup: 0.05, homeStartup: 0.04 }; // These are WEEKLY rates
+                const isCompound = !type.includes('Startup');
+                const weeklyRate = interestRates[type];
+                
+                let totalDue, dailyRepayment;
+                if (isCompound) {
+                    const dailyRate = Math.pow(1 + weeklyRate, 1/7) - 1; // Convert weekly rate to daily
+                    totalDue = amount * Math.pow(1 + dailyRate, duration * 7);
+                } else {
+                    totalDue = amount * (1 + weeklyRate * duration); // Simple interest based on weeks
+                }
+                dailyRepayment = totalDue / (duration * 7);
+                const existingDailyRepayment = currentUserAccount.loans.reduce((sum, loan) => loan.loanStatus === 'active' ? sum + loan.dailyRepayment : sum, 0);
+                if (existingDailyRepayment + dailyRepayment > maxDailyRepayment) {
+                    showModal('Loan Rejected', `Your income is too low. Your max daily repayment is $${maxDailyRepayment.toFixed(2)}, but this loan would bring it to $${(existingDailyRepayment + dailyRepayment).toFixed(2)}.`, 'error');
+                    return;
+                }
+                const newLoan = { id: `LOAN${Date.now()}`, loanAmount: amount, loanAmountDue: totalDue, loanPaid: 0, dailyRepayment, durationWeeks: duration, loanType: type, loanStatus: 'pending', applicationDate: new Date().toISOString(), ...details };
+                const updatedAccount = { ...currentUserAccount, loans: [...currentUserAccount.loans, newLoan], transactions: [...currentUserAccount.transactions, { type: 'info', amount: 0, date: new Date().toISOString(), description: `Loan application for $${amount} submitted` }] };
+                updateCurrentUser(updatedAccount);
+                showModal('Application Submitted', `Your ${type} loan application for $${amount.toFixed(2)} has been submitted for admin approval.`, 'success');
+            };
+
+            const handleCancelLoan = (loanId) => {
+                const updatedLoans = currentUserAccount.loans.filter(loan => loan.id !== loanId);
+                const updatedAccount = { ...currentUserAccount, loans: updatedLoans, transactions: [...currentUserAccount.transactions, { type: 'info', amount: 0, date: new Date().toISOString(), description: `Loan application ${loanId} cancelled` }] };
+                updateCurrentUser(updatedAccount);
+                showModal('Success', 'Loan application has been cancelled.', 'success');
+            };
+
+            const handleAdminApproveLoan = (loanId) => {
+                const loans = currentUserAccount.loans.map(loan => loan.id === loanId ? { ...loan, loanStatus: 'active' } : loan);
+                const approvedLoan = loans.find(loan => loan.id === loanId);
+                const updatedAccount = { ...currentUserAccount, loans, balance: currentUserAccount.balance + approvedLoan.loanAmount, transactions: [...currentUserAccount.transactions, { type: 'credit', amount: approvedLoan.loanAmount, date: new Date().toISOString(), description: `Loan ${loanId} approved` }] };
+                updateCurrentUser(updatedAccount);
+                showModal('Admin Action', 'Loan has been approved!', 'success');
+            };
+
+            const handlePayLoan = (loanId, customAmount = null) => {
+                const loan = currentUserAccount.loans.find(l => l.id === loanId);
+                if (!loan) return;
+
+                let amountToPay = customAmount !== null ? customAmount : (loan.loanAmountDue - loan.loanPaid);
+                if (amountToPay <= 0) { showModal('Info', 'No amount to pay for this loan.', 'info'); return; }
+
+                const timeSinceApplication = Date.now() - new Date(loan.applicationDate).getTime();
+                let effectiveAmountToPay = amountToPay;
+
+                // Apply interest reduction rules only if paying the full remaining amount
+                if (customAmount === null || customAmount >= (loan.loanAmountDue - loan.loanPaid)) {
+                    if (timeSinceApplication < 6 * 3600 * 1000) { // 6 hours
+                        effectiveAmountToPay = loan.loanAmount; // Only principal
+                        showModal('Interest Waived!', 'Paid within 6 hours! 0% interest applied.', 'success');
+                    } else if (timeSinceApplication < 2 * 24 * 3600 * 1000) { // 2 days
+                        const interest = loan.loanAmountDue - loan.loanAmount;
+                        effectiveAmountToPay = loan.loanAmount + (interest * 0.6); // 40% interest reduction
+                        showModal('Interest Reduced!', 'Paid within 2 days! Interest reduced by 40%.', 'success');
+                    }
+                }
+
+                if (currentUserAccount.balance < effectiveAmountToPay) { showModal('Error', 'Insufficient balance to pay the loan.', 'error'); return; }
+
+                const newLoanPaid = loan.loanPaid + effectiveAmountToPay;
+                let updatedLoans;
+                let transactionDescription = `Loan payment for ${loan.id}`; 
+
+                if (newLoanPaid >= loan.loanAmountDue) {
+                    updatedLoans = currentUserAccount.loans.filter(l => l.id !== loanId);
+                    transactionDescription = `Paid off loan ${loan.id}`; 
+                    showModal('Loan Paid!', 'Loan has been fully paid off!', 'success');
+                } else {
+                    updatedLoans = currentUserAccount.loans.map(l => l.id === loanId ? { ...l, loanPaid: newLoanPaid } : l);
+                    showModal('Payment Successful!', `Paid $${effectiveAmountToPay.toFixed(2)} towards loan ${loan.id}.`, 'success');
+                }
+                
+                const updatedAccount = { ...currentUserAccount, loans: updatedLoans, balance: currentUserAccount.balance - effectiveAmountToPay, transactions: [...currentUserAccount.transactions, { type: 'debit', amount: -effectiveAmountToPay, date: new Date().toISOString(), description: transactionDescription }] };
+                updateCurrentUser(updatedAccount);
+            };
+
+            const renderPage = () => {
+                if (loading) return <LoadingScreen loginSuccess={loginSuccess} message={loginSuccess ? 'Login Successful!' : 'Loading Bank Data...'} />;
+                const commonProps = { currentUserAccount, setCurrentPage, showModal, handleLogout, handleChangePassword, handleUpdateProfile, handlePayTax, handleAdvanceTax, handleApplyLoan, handleCancelLoan, handleAdminApproveLoan, handlePayLoan };
+                if (!currentUserAccount) {
+                    switch (currentPage) {
+                        case 'create-account': return <CreateAccountPage {...commonProps} handleCreateAccount={handleCreateAccount} />;
+                        default: return <LoginPage {...commonProps} handleLogin={handleLogin} />;
+                    }
+                }
+                let pageComponent;
+                switch (currentPage) {
+                    case 'account-settings': pageComponent = <AccountSettingsPage {...commonProps} />; break;
+                    case 'top-tax-payers': pageComponent = <TopTaxPayersPage {...commonProps} getAllAccounts={getAllAccounts} />; break;
+                    case 'top-advance-tax-payers': pageComponent = <TopAdvanceTaxPayersPage {...commonProps} getAllAccounts={getAllAccounts} />; break;
+                    case 'contact-us': pageComponent = <ContactUsPage {...commonProps} />; break;
+                    case 'theme-setting': pageComponent = <ThemeSettingsPage {...commonProps} />; break;
+                    default: pageComponent = <Dashboard {...commonProps} />;
+                }
+                return <MainLayout {...commonProps}>{pageComponent}</MainLayout>;
+            };
+
+            return <>{renderPage()}<Modal {...modal} onClose={closeModal} /></>;
+        };
+
+        ReactDOM.createRoot(document.getElementById('root')).render(<App />);
+    </script>
 </body>
 </html>
