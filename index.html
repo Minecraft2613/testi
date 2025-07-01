@@ -3,202 +3,189 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>MineBank</title>
+    <title>Gemini Bank</title>
     <link rel="stylesheet" href="style.css">
-    <link href="https://fonts.googleapis.com/css2?family=Roboto:wght@300;400;500;700&display=swap" rel="stylesheet">
-    <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
 </head>
 <body>
-
-    <!-- ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~ -->
-    <!-- ~~~~~~~~ AUTH CONTAINER ~~~~~~~~~~ -->
-    <!-- ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~ -->
-    <div id="auth-container" class="auth-container">
-        <!-- LOGIN VIEW -->
-        <div id="login-view" class="auth-form">
-            <h2>🏦 MineBank Login</h2>
-            <div class="input-group">
-                <label for="login-identifier">Minecraft Username / Bank ID</label>
-                <input type="text" id="login-identifier" placeholder="Enter username or BANK...">
-            </div>
-            <div id="login-edition-selector" class="input-group hidden">
-                <label>Minecraft Edition</label>
-                <div class="radio-group">
-                    <input type="radio" id="login-java" name="login-edition" value="java" checked>
-                    <label for="login-java">Java</label>
-                    <input type="radio" id="login-bedrock" name="login-edition" value="bedrock">
-                    <label for="login-bedrock">Bedrock</label>
+    <div id="app">
+        <!-- Login Page -->
+        <div id="login-page" class="page active">
+            <div class="auth-container">
+                <h2>Login 🏦</h2>
+                <div class="input-group">
+                    <label for="login-id-type">Login with:</label>
+                    <select id="login-id-type">
+                        <option value="bank-id">Bank ID</option>
+                        <option value="minecraft-username">Minecraft Username</option>
+                    </select>
                 </div>
-            </div>
-            <div class="input-group">
-                <label for="login-password">Password</label>
-                <input type="password" id="login-password" placeholder="Enter your password">
-            </div>
-            <button id="login-btn" class="btn-primary">Login 🚀</button>
-            <p class="auth-switch">Don't have an account? <a href="#" id="show-signup">Create one</a></p>
-        </div>
-
-        <!-- SIGNUP VIEW -->
-        <div id="signup-view" class="auth-form hidden">
-            <h2>📝 Create Your MineBank Account</h2>
-            <div class="input-group">
-                <label for="signup-bank-name">Bank Name</label>
-                <input type="text" id="signup-bank-name" placeholder="e.g., Iron Bank of Minecraftia">
-            </div>
-            <div class="input-group">
-                <label for="signup-mc-name">Minecraft Username</label>
-                <div id="mc-username-inputs">
-                    <!-- JS will populate this based on edition -->
+                <div id="login-bank-id-group" class="input-group">
+                    <label for="login-bank-id">Bank ID</label>
+                    <input type="text" id="login-bank-id" placeholder="BANK006443">
                 </div>
-            </div>
-            <div class="input-group">
-                <label>Minecraft Edition</label>
-                <div class="radio-group">
-                    <input type="radio" id="signup-java" name="signup-edition" value="java" checked>
-                    <label for="signup-java">Java</label>
-                    <input type="radio" id="signup-bedrock" name="signup-edition" value="bedrock">
-                    <label for="signup-bedrock">Bedrock</label>
-                </div>
-            </div>
-            <div class="input-group">
-                <label for="signup-password">Password</label>
-                <input type="password" id="signup-password" placeholder="Choose a secure password">
-            </div>
-            <div id="generated-bank-id-container" class="input-group hidden">
-                <label>Your New Bank ID</label>
-                <div class="generated-id-wrapper">
-                    <input type="text" id="generated-bank-id" readonly>
-                    <button id="copy-bank-id-btn">📋</button>
-                </div>
-            </div>
-            <button id="signup-btn" class="btn-primary">Create Account ✨</button>
-            <p class="auth-switch">Already have an account? <a href="#" id="show-login">Login</a></p>
-        </div>
-    </div>
-
-
-    <!-- ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~ -->
-    <!-- ~~~~~~~~ APP CONTAINER ~~~~~~~~~~~ -->
-    <!-- ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~ -->
-    <div id="app-container" class="app-container hidden">
-        <!-- SIDEBAR / NAV -->
-        <nav id="sidebar" class="sidebar">
-            <div class="sidebar-header">
-                <h3>Menu</h3>
-            </div>
-            <ul class="sidebar-links">
-                <li><a href="#" id="nav-home" class="nav-link active"><span class="emoji">🏠</span> Home</a></li>
-                <li><a href="#" id="nav-settings" class="nav-link"><span class="emoji">⚙️</span> Account Settings</a></li>
-                <li><a href="#" id="nav-top-tax" class="nav-link"><span class="emoji">🏆</span> Top Tax Payers</a></li>
-                <li><a href="#" id="nav-top-adv-tax" class="nav-link"><span class="emoji">🥇</span> Top Advance Payers</a></li>
-                <li><a href="#" id="nav-contact" class="nav-link"><span class="emoji">📞</span> Contact Us</a></li>
-                <li><a href="#" id="nav-theme" class="nav-link"><span class="emoji">🎨</span> Theme</a></li>
-                <li><a href="#" id="logout-btn" class="nav-link"><span class="emoji">🚪</span> Logout</a></li>
-            </ul>
-        </nav>
-
-        <!-- MAIN CONTENT -->
-        <main id="main-content" class="main-content">
-            <!-- HEADER -->
-            <header class="header">
-                <div class="header-left">
-                    <button id="menu-toggle-btn">☰</button>
-                    <div class="main-nav-buttons">
-                        <button class="nav-btn active" data-page="bank-status">🏦 Bank Status</button>
-                        <button class="nav-btn" data-page="view-tax">💸 View Tax</button>
-                        <button class="nav-btn" data-page="apply-loan">💰 Apply for Loan</button>
+                <div id="login-minecraft-group" class="input-group" style="display: none;">
+                    <label for="login-minecraft-edition">Minecraft Edition</label>
+                    <select id="login-minecraft-edition">
+                        <option value="java">Java</option>
+                        <option value="bedrock">Bedrock</option>
+                    </select>
+                    <div id="login-minecraft-username-group" class="input-group">
+                        <label for="login-minecraft-username">Minecraft Username</label>
+                        <input type="text" id="login-minecraft-username" placeholder="Enter your Minecraft name">
+                    </div>
+                     <div id="login-bedrock-username-group" class="input-group" style="display: none;">
+                        <label for="login-bedrock-username">Minecraft Username</label>
+                        <div class="bedrock-input">
+                            <span class="bedrock-prefix">.</span>
+                            <input type="text" id="login-bedrock-username-input" placeholder="Enter your Minecraft name">
+                        </div>
                     </div>
                 </div>
-                <div class="header-right">
-                    <span id="username-display"></span>
-                    <div id="profile-pic" class="profile-pic"></div>
+                <div class="input-group">
+                    <label for="login-password">Password</label>
+                    <input type="password" id="login-password" placeholder="Enter your password">
                 </div>
-            </header>
+                <button id="login-btn">Login</button>
+                <p>Don't have an account? <a href="#" id="show-register">Create one</a></p>
+            </div>
+        </div>
 
-            <!-- ~~~~~~~ PAGES ~~~~~~~ -->
-            <div id="page-container" class="page-container">
-
-                <!-- BANK STATUS PAGE -->
-                <div id="bank-status-page" class="page active">
-                    <h2>🏦 Bank Status</h2>
-                    <div class="card-container">
-                        <div class="card">
-                            <h4>Bank Name</h4>
-                            <p id="status-bank-name">---</p>
-                        </div>
-                        <div class="card">
-                            <h4>Bank Balance</h4>
-                            <p id="status-bank-balance" class="balance">$ 1,250.75</p>
-                        </div>
-                        <div class="card">
-                            <h4>Account ID</h4>
-                            <p id="status-bank-id">---</p>
-                        </div>
+        <!-- Registration Page -->
+        <div id="register-page" class="page">
+            <div class="auth-container">
+                <h2>Create Account 📝</h2>
+                <div class="input-group">
+                    <label for="register-bank-name">Bank Name</label>
+                    <input type="text" id="register-bank-name" placeholder="Enter your bank name">
+                </div>
+                <div class="input-group">
+                    <label for="register-minecraft-edition">Minecraft Edition</label>
+                    <select id="register-minecraft-edition">
+                        <option value="java">Java</option>
+                        <option value="bedrock">Bedrock</option>
+                    </select>
+                </div>
+                <div id="register-java-username-group" class="input-group">
+                    <label for="register-java-username">Minecraft Username (Java)</label>
+                    <input type="text" id="register-java-username" placeholder="Enter your Java username">
+                </div>
+                <div id="register-bedrock-username-group" class="input-group" style="display: none;">
+                    <label for="register-bedrock-username">Minecraft Username (Bedrock)</label>
+                    <div class="bedrock-input">
+                        <span class="bedrock-prefix">.</span>
+                        <input type="text" id="register-bedrock-username-input" placeholder="Enter your Bedrock username">
                     </div>
-                    <h3>📄 Transactions</h3>
+                </div>
+                <div class="input-group">
+                    <label for="register-password">Password</label>
+                    <input type="password" id="register-password" placeholder="Create a password">
+                </div>
+                <div class="input-group">
+                    <label>Generated Bank ID</label>
+                    <div class="generated-id-container">
+                        <input type="text" id="generated-bank-id" readonly>
+                        <button id="copy-bank-id">Copy</button>
+                    </div>
+                </div>
+                <button id="register-btn">Create Account</button>
+                <p>Already have an account? <a href="#" id="show-login">Login</a></p>
+            </div>
+        </div>
+
+        <!-- Main App -->
+        <div id="main-app" class="page">
+            <div class="sidebar">
+                <div class="sidebar-header">
+                    <h3>Menu</h3>
+                    <button id="close-sidebar">✖</button>
+                </div>
+                <ul>
+                    <li><a href="#" class="nav-link" data-page="bank-status">🏦 Bank Status</a></li>
+                    <li><a href="#" class="nav-link" data-page="view-tax">📊 View Tax</a></li>
+                    <li><a href="#" class="nav-link" data-page="apply-loan">💰 Apply Loan</a></li>
+                    <li><a href="#" class="nav-link" data-page="account-settings">⚙️ Account Settings</a></li>
+                    <li><a href="#" class="nav-link" data-page="top-tax-payers">🏆 Top 3 Tax Payers</a></li>
+                    <li><a href="#" class="nav-link" data-page="top-adv-tax-payers">🥇 Top 3 Advance Tax Payers</a></li>
+                    <li><a href="#" class="nav-link" data-page="contact-us">📞 Contact Us</a></li>
+                    <li><a href="#" class="nav-link" data-page="theme-settings">🎨 Theme Settings</a></li>
+                    <li><a href="#" id="logout-btn">🚪 Logout</a></li>
+                </ul>
+            </div>
+
+            <div class="main-content">
+                <header>
+                    <button id="open-sidebar">☰</button>
+                    <div class="profile-pic">
+                        <span id="profile-initial"></span>
+                    </div>
+                </header>
+
+                <div id="bank-status-page" class="main-page active">
+                    <h2>Bank Status</h2>
+                    <div class="status-card">
+                        <h3>Bank Name: <span id="status-bank-name"></span></h3>
+                        <p>Bank Balance: <span id="status-bank-balance"></span></p>
+                        <p>Other Info: ...</p>
+                    </div>
                     <div class="transaction-buttons">
-                        <button class="btn-secondary">🛒 Shop Transactions</button>
-                        <button class="btn-secondary">⛏️ Job Transactions</button>
-                        <button class="btn-secondary">🤝 Player Transactions</button>
+                        <button class="view-btn">Shop Transaction</button>
+                        <button class="view-btn">Job Transaction</button>
+                        <button class="view-btn">Player to Player Transaction</button>
                     </div>
                 </div>
 
-                <!-- VIEW TAX PAGE -->
-                <div id="view-tax-page" class="page">
-                    <h2>💸 View Tax</h2>
-                     <div class="tax-main-card">
-                        <div class="tax-header">
-                            <div id="tax-profile-pic" class="tax-profile-pic"><span></span></div>
-                            <div class="tax-user-info">
-                                <h3 id="tax-bank-name">---</h3>
-                                <p id="tax-mc-name">---</p>
-                            </div>
+                <div id="view-tax-page" class="main-page">
+                    <h2>View Tax</h2>
+                     <div class="tax-info-header">
+                        <div class="tax-profile-pic" style="background-image: url('https://www.minecraft.net/etc.clientlibs/minecraft/clientlibs/main/resources/img/minecraft-creeper-face.jpg');">
+                            <span id="tax-profile-initial"></span>
                         </div>
-                        <div class="tax-details-grid">
-                            <div><p>Selling Tax</p><span id="tax-selling">$ 12.50</span></div>
-                            <div><p>Buying Tax</p><span id="tax-buying">$ 25.00</span></div>
-                            <div><p>Total Tax Due</p><span id="tax-total" class="total-due">$ 37.50</span></div>
-                            <div><p>Tax Paid (Cycle)</p><span id="tax-paid">$ 0.00</span></div>
+                        <div>
+                            <p>Bank Name: <span id="tax-bank-name"></span></p>
+                            <p>Minecraft Name: <span id="tax-minecraft-name"></span></p>
                         </div>
-                        <div class="tax-actions">
-                            <button id="pay-tax-btn" class="btn-primary">Pay Tax Now</button>
-                            <button id="exit-tax-btn" class="btn-secondary">Exit</button>
-                        </div>
-                        <div class="tax-history">
-                            <h4>📊 Tax Charge History (Last 7 Days)</h4>
-                            <canvas id="tax-chart"></canvas>
-                            <h4>📜 Recent Payments (Last 5)</h4>
-                            <ul id="tax-history-list">
-                                <li>No recent payments.</li>
-                            </ul>
-                            <a href="#" class="full-history-link">View Full History</a>
-                        </div>
+                    </div>
+                    <div class="tax-details">
+                        <p>Total Tax: <span id="total-tax"></span></p>
+                        <p>Selling Tax: <span id="selling-tax"></span></p>
+                        <p>Buying Tax: <span id="buying-tax"></span></p>
+                        <p>Tax Paid: <span id="tax-paid"></span></p>
+                    </div>
+                    <div class="tax-actions">
+                        <button id="pay-tax-btn">Pay Tax</button>
+                        <button id="adv-tax-btn">Advance Tax Pay</button>
+                        <button id="exit-tax-btn">Exit</button>
+                    </div>
+                    <div class="tax-history">
+                        <h3>Payment History (Last 5)</h3>
+                        <ul id="tax-history-list"></ul>
+                        <a href="#" id="full-history-link">Full History</a>
+                    </div>
+                    <div class="tax-chart">
+                        <h3>Weekly Tax Chart</h3>
+                        <canvas id="tax-chart-canvas"></canvas>
                     </div>
                 </div>
 
-                <!-- APPLY LOAN PAGE -->
-                <div id="apply-loan-page" class="page">
-                    <h2>💰 Apply for a Loan</h2>
-                    <form id="loan-form" class="loan-form">
+                <div id="apply-loan-page" class="main-page">
+                    <h2>Apply for a Loan</h2>
+                    <div class="loan-form">
                         <div class="input-group">
-                            <label for="loan-type">Select Loan Type</label>
+                            <label for="loan-type">Loan Type</label>
                             <select id="loan-type">
                                 <option value="personal">Personal Loan</option>
                                 <option value="home">Home Loan</option>
                                 <option value="business">Business Loan</option>
-                                <option value="home_startup">Home Startup Loan</option>
-                                <option value="business_startup">Business Startup Loan</option>
+                                <option value="home-startup">Home Startup Loan</option>
+                                <option value="business-startup">Business Startup Loan</option>
                             </select>
                         </div>
                         <div class="input-group">
-                            <label for="loan-amount">Loan Amount ($)</label>
-                            <input type="number" id="loan-amount" placeholder="e.g., 1000">
+                            <label for="loan-amount">Amount</label>
+                            <input type="number" id="loan-amount" placeholder="Enter loan amount">
                         </div>
-                        <div id="loan-fields-container">
-                            <!-- JS will inject fields here -->
-                        </div>
-                         <div class="input-group">
-                            <label for="loan-duration">Loan Duration (Weeks)</label>
+                        <div class="input-group">
+                            <label for="loan-duration">Duration (in weeks)</label>
                             <select id="loan-duration">
                                 <option value="1">1 Week</option>
                                 <option value="2">2 Weeks</option>
@@ -207,20 +194,123 @@
                                 <option value="5">5 Weeks</option>
                             </select>
                         </div>
-                        <div class="loan-summary card">
-                            <h4>Loan Summary</h4>
-                            <p>Interest Rate: <span id="loan-interest-rate">--%</span></p>
-                            <p>Per Day Cost: <span id="loan-per-day">---</span></p>
-                            <p>Total Repayment: <span id="loan-total-repayment">---</span></p>
+                        <div id="loan-details-personal" class="loan-details-group">
+                             <div class="input-group">
+                                <label for="personal-loan-name">Your Name</label>
+                                <input type="text" id="personal-loan-name" placeholder="Enter your name">
+                            </div>
+                            <div class="input-group">
+                                <label for="personal-loan-job">Job</label>
+                                <input type="text" id="personal-loan-job" placeholder="Enter your job">
+                            </div>
+                            <div class="input-group">
+                                <label for="personal-loan-income">Per Day Income</label>
+                                <input type="number" id="personal-loan-income" placeholder="Enter your daily income">
+                            </div>
                         </div>
-                        <button type="submit" class="btn-primary">Apply for Loan</button>
-                    </form>
+                        <div id="loan-details-home" class="loan-details-group" style="display: none;">
+                            <div class="input-group">
+                                <label for="home-loan-pic">Upload Picture</label>
+                                <input type="file" id="home-loan-pic">
+                            </div>
+                            <div class="input-group">
+                                <label for="home-loan-coords1">End Coordinates 1</label>
+                                <input type="text" id="home-loan-coords1" placeholder="e.g., 100, 64, -200">
+                            </div>
+                            <div class="input-group">
+                                <label for="home-loan-coords2">End Coordinates 2</label>
+                                <input type="text" id="home-loan-coords2" placeholder="e.g., 200, 70, -100">
+                            </div>
+                        </div>
+                         <div id="loan-details-business" class="loan-details-group" style="display: none;">
+                            <div class="input-group">
+                                <label for="business-loan-pic">Upload Picture</label>
+                                <input type="file" id="business-loan-pic">
+                            </div>
+                            <div class="input-group">
+                                <label for="business-loan-coords1">End Coordinates 1</label>
+                                <input type="text" id="business-loan-coords1" placeholder="e.g., 100, 64, -200">
+                            </div>
+                            <div class="input-group">
+                                <label for="business-loan-coords2">End Coordinates 2</label>
+                                <input type="text" id="business-loan-coords2" placeholder="e.g., 200, 70, -100">
+                            </div>
+                        </div>
+                        <div id="loan-details-startup" class="loan-details-group" style="display: none;">
+                             <div class="input-group">
+                                <label for="startup-loan-job">Job</label>
+                                <input type="text" id="startup-loan-job" placeholder="Enter your job">
+                            </div>
+                            <div class="input-group">
+                                <label for="startup-loan-income">Per Day Income</label>
+                                <input type="number" id="startup-loan-income" placeholder="Enter your daily income">
+                            </div>
+                        </div>
+                        <div class="loan-summary">
+                            <p>Interest Rate: <span id="loan-interest-rate"></span>%</p>
+                            <p>Per Day Cost: <span id="loan-per-day-cost"></span></p>
+                        </div>
+                        <button id="apply-loan-btn">Apply Now</button>
+                    </div>
+                </div>
+                 <div id="account-settings-page" class="main-page">
+                    <h2>Account Settings</h2>
+                    <div class="settings-form">
+                        <div class="input-group">
+                            <label for="settings-bank-name">Bank Name</label>
+                            <input type="text" id="settings-bank-name">
+                        </div>
+                        <div class="input-group">
+                            <label for="settings-minecraft-username">Minecraft Username</label>
+                            <input type="text" id="settings-minecraft-username" readonly>
+                        </div>
+                        <div class="input-group">
+                            <label for="settings-social-info">Social Info</label>
+                            <input type="text" id="settings-social-info" placeholder="e.g., Discord, Twitter">
+                        </div>
+                        <button id="save-settings-btn">Save Changes</button>
+                        <hr>
+                        <h3>Change Password</h3>
+                        <div class="input-group">
+                            <label for="current-password">Current Password</label>
+                            <input type="password" id="current-password">
+                        </div>
+                        <div class="input-group">
+                            <label for="new-password">New Password</label>
+                            <input type="password" id="new-password">
+                        </div>
+                        <button id="change-password-btn">Change Password</button>
+                    </div>
+                </div>
+                 <div id="top-tax-payers-page" class="main-page">
+                    <h2>🏆 Top 3 Tax Payers</h2>
+                    <ol id="top-tax-payers-list"></ol>
                 </div>
 
-            </div>
-        </main>
-    </div>
+                <div id="top-adv-tax-payers-page" class="main-page">
+                    <h2>🥇 Top 3 Advance Tax Payers</h2>
+                    <ol id="top-adv-tax-payers-list"></ol>
+                </div>
 
+                <div id="contact-us-page" class="main-page">
+                    <h2>📞 Contact Us</h2>
+                    <p>For support, please contact us at <a href="mailto:support@geminibank.com">support@geminibank.com</a>.</p>
+                </div>
+
+                <div id="theme-settings-page" class="main-page">
+                    <h2>🎨 Theme Settings</h2>
+                    <div class="theme-options">
+                        <label for="theme-select">Select Theme:</label>
+                        <select id="theme-select">
+                            <option value="dark">Dark</option>
+                            <option value="light">Light</option>
+                        </select>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+    <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
     <script src="script.js"></script>
 </body>
 </html>

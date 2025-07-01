@@ -1,308 +1,46 @@
 :root {
-    --primary-color: #4a90e2;
-    --primary-hover: #357abd;
-    --secondary-color: #50e3c2;
-    --background-color: #1e2a38;
-    --surface-color: #2a3b4c;
-    --text-color: #e0e0e0;
-    --text-muted-color: #a0a0a0;
-    --border-color: #3a4b5c;
-    --danger-color: #e94b3c;
-    --success-color: #7ed321;
-    --font-family: 'Roboto', sans-serif;
+    --primary-color: #1a237e;
+    --secondary-color: #283593;
+    --accent-color: #5c6bc0;
+    --text-color: #e8eaf6;
+    --background-color: #0f172a;
+    --container-bg: #1e293b;
+    --input-bg: #334155;
+    --btn-bg: #3f51b5;
+    --btn-hover-bg: #3949ab;
+    --border-color: #475569;
+    --success-color: #4caf50;
+    --error-color: #f44336;
 }
 
-* {
-    box-sizing: border-box;
-    margin: 0;
-    padding: 0;
+[data-theme="light"] {
+    --primary-color: #e8eaf6;
+    --secondary-color: #c5cae9;
+    --accent-color: #7986cb;
+    --text-color: #1a237e;
+    --background-color: #f1f5f9;
+    --container-bg: #ffffff;
+    --input-bg: #e2e8f0;
+    --btn-bg: #3f51b5;
+    --btn-hover-bg: #303f9f;
+    --border-color: #cbd5e1;
 }
 
 body {
-    font-family: var(--font-family);
+    font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
     background-color: var(--background-color);
     color: var(--text-color);
+    margin: 0;
     display: flex;
     justify-content: center;
     align-items: center;
     min-height: 100vh;
-    overflow: hidden; /* Hide scrollbars from body */
+    overflow-x: hidden;
 }
 
-.hidden {
-    display: none !important;
-}
-
-/* ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~ */
-/* ~~~~~~~~ AUTH CONTAINER ~~~~~~~~~~ */
-/* ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~ */
-
-.auth-container {
+#app {
     width: 100%;
-    max-width: 400px;
-    padding: 2rem;
-}
-
-.auth-form {
-    background-color: var(--surface-color);
-    padding: 2rem;
-    border-radius: 8px;
-    box-shadow: 0 10px 25px rgba(0,0,0,0.3);
-}
-
-.auth-form h2 {
-    text-align: center;
-    margin-bottom: 1.5rem;
-    color: var(--primary-color);
-}
-
-.input-group {
-    margin-bottom: 1.25rem;
-}
-
-.input-group label {
-    display: block;
-    margin-bottom: 0.5rem;
-    font-weight: 500;
-    color: var(--text-muted-color);
-}
-
-.input-group input,
-.input-group select {
-    width: 100%;
-    padding: 0.75rem;
-    background-color: var(--background-color);
-    border: 1px solid var(--border-color);
-    border-radius: 4px;
-    color: var(--text-color);
-    font-size: 1rem;
-}
-
-.input-group input:focus {
-    outline: none;
-    border-color: var(--primary-color);
-    box-shadow: 0 0 0 2px rgba(74, 144, 226, 0.5);
-}
-
-.radio-group {
-    display: flex;
-    gap: 1rem;
-    align-items: center;
-}
-
-.radio-group input[type="radio"] {
-    accent-color: var(--primary-color);
-}
-
-.btn-primary {
-    width: 100%;
-    padding: 0.85rem;
-    background-color: var(--primary-color);
-    border: none;
-    border-radius: 4px;
-    color: white;
-    font-size: 1.1rem;
-    font-weight: 700;
-    cursor: pointer;
-    transition: background-color 0.3s ease;
-}
-
-.btn-primary:hover {
-    background-color: var(--primary-hover);
-}
-
-.auth-switch {
-    text-align: center;
-    margin-top: 1.5rem;
-}
-
-.auth-switch a {
-    color: var(--primary-color);
-    text-decoration: none;
-    font-weight: 500;
-}
-
-.auth-switch a:hover {
-    text-decoration: underline;
-}
-
-#mc-username-inputs {
-    display: flex;
-    gap: 0.5rem;
-}
-
-#mc-username-inputs .bedrock-prefix {
-    width: 20%;
-    text-align: center;
-}
-
-#mc-username-inputs .bedrock-main {
-    width: 80%;
-}
-
-.generated-id-wrapper {
-    display: flex;
-    align-items: center;
-    gap: 0.5rem;
-}
-
-#generated-bank-id {
-    background-color: #e0e0e0;
-    color: #111;
-    font-weight: bold;
-}
-
-#copy-bank-id-btn {
-    padding: 0.5rem;
-    background: var(--border-color);
-    border: none;
-    color: var(--text-color);
-    cursor: pointer;
-    border-radius: 4px;
-}
-
-/* ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~ */
-/* ~~~~~~~~ APP CONTAINER ~~~~~~~~~~~ */
-/* ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~ */
-
-.app-container {
-    display: flex;
-    width: 100vw;
-    height: 100vh;
-}
-
-/* ~~~~~~~ SIDEBAR ~~~~~~~ */
-.sidebar {
-    width: 250px;
-    background-color: var(--surface-color);
-    padding: 1.5rem 0;
-    display: flex;
-    flex-direction: column;
-    transition: transform 0.3s ease-in-out;
-    transform: translateX(-100%);
-    position: fixed; /* Changed to fixed */
     height: 100%;
-    z-index: 1000;
-}
-
-.sidebar.open {
-    transform: translateX(0);
-}
-
-.sidebar-header {
-    padding: 0 1.5rem 1rem;
-    border-bottom: 1px solid var(--border-color);
-    margin-bottom: 1rem;
-}
-
-.sidebar-links {
-    list-style: none;
-}
-
-.sidebar-links li a {
-    display: flex;
-    align-items: center;
-    gap: 1rem;
-    padding: 1rem 1.5rem;
-    color: var(--text-muted-color);
-    text-decoration: none;
-    font-weight: 500;
-    transition: background-color 0.2s, color 0.2s;
-}
-
-.sidebar-links li a:hover {
-    background-color: var(--background-color);
-    color: var(--text-color);
-}
-
-.sidebar-links li a.active {
-    background-color: var(--primary-color);
-    color: white;
-}
-
-.sidebar-links .emoji {
-    font-size: 1.2rem;
-}
-
-/* ~~~~~~~ MAIN CONTENT ~~~~~~~ */
-.main-content {
-    flex-grow: 1;
-    display: flex;
-    flex-direction: column;
-    height: 100vh;
-    padding-left: 0; /* Start with no padding */
-    transition: padding-left 0.3s ease-in-out;
-}
-
-.main-content.sidebar-open {
-    padding-left: 250px; /* Add padding when sidebar is open */
-}
-
-/* ~~~~~~~ HEADER ~~~~~~~ */
-.header {
-    display: flex;
-    justify-content: space-between;
-    align-items: center;
-    padding: 1rem 1.5rem;
-    background-color: var(--surface-color);
-    border-bottom: 1px solid var(--border-color);
-}
-
-#menu-toggle-btn {
-    background: none;
-    border: none;
-    color: var(--text-color);
-    font-size: 1.5rem;
-    cursor: pointer;
-}
-
-.header-left {
-    display: flex;
-    align-items: center;
-    gap: 1.5rem;
-}
-
-.main-nav-buttons .nav-btn {
-    background: none;
-    border: 2px solid transparent;
-    color: var(--text-muted-color);
-    padding: 0.5rem 1rem;
-    border-radius: 20px;
-    cursor: pointer;
-    font-weight: 500;
-    transition: all 0.3s ease;
-}
-
-.main-nav-buttons .nav-btn.active {
-    color: var(--primary-color);
-    border-color: var(--primary-color);
-}
-
-.header-right {
-    display: flex;
-    align-items: center;
-    gap: 1rem;
-}
-
-.profile-pic {
-    width: 40px;
-    height: 40px;
-    border-radius: 50%;
-    background-color: var(--primary-color);
-    display: flex;
-    justify-content: center;
-    align-items: center;
-    font-weight: bold;
-    font-size: 1.2rem;
-    color: white;
-    background-image: url('https://www.transparenttextures.com/patterns/cubes.png');
-}
-
-/* ~~~~~~~ PAGE CONTAINER ~~~~~~~ */
-.page-container {
-    flex-grow: 1;
-    padding: 2rem;
-    overflow-y: auto;
 }
 
 .page {
@@ -313,155 +51,254 @@ body {
     display: block;
 }
 
-.card-container {
-    display: grid;
-    grid-template-columns: repeat(auto-fit, minmax(250px, 1fr));
-    gap: 1.5rem;
-    margin-bottom: 2rem;
+.auth-container {
+    background-color: var(--container-bg);
+    padding: 2rem;
+    border-radius: 10px;
+    box-shadow: 0 4px 20px rgba(0, 0, 0, 0.3);
+    max-width: 400px;
+    margin: 2rem auto;
+    border: 1px solid var(--border-color);
 }
 
-.card {
-    background-color: var(--surface-color);
-    padding: 1.5rem;
-    border-radius: 8px;
-    border-left: 4px solid var(--primary-color);
+.auth-container h2 {
+    text-align: center;
+    margin-bottom: 1.5rem;
+    color: var(--accent-color);
 }
 
-.card h4 {
-    color: var(--text-muted-color);
+.input-group {
+    margin-bottom: 1rem;
+}
+
+.input-group label {
+    display: block;
     margin-bottom: 0.5rem;
 }
 
-.card p {
-    font-size: 1.5rem;
-    font-weight: 500;
-}
-
-.card .balance {
-    color: var(--success-color);
-}
-
-.transaction-buttons {
-    display: flex;
-    gap: 1rem;
-    margin-top: 1rem;
-}
-
-.btn-secondary {
-    padding: 0.75rem 1.5rem;
-    background-color: var(--border-color);
-    border: none;
-    border-radius: 4px;
+.input-group input,
+.input-group select {
+    width: 100%;
+    padding: 0.75rem;
+    border: 1px solid var(--border-color);
+    border-radius: 5px;
+    background-color: var(--input-bg);
     color: var(--text-color);
+}
+
+.bedrock-input {
+    display: flex;
+}
+
+.bedrock-prefix {
+    padding: 0.75rem;
+    background-color: var(--secondary-color);
+    border: 1px solid var(--border-color);
+    border-right: none;
+    border-radius: 5px 0 0 5px;
+}
+
+.bedrock-input input {
+    border-radius: 0 5px 5px 0;
+}
+
+.generated-id-container {
+    display: flex;
+}
+
+.generated-id-container input {
+    flex-grow: 1;
+    border-radius: 5px 0 0 5px;
+    background-color: #fff;
+    color: #000;
+    font-weight: bold;
+}
+
+.generated-id-container button {
+    border-radius: 0 5px 5px 0;
+}
+
+button {
+    width: 100%;
+    padding: 0.85rem;
+    border: none;
+    border-radius: 5px;
+    background-color: var(--btn-bg);
+    color: white;
+    font-size: 1rem;
     cursor: pointer;
     transition: background-color 0.3s ease;
 }
 
-.btn-secondary:hover {
-    background-color: #4a5b6c;
+button:hover {
+    background-color: var(--btn-hover-bg);
 }
 
-/* ~~~~~~~ TAX PAGE ~~~~~~~ */
-.tax-main-card {
-    background: var(--surface-color);
-    border-radius: 8px;
-    padding: 2rem;
+.auth-container p {
+    text-align: center;
+    margin-top: 1rem;
 }
 
-.tax-header {
-    display: flex;
-    align-items: center;
-    gap: 1.5rem;
-    padding-bottom: 1.5rem;
-    border-bottom: 1px solid var(--border-color);
-}
-
-.tax-profile-pic {
-    width: 80px;
-    height: 80px;
-    border-radius: 50%;
-    background-color: var(--primary-color);
-    display: flex;
-    justify-content: center;
-    align-items: center;
-    font-size: 2.5rem;
-    font-weight: bold;
-    color: white;
-    background-image: url('https://i.imgur.com/s3RGs3C.png'); /* Minecraft grass block style */
-    background-size: cover;
-    border: 3px solid var(--border-color);
-}
-
-.tax-details-grid {
-    display: grid;
-    grid-template-columns: 1fr 1fr;
-    gap: 1.5rem;
-    margin: 1.5rem 0;
-}
-
-.tax-details-grid > div {
-    background: var(--background-color);
-    padding: 1rem;
-    border-radius: 6px;
-}
-
-.tax-details-grid p {
-    color: var(--text-muted-color);
-    margin-bottom: 0.25rem;
-}
-
-.tax-details-grid span {
-    font-size: 1.5rem;
-    font-weight: 500;
-}
-
-.tax-details-grid .total-due {
-    color: var(--danger-color);
-}
-
-.tax-actions {
-    display: flex;
-    gap: 1rem;
-    margin-bottom: 2rem;
-}
-
-.tax-history h4 {
-    margin-bottom: 1rem;
-}
-
-#tax-chart {
-    margin-bottom: 2rem;
-}
-
-#tax-history-list {
-    list-style: none;
-    margin-bottom: 1rem;
-}
-
-#tax-history-list li {
-    background: var(--background-color);
-    padding: 0.75rem;
-    border-radius: 4px;
-    margin-bottom: 0.5rem;
-}
-
-.full-history-link {
-    color: var(--primary-color);
+.auth-container a {
+    color: var(--accent-color);
     text-decoration: none;
 }
 
-/* ~~~~~~~ LOAN PAGE ~~~~~~~ */
-.loan-form {
-    max-width: 600px;
+/* Main App Layout */
+#main-app {
+    display: flex;
+    height: 100vh;
+}
+
+.sidebar {
+    width: 250px;
+    background-color: var(--container-bg);
+    padding: 1rem;
+    transform: translateX(-100%);
+    transition: transform 0.3s ease-in-out;
+    position: fixed;
+    height: 100%;
+    z-index: 1000;
+    left: 0;
+    top: 0;
+}
+
+.sidebar.open {
+    transform: translateX(0);
+}
+
+.sidebar-header {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    margin-bottom: 2rem;
+}
+
+.sidebar ul {
+    list-style: none;
+    padding: 0;
+}
+
+.sidebar ul li a {
+    display: block;
+    padding: 0.75rem 1rem;
+    color: var(--text-color);
+    text-decoration: none;
+    border-radius: 5px;
+    margin-bottom: 0.5rem;
+}
+
+.sidebar ul li a:hover {
+    background-color: var(--secondary-color);
+}
+
+.main-content {
+    flex-grow: 1;
+    padding: 1rem;
+    margin-left: 0;
+    transition: margin-left 0.3s ease-in-out;
+}
+
+.main-content.shifted {
+    margin-left: 250px;
+}
+
+header {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    margin-bottom: 2rem;
+}
+
+.profile-pic {
+    width: 40px;
+    height: 40px;
+    background-color: var(--accent-color);
+    color: white;
+    display: flex;
+    justify-content: center;
+    align-items: center;
+    border-radius: 50%;
+    font-size: 1.2rem;
+    font-weight: bold;
+}
+
+.main-page {
+    display: none;
+}
+
+.main-page.active {
+    display: block;
+}
+
+.status-card, .tax-info-header, .tax-details, .tax-actions, .tax-history, .tax-chart, .loan-form, .settings-form {
+    background-color: var(--container-bg);
+    padding: 1.5rem;
+    border-radius: 10px;
+    margin-bottom: 1rem;
+}
+
+.transaction-buttons button {
+    width: auto;
+    margin-right: 1rem;
+    background-color: var(--secondary-color);
+}
+
+.tax-info-header {
+    display: flex;
+    align-items: center;
+    gap: 1rem;
+}
+
+.tax-profile-pic {
+    width: 60px;
+    height: 60px;
+    border-radius: 50%;
+    background-size: cover;
+    background-position: center;
+    display: flex;
+    justify-content: center;
+    align-items: center;
+    font-size: 2rem;
+    color: white;
+    text-shadow: 2px 2px 4px rgba(0,0,0,0.7);
+}
+
+.tax-history ul {
+    list-style: none;
+    padding: 0;
+}
+
+.tax-history li {
+    padding: 0.5rem;
+    border-bottom: 1px solid var(--border-color);
 }
 
 .loan-summary {
-    margin-top: 1.5rem;
-    margin-bottom: 1.5rem;
-    border-color: var(--secondary-color);
+    margin-top: 1rem;
+    padding: 1rem;
+    background-color: var(--background-color);
+    border-radius: 5px;
 }
 
-.loan-summary span {
-    font-size: 1.2rem;
+#close-sidebar, #open-sidebar {
+    background: none;
+    border: none;
     color: var(--text-color);
+    font-size: 1.5rem;
+    cursor: pointer;
+}
+
+@media (max-width: 768px) {
+    .main-content {
+        margin-left: 0 !important;
+    }
+
+    .sidebar {
+        transform: translateX(-100%);
+    }
+
+    .sidebar.open {
+        transform: translateX(0);
+    }
 }
