@@ -1062,6 +1062,9 @@ const handleAdvanceTax = async (amount) => {
         };
 
         ReactDOM.createRoot(document.getElementById('root')).render(<App />);
+        const taxDue = getTaxDue(currentUserAccount.taxData, currentUserAccount.accountId);
+document.getElementById("taxDueAmount").innerText = `$${taxDue.toFixed(2)}`;
+
     </script>
 </body>
 </html>
