@@ -1,1 +1,54 @@
-[]
+[
+  {
+    "bankName": "Ansh",
+    "accountId": "ansh",
+    "email": "Ansh@test",
+    "password": "26",
+    "edition": "java",
+    "bankId": "BANK512730",
+    "balance": 1000,
+    "taxData": {
+      "totalTax": 350,
+      "taxPaid": 0,
+      "advanceTaxPaid": 0,
+      "dailyTaxCharges": [
+        {
+          "date": "2025-06-26T13:19:02.724Z",
+          "amount": 50
+        },
+        {
+          "date": "2025-06-27T13:19:02.724Z",
+          "amount": 50
+        },
+        {
+          "date": "2025-06-28T13:19:02.724Z",
+          "amount": 50
+        },
+        {
+          "date": "2025-06-29T13:19:02.724Z",
+          "amount": 50
+        },
+        {
+          "date": "2025-06-30T13:19:02.724Z",
+          "amount": 50
+        },
+        {
+          "date": "2025-07-01T13:19:02.724Z",
+          "amount": 50
+        },
+        {
+          "date": "2025-07-02T13:19:02.724Z",
+          "amount": 50
+        }
+      ]
+    },
+    "transactions": [
+      {
+        "type": "credit",
+        "amount": 1000,
+        "date": "2025-07-02T13:19:02.724Z",
+        "description": "Initial deposit"
+      }
+    ]
+  }
+]
