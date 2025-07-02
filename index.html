@@ -40,9 +40,7 @@
 
         // --- CONFIGURATION (Cloudflare Worker URLs) ---
         const API_ENDPOINTS = {
-            ACCOUNTS: 'https://bank-data.1987sakshamsingh.workers.dev',
-            TAX: 'https://bank-data.1987sakshamsingh.workers.dev',
-            CONTACT: 'https://bank-data.1987sakshamsingh.workers.dev',
+            BASE: 'https://bank-data.1987sakshamsingh.workers.dev',
         };
 
         // --- UTILITY & HELPER FUNCTIONS ---
@@ -722,7 +720,7 @@
 
             const getAllAccounts = async () => {
                 try {
-                    const response = await fetch(`${API_ENDPOINTS.ACCOUNTS}/accounts`);
+                    const response = await fetch(`${API_ENDPOINTS.BASE}/accounts`);
                     if (!response.ok) throw new Error('Failed to fetch accounts');
                     return await response.json();
                 } catch (error) {
@@ -755,7 +753,7 @@
                         // and rely on the create-account endpoint for persistence.
                         accounts.push(initialAccount);
                         // In a real app, you'd call the worker to create this initial account
-                        // await fetch(`${API_ENDPOINTS.ACCOUNTS}/create-account`, { method: 'POST', body: JSON.stringify(initialAccount) });
+                        // await fetch(`${API_ENDPOINTS.BASE}/create-account`, { method: 'POST', body: JSON.stringify(initialAccount) });
                     }
                     // Simulate initial loading time
                     setTimeout(() => {
@@ -771,7 +769,7 @@
                 setLoginSuccess(false); 
 
                 try {
-                    const response = await fetch(`${API_ENDPOINTS.ACCOUNTS}/login`, {
+                    const response = await fetch(`${API_ENDPOINTS.BASE}/login`, {
                         method: 'POST',
                         headers: { 'Content-Type': 'application/json' },
                         body: JSON.stringify({ identifier, password })
@@ -800,7 +798,7 @@
 
             const handleCreateAccount = async (newData) => {
                 try {
-                    const response = await fetch(`${API_ENDPOINTS.ACCOUNTS}/create-account`, {
+                    const response = await fetch(`${API_ENDPOINTS.BASE}/create-account`, {
                         method: 'POST',
                         headers: { 'Content-Type': 'application/json' },
                         body: JSON.stringify(newData),
@@ -826,7 +824,7 @@
             
             const updateCurrentUser = async (updatedAccount) => {
                 try {
-                    const response = await fetch(`${API_ENDPOINTS.ACCOUNTS}/update-account`, {
+                    const response = await fetch(`${API_ENDPOINTS.BASE}/update-account`, {
                         method: 'POST',
                         headers: { 'Content-Type': 'application/json' },
                         body: JSON.stringify(updatedAccount),
@@ -861,89 +859,53 @@
                 showModal('Success', 'Password changed successfully!', 'success');
             };
 
-           const handlePayTax = async (amount) => {
-    if (currentUserAccount.balance < amount) {
-        showModal('Error', 'Insufficient balance.', 'error');
-        return;
-    }
-    try {
-        const response = await fetch(`${API_ENDPOINTS.TAX}/pay-tax`, {
-            method: 'POST',
-            headers: { 'Content-Type': 'application/json' },
-            body: JSON.stringify({
-                player: currentUserAccount.accountId, // ✅ Use accountId as player name
-                amount
-            })
-        });
-        if (response.ok) {
-            const data = await response.json();
-            const updatedAccount = {
-                ...currentUserAccount,
-                balance: currentUserAccount.balance - amount,
-                taxData: data.taxData,
-                transactions: [
-                    ...currentUserAccount.transactions,
-                    {
-                        type: 'debit',
-                        amount: -amount,
-                        date: new Date().toISOString(),
-                        description: 'Tax payment'
+            const handlePayTax = async (amount) => {
+                if (currentUserAccount.balance < amount) { showModal('Error', 'Insufficient balance.', 'error'); return; }
+                try {
+                    const response = await fetch(`${API_ENDPOINTS.BASE}/pay-tax`, {
+                        method: 'POST',
+                        headers: { 'Content-Type': 'application/json' },
+                        body: JSON.stringify({ bankId: currentUserAccount.bankId, amount: amount }),
+                    });
+                    if (response.ok) {
+                        const data = await response.json();
+                        // Assuming worker returns updated user data or just success
+                        // For simplicity, we'll refetch user data or update locally
+                        const updatedAccount = { ...currentUserAccount, balance: currentUserAccount.balance - amount, taxData: data.taxData, transactions: [...currentUserAccount.transactions, { type: 'debit', amount: -amount, date: new Date().toISOString(), description: 'Tax payment' }] };
+                        updateCurrentUser(updatedAccount);
+                        showModal('Success', `Paid $${amount.toFixed(2)} in tax.`, 'success');
+                    } else {
+                        const errorData = await response.json();
+                        showModal('Error', errorData.message || 'Failed to pay tax.', 'error');
                     }
-                ]
+                } catch (error) {
+                    console.error("Pay tax API error:", error);
+                    showModal('Error', 'Could not connect to the tax service.', 'error');
+                }
             };
-            updateCurrentUser(updatedAccount);
-            showModal('Success', `Paid $${amount.toFixed(2)} in tax.`, 'success');
-        } else {
-            const errorData = await response.json();
-            showModal('Error', errorData.message || 'Failed to pay tax.', 'error');
-        }
-    } catch (error) {
-        console.error("Pay tax API error:", error);
-        showModal('Error', 'Could not connect to the tax service.', 'error');
-    }
-};
 
-const handleAdvanceTax = async (amount) => {
-    if (currentUserAccount.balance < amount) {
-        showModal('Error', 'Insufficient balance.', 'error');
-        return;
-    }
-    try {
-        const response = await fetch(`${API_ENDPOINTS.TAX}/advance-tax`, {
-            method: 'POST',
-            headers: { 'Content-Type': 'application/json' },
-            body: JSON.stringify({
-                player: currentUserAccount.accountId, // ✅ use player instead of bankId
-                amount
-            })
-        });
-        if (response.ok) {
-            const data = await response.json();
-            const updatedAccount = {
-                ...currentUserAccount,
-                balance: currentUserAccount.balance - amount,
-                taxData: data.taxData,
-                transactions: [
-                    ...currentUserAccount.transactions,
-                    {
-                        type: 'debit',
-                        amount: -amount,
-                        date: new Date().toISOString(),
-                        description: 'Advance tax payment'
+            const handleAdvanceTax = async (amount) => {
+                if (currentUserAccount.balance < amount) { showModal('Error', 'Insufficient balance.', 'error'); return; }
+                try {
+                    const response = await fetch(`${API_ENDPOINTS.BASE}/advance-tax`, {
+                        method: 'POST',
+                        headers: { 'Content-Type': 'application/json' },
+                        body: JSON.stringify({ bankId: currentUserAccount.bankId, amount: amount }),
+                    });
+                    if (response.ok) {
+                        const data = await response.json();
+                        const updatedAccount = { ...currentUserAccount, balance: currentUserAccount.balance - amount, taxData: data.taxData, transactions: [...currentUserAccount.transactions, { type: 'debit', amount: -amount, date: new Date().toISOString(), description: 'Advance tax payment' }] };
+                        updateCurrentUser(updatedAccount);
+                        showModal('Success', `Paid $${amount.toFixed(2)} in advance tax.`, 'success');
+                    } else {
+                        const errorData = await response.json();
+                        showModal('Error', errorData.message || 'Failed to pay advance tax.', 'error');
                     }
-                ]
+                } catch (error) {
+                    console.error("Advance tax API error:", error);
+                    showModal('Error', 'Could not connect to the tax service.', 'error');
+                }
             };
-            updateCurrentUser(updatedAccount);
-            showModal('Success', `Paid $${amount.toFixed(2)} in advance tax.`, 'success');
-        } else {
-            const errorData = await response.json();
-            showModal('Error', errorData.message || 'Failed to pay advance tax.', 'error');
-        }
-    } catch (error) {
-        console.error("Advance tax API error:", error);
-        showModal('Error', 'Could not connect to the tax service.', 'error');
-    }
-};
 
             const handleApplyLoan = async ({ amount, duration, type, ...details }) => {
                 const jobIncome = currentUserAccount.jobPerDayIncome || 0;
