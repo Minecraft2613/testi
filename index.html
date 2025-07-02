@@ -861,18 +861,21 @@
                 showModal('Success', 'Password changed successfully!', 'success');
             };
 
-          const handlePayTax = async (amount) => {
+         const handlePayTax = async (amount) => {
     if (currentUserAccount.balance < amount) {
         showModal('Error', 'Insufficient balance.', 'error');
         return;
     }
+
+    // Use player key from taxData if available
+    const playerKey = Object.keys(currentUserAccount.taxData?.players || {})[0] || currentUserAccount.accountId;
 
     try {
         const response = await fetch(`${API_ENDPOINTS.TAX}/pay-tax`, {
             method: 'POST',
             headers: { 'Content-Type': 'application/json' },
             body: JSON.stringify({
-                player: currentUserAccount.accountId, // ✅ was bankId — now correct
+                player: playerKey,
                 amount
             }),
         });
@@ -894,7 +897,7 @@
                 ]
             };
             updateCurrentUser(updatedAccount);
-            showModal('Success', `Paid ${amount.toFixed(2)} in tax.`, 'success');
+            showModal('Success', `Paid $${amount.toFixed(2)} in tax.`, 'success');
         } else {
             const errorData = await response.json();
             showModal('Error', errorData.message || 'Failed to pay tax.', 'error');
@@ -904,6 +907,7 @@
         showModal('Error', 'Could not connect to the tax service.', 'error');
     }
 };
+
 
 const handleAdvanceTax = async (amount) => {
     if (currentUserAccount.balance < amount) {
