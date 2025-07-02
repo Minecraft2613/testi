@@ -861,20 +861,22 @@
                 showModal('Success', 'Password changed successfully!', 'success');
             };
 
-           const handlePayTax = async (amount) => {
+          const handlePayTax = async (amount) => {
     if (currentUserAccount.balance < amount) {
         showModal('Error', 'Insufficient balance.', 'error');
         return;
     }
+
     try {
         const response = await fetch(`${API_ENDPOINTS.TAX}/pay-tax`, {
             method: 'POST',
             headers: { 'Content-Type': 'application/json' },
             body: JSON.stringify({
-                player: currentUserAccount.accountId, // ✅ Use accountId as player name
+                player: currentUserAccount.accountId, // ✅ was bankId — now correct
                 amount
-            })
+            }),
         });
+
         if (response.ok) {
             const data = await response.json();
             const updatedAccount = {
@@ -908,15 +910,17 @@ const handleAdvanceTax = async (amount) => {
         showModal('Error', 'Insufficient balance.', 'error');
         return;
     }
+
     try {
         const response = await fetch(`${API_ENDPOINTS.TAX}/advance-tax`, {
             method: 'POST',
             headers: { 'Content-Type': 'application/json' },
             body: JSON.stringify({
-                player: currentUserAccount.accountId, // ✅ use player instead of bankId
+                player: currentUserAccount.accountId, // ✅ changed from bankId
                 amount
-            })
+            }),
         });
+
         if (response.ok) {
             const data = await response.json();
             const updatedAccount = {
@@ -944,6 +948,7 @@ const handleAdvanceTax = async (amount) => {
         showModal('Error', 'Could not connect to the tax service.', 'error');
     }
 };
+
 
             const handleApplyLoan = async ({ amount, duration, type, ...details }) => {
                 const jobIncome = currentUserAccount.jobPerDayIncome || 0;
