@@ -40,7 +40,9 @@
 
         // --- CONFIGURATION (Cloudflare Worker URLs) ---
         const API_ENDPOINTS = {
-            BASE: 'https://bank-data.1987sakshamsingh.workers.dev',
+            ACCOUNTS: 'https://bank-data.1987sakshamsingh.workers.dev',
+            TAX: 'https://tax-worker.1987sakshamsingh.workers.dev',
+            CONTACT: 'https://bank-data.1987sakshamsingh.workers.dev',
         };
 
         // --- UTILITY & HELPER FUNCTIONS ---
@@ -720,7 +722,7 @@
 
             const getAllAccounts = async () => {
                 try {
-                    const response = await fetch(`${API_ENDPOINTS.BASE}/accounts`);
+                    const response = await fetch(`${API_ENDPOINTS.CONTACT}/accounts`);
                     if (!response.ok) throw new Error('Failed to fetch accounts');
                     return await response.json();
                 } catch (error) {
@@ -753,7 +755,7 @@
                         // and rely on the create-account endpoint for persistence.
                         accounts.push(initialAccount);
                         // In a real app, you'd call the worker to create this initial account
-                        // await fetch(`${API_ENDPOINTS.BASE}/create-account`, { method: 'POST', body: JSON.stringify(initialAccount) });
+                        // await fetch(`${API_ENDPOINTS.CONTACT}/create-account`, { method: 'POST', body: JSON.stringify(initialAccount) });
                     }
                     // Simulate initial loading time
                     setTimeout(() => {
@@ -769,7 +771,7 @@
                 setLoginSuccess(false); 
 
                 try {
-                    const response = await fetch(`${API_ENDPOINTS.BASE}/login`, {
+                    const response = await fetch(`${API_ENDPOINTS.CONTACT}/login`, {
                         method: 'POST',
                         headers: { 'Content-Type': 'application/json' },
                         body: JSON.stringify({ identifier, password })
@@ -798,7 +800,7 @@
 
             const handleCreateAccount = async (newData) => {
                 try {
-                    const response = await fetch(`${API_ENDPOINTS.BASE}/create-account`, {
+                    const response = await fetch(`${API_ENDPOINTS.CONTACT}/create-account`, {
                         method: 'POST',
                         headers: { 'Content-Type': 'application/json' },
                         body: JSON.stringify(newData),
@@ -824,7 +826,7 @@
             
             const updateCurrentUser = async (updatedAccount) => {
                 try {
-                    const response = await fetch(`${API_ENDPOINTS.BASE}/update-account`, {
+                    const response = await fetch(`${API_ENDPOINTS.CONTACT}/update-account`, {
                         method: 'POST',
                         headers: { 'Content-Type': 'application/json' },
                         body: JSON.stringify(updatedAccount),
@@ -862,7 +864,7 @@
             const handlePayTax = async (amount) => {
                 if (currentUserAccount.balance < amount) { showModal('Error', 'Insufficient balance.', 'error'); return; }
                 try {
-                    const response = await fetch(`${API_ENDPOINTS.BASE}/pay-tax`, {
+                    const response = await fetch(`${API_ENDPOINTS.CONTACT}/pay-tax`, {
                         method: 'POST',
                         headers: { 'Content-Type': 'application/json' },
                         body: JSON.stringify({ bankId: currentUserAccount.bankId, amount: amount }),
@@ -887,7 +889,7 @@
             const handleAdvanceTax = async (amount) => {
                 if (currentUserAccount.balance < amount) { showModal('Error', 'Insufficient balance.', 'error'); return; }
                 try {
-                    const response = await fetch(`${API_ENDPOINTS.BASE}/advance-tax`, {
+                    const response = await fetch(`${API_ENDPOINTS.CONTACT}/advance-tax`, {
                         method: 'POST',
                         headers: { 'Content-Type': 'application/json' },
                         body: JSON.stringify({ bankId: currentUserAccount.bankId, amount: amount }),
