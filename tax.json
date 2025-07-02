@@ -1,1 +1,6 @@
-[]
+{
+  "totalTax": 0,
+  "taxPaid": 0,
+  "advanceTaxPaid": 0,
+  "dailyTaxCharges": []
+}
