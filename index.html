@@ -894,7 +894,7 @@
                 ]
             };
             updateCurrentUser(updatedAccount);
-            showModal('Success', `Paid $${amount.toFixed(2)} in tax.`, 'success');
+            showModal('Success', `Paid ${amount.toFixed(2)} in tax.`, 'success');
         } else {
             const errorData = await response.json();
             showModal('Error', errorData.message || 'Failed to pay tax.', 'error');
@@ -938,7 +938,7 @@ const handleAdvanceTax = async (amount) => {
                 ]
             };
             updateCurrentUser(updatedAccount);
-            showModal('Success', `Paid $${amount.toFixed(2)} in advance tax.`, 'success');
+            showModal('Success', `Paid ${amount.toFixed(2)} in advance tax.`, 'success');
         } else {
             const errorData = await response.json();
             showModal('Error', errorData.message || 'Failed to pay advance tax.', 'error');
