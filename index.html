@@ -209,8 +209,123 @@
             );
         };
 
-        const TaxPage = (props) => {
-            return <CloudflareTaxComponent {...props} />;
+                const TaxPage = ({ currentUserAccount, handlePayTax, handleAdvanceTax, showModal }) => {
+            const chartRef = useRef(null);
+            const chartInstanceRef = useRef(null); // Use a ref to store the chart instance
+            const [chartDataType, setChartDataType] = useState('applied'); // Renamed from chartData to avoid confusion
+            const [customTaxAmount, setCustomTaxAmount] = useState('');
+            if (!currentUserAccount) return null;
+            const { taxData = {}, accountId, transactions = [] } = currentUserAccount;
+            
+            // Ensure dailyTaxCharges is an array of objects with date and amount
+            const dailyCharges = taxData.dailyTaxCharges || [];
+            
+            // Filter tax payments, ensuring amount is positive for display
+            const taxPayments = transactions.filter(tx => tx.description.includes('tax payment'))
+                                        .map(tx => ({ date: tx.date, amount: Math.abs(tx.amount), description: tx.description }));
+
+            const dataToDisplay = chartDataType === 'applied' ? dailyCharges : taxPayments;
+
+            useEffect(() => {
+                if (!chartRef.current) {
+                    // If canvas ref is not available, or component unmounted, do nothing
+                    return;
+                }
+
+                // Destroy existing chart instance before creating a new one
+                if (chartInstanceRef.current) {
+                    chartInstanceRef.current.destroy();
+                    chartInstanceRef.current = null;
+                }
+
+                if (dataToDisplay.length > 0) {
+                    const ctx = chartRef.current.getContext('2d');
+                    if (!ctx) { // Defensive check for context
+                        console.error("Could not get 2D context for canvas.");
+                        return;
+                    }
+                    chartInstanceRef.current = new Chart(ctx, {
+                        type: 'line',
+                        data: {
+                            labels: dataToDisplay.map(c => new Date(c.date).toLocaleDateString()),
+                            datasets: [{
+                                label: `Daily Tax ${chartDataType === 'applied' ? 'Applied' : 'Paid'} ($)`,
+                                data: dataToDisplay.map(c => c.amount),
+                                borderColor: '#2dd4bf',
+                                backgroundColor: 'rgba(45, 212, 191, 0.2)',
+                                fill: true,
+                                tension: 0.4,
+                                pointRadius: 5,
+                                pointHoverRadius: 8,
+                                pointBackgroundColor: '#2dd4bf'
+                            }]
+                        },
+                        options: {
+                            responsive: true,
+                            maintainAspectRatio: false,
+                            plugins: {
+                                legend: {
+                                    labels: {
+                                        color: '#d1d5db'
+                                    }
+                                },
+                                tooltip: {
+                                    callbacks: {
+                                        label: (context) => `Amount: ${context.raw.toFixed(2)}`,
+                                        afterLabel: (context) => dataToDisplay[context.dataIndex].description ? `Info: ${dataToDisplay[context.dataIndex].description}` : ''
+                                    }
+                                }
+                            },
+                            scales: {
+                                x: {
+                                    ticks: { color: '#9ca3af' },
+                                    grid: { color: 'rgba(107, 114, 128, 0.3)' }
+                                },
+                                y: {
+                                    ticks: { color: '#9ca3af' },
+                                    grid: { color: 'rgba(107, 114, 128, 0.3)' }
+                                }
+                            }
+                        }
+                    });
+                }
+                // Cleanup function to destroy chart on unmount or data change
+                return () => {
+                    if (chartInstanceRef.current) {
+                        chartInstanceRef.current.destroy();
+                        chartInstanceRef.current = null;
+                    }
+                };
+            }, [dataToDisplay, chartDataType]); // Re-render chart when dataToDisplay or chartDataType changes
+
+            const downloadReport = () => {
+                if (!chartRef.current || !chartInstanceRef.current) {
+                    showModal('Error', 'Chart not rendered yet. Please view the chart before downloading.', 'error');
+                    return;
+                }
+
+                const chartImage = chartRef.current.toDataURL('image/png');
+                const link = document.createElement('a');
+                link.href = chartImage;
+                link.download = `tax-chart-${accountId}-${chartDataType}.png`;
+                document.body.appendChild(link); // Append to body to make it clickable
+                link.click();
+                document.body.removeChild(link); // Clean up
+                showModal('Download Complete', 'Tax chart downloaded successfully!', 'success');
+            };
+
+            return (
+                <div className="space-y-6">
+                    <div className="bg-gray-800 p-6 rounded-lg shadow-minecraft flex items-center justify-between">
+                        <div><h2 className="text-xl font-bold text-green-400 mb-2">Tax Summary</h2><p className="text-gray-300">Total Due: <span className="font-bold text-red-400">${taxData.totalTax?.toFixed(2) || '0.00'}</span></p><p className="text-gray-300">Advance Paid: <span className="font-bold text-blue-400">${taxData.advanceTaxPaid?.toFixed(2) || '0.00'}</span></p>{taxData.totalTax > 0 ? (<><button onClick={() => handlePayTax(taxData.totalTax)} className="mt-4 bg-green-600 text-white font-bold py-2 px-4 rounded-md hover:bg-green-700">Pay Full Amount</button><input type="number" value={customTaxAmount} onChange={(e) => setCustomTaxAmount(e.target.value)} placeholder="Custom Amount" className="ml-2 p-2 bg-gray-700 border border-gray-600 rounded-md" /><button onClick={() => handlePayTax(parseFloat(customTaxAmount))} className="ml-2 bg-green-600 text-white font-bold py-2 px-4 rounded-md hover:bg-green-700">Pay Custom</button></>) : (<div className="mt-4"><input type="number" value={customTaxAmount} onChange={(e) => setCustomTaxAmount(e.target.value)} placeholder="Advance Amount" className="p-2 bg-gray-700 border border-gray-600 rounded-md" /><button onClick={() => handleAdvanceTax(parseFloat(customTaxAmount))} className="ml-2 bg-blue-600 text-white font-bold py-2 px-4 rounded-md hover:bg-blue-700">Pay Advance</button></div>)}</div>
+                        <div className="w-24 h-24 rounded-full flex items-center justify-center text-white text-4xl font-bold shadow-md border-4 border-green-500 bg-minecraft-world overflow-hidden"><span className="relative z-10">{accountId.charAt(0).toUpperCase()}</span></div>
+                    </div>
+                    <div className="bg-gray-800 p-6 rounded-lg shadow-minecraft">
+                        <div className="flex justify-between items-center mb-4"><h2 className="text-xl font-bold text-green-400">Tax Trend</h2><div className="flex gap-2"><button onClick={() => setChartDataType('applied')} className={`px-3 py-1 text-sm rounded-md ${chartDataType === 'applied' ? 'bg-green-600 text-white' : 'bg-gray-700'}`}>Applied</button><button onClick={() => setChartDataType('paid')} className={`px-3 py-1 text-sm rounded-md ${chartDataType === 'paid' ? 'bg-green-600 text-white' : 'bg-gray-700'}`}>Paid</button><button onClick={downloadReport} className="px-3 py-1 text-sm rounded-md bg-blue-600 text-white">Download</button></div></div>
+                        <div className="relative h-60">{dataToDisplay.length > 0 ? <canvas ref={chartRef}></canvas> : <p className="text-gray-400">No tax data to display.</p>}</div>
+                    </div>
+                </div>
+            );
         };
         
         const ApplyLoanPage = ({ currentUserAccount, showModal, handleApplyLoan }) => {
@@ -592,240 +707,7 @@
             );
         };
 
-        const CloudflareTaxComponent = ({ showModal }) => {
-            const [taxData, setTaxData] = useState(null);
-            const [loading, setLoading] = useState(true);
-            const [error, setError] = useState(null);
-            const [isProcessing, setIsProcessing] = useState(false);
-            const [selectedPlayer, setSelectedPlayer] = useState(null);
-            const [payment, setPayment] = useState({ player: '', amount: '' });
-
-            const fetchTaxData = async () => {
-                setLoading(true);
-                setError(null);
-                try {
-                    const response = await fetch(`${API_ENDPOINTS.TAX}/tax-data`);
-                    if (!response.ok) throw new Error(`Failed to fetch tax data: ${response.statusText}`);
-                    const data = await response.json();
-                    setTaxData(data);
-                    if (data && data.players) {
-                        const firstPlayerName = Object.keys(data.players)[0];
-                        if(firstPlayerName) {
-                           setSelectedPlayer({name: firstPlayerName, ...data.players[firstPlayerName]});
-                        }
-                    }
-                } catch (err) {
-                    setError(err.message);
-                    showModal('Error', err.message, 'error');
-                } finally {
-                    setLoading(false);
-                }
-            };
-
-            useEffect(() => {
-                fetchTaxData();
-            }, []);
-
-            const handleProcessTax = async () => {
-                setIsProcessing(true);
-                setError(null);
-                try {
-                    const response = await fetch(`${API_ENDPOINTS.TAX}/process-tax`, { method: 'POST' });
-                    if (!response.ok) {
-                         const errorData = await response.json();
-                         throw new Error(errorData.error || `Failed to process tax: ${response.statusText}`);
-                    }
-                    const result = await response.json();
-                    showModal('Success', result.message, 'success');
-                    fetchTaxData(); // Refresh data after processing
-                } catch (err) {
-                    setError(err.message);
-                    showModal('Error', err.message, 'error');
-                } finally {
-                    setIsProcessing(false);
-                }
-            };
-
-            const handlePayTax = async (e) => {
-                e.preventDefault();
-                if (!payment.player || !payment.amount) {
-                    showModal('Warning', 'Please enter both player name and amount.', 'info');
-                    return;
-                }
-                
-                setIsProcessing(true);
-                try {
-                    const response = await fetch(`${API_ENDPOINTS.TAX}/pay-tax`, {
-                        method: 'POST',
-                        headers: { 'Content-Type': 'application/json' },
-                        body: JSON.stringify({ player: payment.player, amount: parseFloat(payment.amount) })
-                    });
-                    if (!response.ok) {
-                        const errorData = await response.json();
-                        throw new Error(errorData.message || 'Payment failed');
-                    }
-                    const result = await response.json();
-                    showModal('Success', result.message, 'success');
-                    setPayment({ player: '', amount: '' });
-                    fetchTaxData(); // Refresh data
-                } catch (err) {
-                    showModal('Error', err.message, 'error');
-                } finally {
-                    setIsProcessing(false);
-                }
-            };
-            
-            const handlePlayerSelect = (playerName) => {
-                if (taxData && taxData.players[playerName]) {
-                    setSelectedPlayer({ name: playerName, ...taxData.players[playerName] });
-                }
-            };
-
-            const PlayerTaxChart = ({ player }) => {
-                const chartRef = useRef(null);
-                const chartInstanceRef = useRef(null);
-
-                useEffect(() => {
-                    if (!chartRef.current || !player || !player.dailyCharges) return;
-
-                    if (chartInstanceRef.current) {
-                        chartInstanceRef.current.destroy();
-                    }
-
-                    const ctx = chartRef.current.getContext('2d');
-                    chartInstanceRef.current = new Chart(ctx, {
-                        type: 'bar',
-                        data: {
-                            labels: player.dailyCharges.map(d => new Date(d.date).toLocaleDateString()),
-                            datasets: [{
-                                label: 'Daily Tax Amount ($)',
-                                data: player.dailyCharges.map(d => d.amount),
-                                backgroundColor: 'rgba(45, 212, 191, 0.5)',
-                                borderColor: '#2dd4bf',
-                                borderWidth: 1
-                            }]
-                        },
-                        options: {
-                            responsive: true,
-                            maintainAspectRatio: false,
-                            scales: {
-                                y: { beginAtZero: true, ticks: { color: '#9ca3af' }, grid: { color: 'rgba(107, 114, 128, 0.3)' } },
-                                x: { ticks: { color: '#9ca3af' }, grid: { color: 'rgba(107, 114, 128, 0.3)' } }
-                            },
-                            plugins: { legend: { labels: { color: '#d1d5db' } } }
-                        }
-                    });
-
-                    return () => {
-                        if (chartInstanceRef.current) {
-                            chartInstanceRef.current.destroy();
-                        }
-                    };
-                }, [player]);
-
-                if (!player) return null;
-
-                return (
-                    <div className="bg-gray-800 p-4 rounded-lg shadow-minecraft mt-4">
-                        <h3 class="text-xl font-bold text-green-400 mb-4">Tax Chart for {player.name}</h3>
-                        <div className="relative h-60">
-                            <canvas ref={chartRef}></canvas>
-                        </div>
-                    </div>
-                );
-            };
-
-            return (
-                <div className="space-y-6">
-                    <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
-                        {/* Left Column: Actions & Player List */}
-                        <div className="md:col-span-1 space-y-6">
-                            <div className="bg-gray-800 p-6 rounded-lg shadow-minecraft">
-                                <h2 className="text-xl font-bold text-green-400 mb-4">Actions</h2>
-                                <button 
-                                    onClick={handleProcessTax} 
-                                    disabled={isProcessing}
-                                    className="w-full bg-blue-600 hover:bg-blue-700 text-white font-bold py-3 px-6 rounded-md transition duration-200 disabled:bg-gray-500"
-                                >
-                                    {isProcessing ? 'Processing...' : 'Process Latest Tax Log'}
-                                </button>
-                            </div>
-
-                            <div className="bg-gray-800 p-6 rounded-lg shadow-minecraft">
-                                <h2 className="text-xl font-bold text-green-400 mb-4">Pay Tax</h2>
-                                <form onSubmit={handlePayTax} className="space-y-4">
-                                    <input 
-                                        type="text" 
-                                        value={payment.player} 
-                                        onChange={(e) => setPayment({...payment, player: e.target.value})} 
-                                        placeholder="Player Name" 
-                                        required 
-                                        className="w-full p-3 bg-gray-700 text-gray-200 border border-gray-600 rounded-md" 
-                                    />
-                                    <input 
-                                        type="number" 
-                                        value={payment.amount} 
-                                        onChange={(e) => setPayment({...payment, amount: e.target.value})} 
-                                        placeholder="Amount" 
-                                        required 
-                                        className="w-full p-3 bg-gray-700 text-gray-200 border border-gray-600 rounded-md" 
-                                    />
-                                    <button 
-                                        type="submit" 
-                                        disabled={isProcessing}
-                                        className="w-full bg-green-600 hover:bg-green-700 text-white font-bold py-3 px-6 rounded-md transition duration-200 disabled:bg-gray-500"
-                                    >
-                                        {isProcessing ? 'Submitting...' : 'Submit Payment'}
-                                    </button>
-                                </form>
-                            </div>
-                        </div>
-
-                        {/* Right Column: Tax Data Table & Chart */}
-                        <div className="md:col-span-2 space-y-6">
-                            <div className="bg-gray-800 p-6 rounded-lg shadow-minecraft">
-                                <h2 className="text-xl font-bold text-green-400 mb-4">Player Tax Overview</h2>
-                                {loading ? (
-                                    <p>Loading tax data...</p>
-                                ) : error ? (
-                                    <p className="text-red-400">{error}</p>
-                                ) : (
-                                    <div className="overflow-x-auto">
-                                        <table className="min-w-full text-sm text-left">
-                                            <thead className="bg-gray-700">
-                                                <tr>
-                                                    <th className="p-3 text-gray-300">Player</th>
-                                                    <th className="p-3 text-gray-300">Tax Due</th>
-                                                    <th className="p-3 text-gray-300">Tax Paid</th>
-                                                    <th className="p-3 text-gray-300">Advance Paid</th>
-                                                    <th className="p-3 text-gray-300">Actions</th>
-                                                </tr>
-                                            </thead>
-                                            <tbody>
-                                                {taxData && Object.entries(taxData.players).map(([name, data]) => (
-                                                    <tr key={name} className="border-b border-gray-700 hover:bg-gray-700/50">
-                                                        <td className="p-3 font-semibold">{name}</td>
-                                                        <td className="p-3 text-red-400">${data.taxDue.toFixed(2)}</td>
-                                                        <td className="p-3 text-green-400">${data.taxPaid.toFixed(2)}</td>
-                                                        <td className="p-3 text-blue-400">${data.advancePaid.toFixed(2)}</td>
-                                                        <td className="p-3">
-                                                            <button onClick={() => handlePlayerSelect(name)} className="bg-purple-600 hover:bg-purple-700 text-white font-bold py-1 px-3 rounded-md text-xs">
-                                                                View Chart
-                                                            </button>
-                                                        </td>
-                                                    </tr>
-                                                ))}
-                                            </tbody>
-                                        </table>
-                                    </div>
-                                )}
-                            </div>
-                            {selectedPlayer && <PlayerTaxChart player={selectedPlayer} />}
-                        </div>
-                    </div>
-                </div>
-            );
-        };
+        
 
         // --- Main App Component ---
         const App = () => {
