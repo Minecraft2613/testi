@@ -288,6 +288,8 @@
 
             if (!currentUserAccount) return null;
             const { taxData = {}, accountId, transactions = [], balance } = currentUserAccount;
+
+            const totalTaxPaidTillYet = transactions.filter(tx => tx.description.includes('tax payment')).reduce((sum, tx) => sum + Math.abs(tx.amount), 0);
             
             useEffect(() => {
                 const fetchTaxData = async () => {
@@ -398,6 +400,18 @@
                 showModal('Download Complete', 'Tax chart downloaded successfully!', 'success');
             };
 
+            const downloadFullDetails = () => {
+                const taxTransactions = transactions.filter(tx => tx.description.includes('tax payment') || tx.description.includes('Advance tax payment'));
+                const dataStr = "data:text/json;charset=utf-8," + encodeURIComponent(JSON.stringify(taxTransactions, null, 2));
+                const downloadAnchorNode = document.createElement('a');
+                downloadAnchorNode.setAttribute("href", dataStr);
+                downloadAnchorNode.setAttribute("download", `tax-details-${accountId}.json`);
+                document.body.appendChild(downloadAnchorNode); // Required for Firefox
+                downloadAnchorNode.click();
+                downloadAnchorNode.remove();
+                showModal('Download Complete', 'Full tax details downloaded successfully!', 'success');
+            };
+
             const onPayTax = async (amount, isFullTax = false) => {
                 if (balance < amount) {
                     showModal('Insufficient Balance', 'Do you want to deduct the amount from your Minecraft account?', 'info');
@@ -429,11 +443,12 @@
                         />
                     )}
                     <div className="bg-gray-800 p-6 rounded-lg shadow-minecraft flex items-center justify-between">
-                        <div><h2 className="text-xl font-bold text-green-400 mb-2">Tax Summary</h2><p className="text-gray-300">Total Due: <span className="font-bold text-red-400">${sessionTaxData.taxDue?.toFixed(2) || '0.00'}</span></p><p className="text-gray-300">Paid: <span className="font-bold text-green-400">${sessionTaxData.taxPaid?.toFixed(2) || '0.00'}</span></p><p className="text-gray-300">Advance Paid: <span className="font-bold text-blue-400">${sessionTaxData.advancePaid?.toFixed(2) || '0.00'}</span></p>{sessionTaxData.taxDue > 0 ? (<><button onClick={() => onPayTax(sessionTaxData.taxDue, true)} disabled={isPaying} className="mt-4 bg-green-600 text-white font-bold py-2 px-4 rounded-md hover:bg-green-700 disabled:bg-gray-500"> {isPaying ? 'Paying...' : 'Pay Full Amount'}</button><input type="number" value={customTaxAmount} onChange={(e) => setCustomTaxAmount(e.target.value)} placeholder="Custom Amount" className="ml-2 p-2 bg-gray-700 border border-gray-600 rounded-md" /><button onClick={() => onPayTax(parseFloat(customTaxAmount), false)} disabled={isPaying} className="ml-2 bg-green-600 text-white font-bold py-2 px-4 rounded-md hover:bg-green-700 disabled:bg-gray-500"> {isPaying ? 'Paying...' : 'Make Custom Payment'}</button></>) : (<div className="mt-4"><input type="number" value={customTaxAmount} onChange={(e) => setCustomTaxAmount(e.target.value)} placeholder="Advance Amount" className="p-2 bg-gray-700 border border-gray-600 rounded-md" /><button onClick={() => onAdvanceTax(parseFloat(customTaxAmount))} disabled={isPaying} className="ml-2 bg-blue-600 text-white font-bold py-2 px-4 rounded-md hover:bg-blue-700 disabled:bg-gray-500"> {isPaying ? 'Paying...' : 'Pay Advance'}</button></div>)}</div>
+                        <div><h2 className="text-xl font-bold text-green-400 mb-2">Tax Summary</h2><p className="text-gray-300">Total Due: <span className="font-bold text-red-400">${sessionTaxData.taxDue?.toFixed(2) || '0.00'}</span></p><p className="text-gray-300">Current Session Paid: <span className="font-bold text-green-400">${sessionTaxData.taxPaid?.toFixed(2) || '0.00'}</span></p>
+<p className="text-gray-300">Total Tax Paid (All Sessions): <span className="font-bold text-green-400">${totalTaxPaidTillYet.toFixed(2)}</span></p><p className="text-gray-300">Total Tax Paid: <span className="font-bold text-green-400">${totalTaxPaidTillYet.toFixed(2)}</span></p><p className="text-gray-300">Advance Paid: <span className="font-bold text-blue-400">${sessionTaxData.advancePaid?.toFixed(2) || '0.00'}</span></p>{sessionTaxData.taxDue > 0 ? (<><button onClick={() => onPayTax(sessionTaxData.taxDue, true)} disabled={isPaying} className="mt-4 bg-green-600 text-white font-bold py-2 px-4 rounded-md hover:bg-green-700 disabled:bg-gray-500"> {isPaying ? 'Paying...' : 'Pay Full Amount'}</button><input type="number" value={customTaxAmount} onChange={(e) => setCustomTaxAmount(e.target.value)} placeholder="Custom Amount" className="ml-2 p-2 bg-gray-700 border border-gray-600 rounded-md" /><button onClick={() => onPayTax(parseFloat(customTaxAmount), false)} disabled={isPaying} className="ml-2 bg-green-600 text-white font-bold py-2 px-4 rounded-md hover:bg-green-700 disabled:bg-gray-500"> {isPaying ? 'Paying...' : 'Make Custom Payment'}</button></>) : (<div className="mt-4"><input type="number" value={customTaxAmount} onChange={(e) => setCustomTaxAmount(e.target.value)} placeholder="Advance Amount" className="p-2 bg-gray-700 border border-gray-600 rounded-md" /><button onClick={() => onAdvanceTax(parseFloat(customTaxAmount))} disabled={isPaying} className="ml-2 bg-blue-600 text-white font-bold py-2 px-4 rounded-md hover:bg-blue-700 disabled:bg-gray-500"> {isPaying ? 'Paying...' : 'Pay Advance'}</button></div>)}</div>
                         <div className="w-24 h-24 rounded-full flex items-center justify-center text-white text-4xl font-bold shadow-md border-4 border-yellow-400 bg-minecraft-world overflow-hidden"><span className="relative z-10">{currentUserAccount.accountId.charAt(0).toUpperCase()}</span></div>
                     </div>
                     <div className="bg-gray-800 p-6 rounded-lg shadow-minecraft">
-                        <div className="flex justify-between items-center mb-4"><h2 className="text-xl font-bold text-green-400">Tax Trend</h2><div className="flex gap-2"><button onClick={() => setChartDataType('applied')} className={`px-3 py-1 text-sm rounded-md ${chartDataType === 'applied' ? 'bg-green-600 text-white' : 'bg-gray-700'}`}>Applied</button><button onClick={() => setChartDataType('paid')} className={`px-3 py-1 text-sm rounded-md ${chartDataType === 'paid' ? 'bg-green-600 text-white' : 'bg-gray-700'}`}>Paid</button><button onClick={downloadReport} className="px-3 py-1 text-sm rounded-md bg-blue-600 text-white">Download</button></div></div>
+                        <div className="flex justify-between items-center mb-4"><h2 className="text-xl font-bold text-green-400">Tax Trend</h2><div className="flex gap-2"><button onClick={() => setChartDataType('applied')} className={`px-3 py-1 text-sm rounded-md ${chartDataType === 'applied' ? 'bg-green-600 text-white' : 'bg-gray-700'}`}>Applied</button><button onClick={() => setChartDataType('paid')} className={`px-3 py-1 text-sm rounded-md ${chartDataType === 'paid' ? 'bg-green-600 text-white' : 'bg-gray-700'}`}>Paid</button><button onClick={downloadReport} className="px-3 py-1 text-sm rounded-md bg-blue-600 text-white">Download Chart</button><button onClick={downloadFullDetails} className="px-3 py-1 text-sm rounded-md bg-blue-600 text-white">Download Details</button></div></div>
                         <div className="relative h-60">{dataToDisplay.length > 0 ? <canvas ref={chartRef}></canvas> : <p className="text-gray-400">No tax data to display for this session.</p>}</div>
                     </div>
                 </div>
@@ -1181,7 +1196,7 @@ const handleAdvanceTax = async (amount) => {
                 return <MainLayout {...commonProps}>{pageComponent}</MainLayout>;
             };
 
-            return <>{renderPage()}{paymentAnimationDetails.show && <PaymentLoadingAnimation {...paymentAnimationDetails} onAnimationComplete={() => setPaymentAnimationDetails({ show: false, amount: 0, status: 'processing', paymentType: '' })} /> }<Modal {...modal} onClose={closeModal} /></>;
+            return <>{renderPage()}<Modal {...modal} onClose={closeModal} /></>;
         };
 
         const PaymentLoadingAnimation = ({ amount, status, onAnimationComplete, paymentType }) => {
