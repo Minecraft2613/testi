@@ -291,17 +291,7 @@
 
             const totalTaxPaidTillYet = transactions.filter(tx => tx.description.includes('tax payment')).reduce((sum, tx) => sum + Math.abs(tx.amount), 0);
             
-            useEffect(() => {
-                const fetchTaxData = async () => {
-                    const response = await fetch(`${API_ENDPOINTS.TAX}/tax-data`);
-                    const data = await response.json();
-                    setCurrentUserAccount(prevState => ({...prevState, taxData: data}));
-                    setSession(data.currentSession);
-                };
-                fetchTaxData();
-            }, []);
-
-            const sessionTaxData = session && taxData.players && taxData.players[accountId] && taxData.players[accountId].sessions[session] ? taxData.players[accountId].sessions[session] : { taxDue: 0, taxPaid: 0, advancePaid: 0, dailyCharges: [] };
+            const sessionTaxData = taxData.players && taxData.players[accountId] && taxData.players[accountId].sessions[taxData.currentSession] ? taxData.players[accountId].sessions[taxData.currentSession] : { taxDue: 0, taxPaid: 0, advancePaid: 0, dailyCharges: [] };
 
             // Ensure dailyTaxCharges is an array of objects with date and amount
             const dailyCharges = sessionTaxData.dailyCharges || [];
@@ -908,10 +898,14 @@
 
                     if (response.ok) {
                         const data = await response.json();
+                        // Fetch tax data after successful login
+                        const taxResponse = await fetch(`${API_ENDPOINTS.TAX}/tax-data`);
+                        const taxData = taxResponse.ok ? await taxResponse.json() : {};
+
                         setLoginSuccess(true);
                         setTimeout(() => {
                             setLoading(false);
-                            setCurrentUserAccount(data.account); 
+                            setCurrentUserAccount({ ...data.account, taxData: taxData }); 
                             setCurrentPage('home');
                             setLoginSuccess(false);
                         }, 1500);
