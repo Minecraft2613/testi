@@ -1,3 +1,4 @@
+
 <!DOCTYPE html>
 <html lang="en">
 <head>
@@ -88,11 +89,13 @@
         const LoginPage = ({ setCurrentPage, handleLogin }) => {
             const [identifier, setIdentifier] = useState('');
             const [password, setPassword] = useState('');
+            const [session, setSession] = useState('');
             return (
                 <AuthPageLayout title="Minecraft Bank Login 🏦" footerText="Don't have an account?" footerButtonText="Create one!" onFooterClick={() => setCurrentPage('create-account')}>
-                    <form onSubmit={(e) => { e.preventDefault(); handleLogin(identifier, password); }} className="space-y-4">
+                    <form onSubmit={(e) => { e.preventDefault(); handleLogin(identifier, password, session); }} className="space-y-4">
                         <input type="text" value={identifier} onChange={(e) => setIdentifier(e.target.value)} placeholder="Bank ID / MC Name / Email" required className="w-full p-3 bg-gray-700 text-gray-200 border border-gray-600 rounded-md focus:outline-none focus:ring-2 focus:ring-green-500" />
                         <input type="password" value={password} onChange={(e) => setPassword(e.target.value)} placeholder="********" required className="w-full p-3 bg-gray-700 text-gray-200 border border-gray-600 rounded-md focus:outline-none focus:ring-2 focus:ring-green-500" />
+                        <input type="text" value={session} onChange={(e) => setSession(e.target.value)} placeholder="Session ID" required className="w-full p-3 bg-gray-700 text-gray-200 border border-gray-600 rounded-md focus:outline-none focus:ring-2 focus:ring-green-500" />
                         <button type="submit" className="w-full bg-green-600 hover:bg-green-700 text-white font-bold py-3 px-6 rounded-md transition duration-200 shadow-md transform hover:scale-105">Login</button>
                     </form>
                 </AuthPageLayout>
@@ -209,7 +212,7 @@
             );
         };
 
-                const TaxPage = ({ currentUserAccount, handlePayTax, handleAdvanceTax, showModal }) => {
+                const TaxPage = ({ currentUserAccount, handlePayTax, handleAdvanceTax, showModal, session }) => {
             const chartRef = useRef(null);
             const chartInstanceRef = useRef(null); // Use a ref to store the chart instance
             const [chartDataType, setChartDataType] = useState('applied'); // Renamed from chartData to avoid confusion
@@ -217,8 +220,10 @@
             if (!currentUserAccount) return null;
             const { taxData = {}, accountId, transactions = [] } = currentUserAccount;
             
+            const sessionTaxData = taxData.players && taxData.players[accountId] && taxData.players[accountId].sessions[session] ? taxData.players[accountId].sessions[session] : { taxDue: 0, taxPaid: 0, advancePaid: 0, dailyCharges: [] };
+
             // Ensure dailyTaxCharges is an array of objects with date and amount
-            const dailyCharges = taxData.dailyTaxCharges || [];
+            const dailyCharges = sessionTaxData.dailyCharges || [];
             
             // Filter tax payments, ensuring amount is positive for display
             const taxPayments = transactions.filter(tx => tx.description.includes('tax payment'))
@@ -317,12 +322,12 @@
             return (
                 <div className="space-y-6">
                     <div className="bg-gray-800 p-6 rounded-lg shadow-minecraft flex items-center justify-between">
-                        <div><h2 className="text-xl font-bold text-green-400 mb-2">Tax Summary</h2><p className="text-gray-300">Total Due: <span className="font-bold text-red-400">${taxData.totalTax?.toFixed(2) || '0.00'}</span></p><p className="text-gray-300">Advance Paid: <span className="font-bold text-blue-400">${taxData.advanceTaxPaid?.toFixed(2) || '0.00'}</span></p>{taxData.totalTax > 0 ? (<><button onClick={() => handlePayTax(taxData.totalTax)} className="mt-4 bg-green-600 text-white font-bold py-2 px-4 rounded-md hover:bg-green-700">Pay Full Amount</button><input type="number" value={customTaxAmount} onChange={(e) => setCustomTaxAmount(e.target.value)} placeholder="Custom Amount" className="ml-2 p-2 bg-gray-700 border border-gray-600 rounded-md" /><button onClick={() => handlePayTax(parseFloat(customTaxAmount))} className="ml-2 bg-green-600 text-white font-bold py-2 px-4 rounded-md hover:bg-green-700">Pay Custom</button></>) : (<div className="mt-4"><input type="number" value={customTaxAmount} onChange={(e) => setCustomTaxAmount(e.target.value)} placeholder="Advance Amount" className="p-2 bg-gray-700 border border-gray-600 rounded-md" /><button onClick={() => handleAdvanceTax(parseFloat(customTaxAmount))} className="ml-2 bg-blue-600 text-white font-bold py-2 px-4 rounded-md hover:bg-blue-700">Pay Advance</button></div>)}</div>
+                        <div><h2 className="text-xl font-bold text-green-400 mb-2">Tax Summary for Session: {session}</h2><p className="text-gray-300">Total Due: <span className="font-bold text-red-400">${sessionTaxData.taxDue?.toFixed(2) || '0.00'}</span></p><p className="text-gray-300">Paid in Session: <span className="font-bold text-green-400">${sessionTaxData.taxPaid?.toFixed(2) || '0.00'}</span></p><p className="text-gray-300">Advance Paid: <span className="font-bold text-blue-400">${sessionTaxData.advancePaid?.toFixed(2) || '0.00'}</span></p>{sessionTaxData.taxDue > 0 ? (<><button onClick={() => handlePayTax(sessionTaxData.taxDue, session)} className="mt-4 bg-green-600 text-white font-bold py-2 px-4 rounded-md hover:bg-green-700">Pay Full Amount</button><input type="number" value={customTaxAmount} onChange={(e) => setCustomTaxAmount(e.target.value)} placeholder="Custom Amount" className="ml-2 p-2 bg-gray-700 border border-gray-600 rounded-md" /><button onClick={() => handlePayTax(parseFloat(customTaxAmount), session)} className="ml-2 bg-green-600 text-white font-bold py-2 px-4 rounded-md hover:bg-green-700">Pay Custom</button></>) : (<div className="mt-4"><input type="number" value={customTaxAmount} onChange={(e) => setCustomTaxAmount(e.target.value)} placeholder="Advance Amount" className="p-2 bg-gray-700 border border-gray-600 rounded-md" /><button onClick={() => handleAdvanceTax(parseFloat(customTaxAmount), session)} className="ml-2 bg-blue-600 text-white font-bold py-2 px-4 rounded-md hover:bg-blue-700">Pay Advance</button></div>)}</div>
                         <div className="w-24 h-24 rounded-full flex items-center justify-center text-white text-4xl font-bold shadow-md border-4 border-green-500 bg-minecraft-world overflow-hidden"><span className="relative z-10">{accountId.charAt(0).toUpperCase()}</span></div>
                     </div>
                     <div className="bg-gray-800 p-6 rounded-lg shadow-minecraft">
                         <div className="flex justify-between items-center mb-4"><h2 className="text-xl font-bold text-green-400">Tax Trend</h2><div className="flex gap-2"><button onClick={() => setChartDataType('applied')} className={`px-3 py-1 text-sm rounded-md ${chartDataType === 'applied' ? 'bg-green-600 text-white' : 'bg-gray-700'}`}>Applied</button><button onClick={() => setChartDataType('paid')} className={`px-3 py-1 text-sm rounded-md ${chartDataType === 'paid' ? 'bg-green-600 text-white' : 'bg-gray-700'}`}>Paid</button><button onClick={downloadReport} className="px-3 py-1 text-sm rounded-md bg-blue-600 text-white">Download</button></div></div>
-                        <div className="relative h-60">{dataToDisplay.length > 0 ? <canvas ref={chartRef}></canvas> : <p className="text-gray-400">No tax data to display.</p>}</div>
+                        <div className="relative h-60">{dataToDisplay.length > 0 ? <canvas ref={chartRef}></canvas> : <p className="text-gray-400">No tax data to display for this session.</p>}</div>
                     </div>
                 </div>
             );
@@ -713,6 +718,7 @@
         const App = () => {
             const [currentPage, setCurrentPage] = useState('loading'); // Start with loading page
             const [currentUserAccount, setCurrentUserAccount] = useState(null);
+            const [session, setSession] = useState(null);
             const [loading, setLoading] = useState(true);
             const [loginSuccess, setLoginSuccess] = useState(false);
             const [modal, setModal] = useState({ isOpen: false, title: '', message: '', type: 'info', callback: null });
@@ -766,7 +772,7 @@
                 initializeApp();
             }, []);
 
-            const handleLogin = async (identifier, password) => {
+            const handleLogin = async (identifier, password, session) => {
                 setLoading(true);
                 setLoginSuccess(false); 
 
@@ -783,6 +789,7 @@
                         setTimeout(() => {
                             setLoading(false);
                             setCurrentUserAccount(data.account); 
+                            setSession(session);
                             setCurrentPage('home');
                             setLoginSuccess(false);
                         }, 1500);
@@ -822,7 +829,7 @@
                 }
             };
 
-            const handleLogout = () => { setCurrentUserAccount(null); setCurrentPage('login'); showModal('Logged Out', 'You have been successfully logged out.', 'info'); };
+            const handleLogout = () => { setCurrentUserAccount(null); setSession(null); setCurrentPage('login'); showModal('Logged Out', 'You have been successfully logged out.', 'info'); };
             
             const updateCurrentUser = async (updatedAccount) => {
                 try {
@@ -861,7 +868,7 @@
                 showModal('Success', 'Password changed successfully!', 'success');
             };
 
-         const handlePayTax = async (amount) => {
+         const handlePayTax = async (amount, session) => {
     if (currentUserAccount.balance < amount) {
         showModal('Error', 'Insufficient balance.', 'error');
         return;
@@ -876,7 +883,8 @@
             headers: { 'Content-Type': 'application/json' },
             body: JSON.stringify({
                 player: playerKey,
-                amount
+                amount,
+                session
             }),
         });
 
@@ -892,12 +900,12 @@
                         type: 'debit',
                         amount: -amount,
                         date: new Date().toISOString(),
-                        description: 'Tax payment'
+                        description: `Tax payment for session ${session}`
                     }
                 ]
             };
             updateCurrentUser(updatedAccount);
-            showModal('Success', `Paid $${amount.toFixed(2)} in tax.`, 'success');
+            showModal('Success', `Paid $${amount.toFixed(2)} in tax for session ${session}.`, 'success');
         } else {
             const errorData = await response.json();
             showModal('Error', errorData.message || 'Failed to pay tax.', 'error');
@@ -909,7 +917,7 @@
 };
 
 
-const handleAdvanceTax = async (amount) => {
+const handleAdvanceTax = async (amount, session) => {
     if (currentUserAccount.balance < amount) {
         showModal('Error', 'Insufficient balance.', 'error');
         return;
@@ -921,7 +929,8 @@ const handleAdvanceTax = async (amount) => {
             headers: { 'Content-Type': 'application/json' },
             body: JSON.stringify({
                 player: currentUserAccount.accountId, // ✅ changed from bankId
-                amount
+                amount,
+                session
             }),
         });
 
@@ -937,12 +946,12 @@ const handleAdvanceTax = async (amount) => {
                         type: 'debit',
                         amount: -amount,
                         date: new Date().toISOString(),
-                        description: 'Advance tax payment'
+                        description: `Advance tax payment for session ${session}`
                     }
                 ]
             };
             updateCurrentUser(updatedAccount);
-            showModal('Success', `Paid ${amount.toFixed(2)} in advance tax.`, 'success');
+            showModal('Success', `Paid ${amount.toFixed(2)} in advance tax for session ${session}.`, 'success');
         } else {
             const errorData = await response.json();
             showModal('Error', errorData.message || 'Failed to pay advance tax.', 'error');
@@ -1039,7 +1048,7 @@ const handleAdvanceTax = async (amount) => {
 
             const renderPage = () => {
                 if (loading) return <LoadingScreen loginSuccess={loginSuccess} message={loginSuccess ? 'Login Successful!' : 'Loading Bank Data...'} />;
-                const commonProps = { currentUserAccount, setCurrentPage, showModal, handleLogout, handleChangePassword, handleUpdateProfile, handlePayTax, handleAdvanceTax, handleApplyLoan, handleCancelLoan, handleAdminApproveLoan, handlePayLoan };
+                const commonProps = { currentUserAccount, setCurrentPage, showModal, handleLogout, handleChangePassword, handleUpdateProfile, handlePayTax, handleAdvanceTax, handleApplyLoan, handleCancelLoan, handleAdminApproveLoan, handlePayLoan, session };
                 if (!currentUserAccount) {
                     switch (currentPage) {
                         case 'create-account': return <CreateAccountPage {...commonProps} handleCreateAccount={handleCreateAccount} />;
