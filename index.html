@@ -1,3 +1,4 @@
+
 <!DOCTYPE html>
 <html lang="en">
 <head>
@@ -218,7 +219,7 @@
             const [isPaying, setIsPaying] = useState(false);
 
             if (!currentUserAccount) return null;
-            const { taxData = {}, accountId, transactions = [] } = currentUserAccount;
+            const { taxData = {}, accountId, transactions = [], balance } = currentUserAccount;
             
             useEffect(() => {
                 const fetchTaxData = async () => {
@@ -237,7 +238,7 @@
             
             // Filter tax payments, ensuring amount is positive for display
             const taxPayments = transactions.filter(tx => tx.description.includes('tax payment'))
-                                        .map(tx => ({ date: tx.date, amount: Math.abs(tx.amount), description: tx.description }));
+                                        .map(tx => ({ date: tx.date, amount: Math.abs(tx.amount), description: tx.description.replace(/ for session [^,]+/, '') }));
 
             const dataToDisplay = chartDataType === 'applied' ? dailyCharges : taxPayments;
 
@@ -330,12 +331,20 @@
             };
 
             const onPayTax = async (amount) => {
+                if (balance < amount) {
+                    showModal('Insufficient Balance', 'Do you want to deduct the amount from your Minecraft account?', 'info');
+                    return;
+                }
                 setIsPaying(true);
                 await handlePayTax(amount);
                 setIsPaying(false);
             };
 
             const onAdvanceTax = async (amount) => {
+                if (balance < amount) {
+                    showModal('Insufficient Balance', 'Do you want to deduct the amount from your Minecraft account?', 'info');
+                    return;
+                }
                 setIsPaying(true);
                 await handleAdvanceTax(amount);
                 setIsPaying(false);
@@ -344,8 +353,8 @@
             return (
                 <div className="space-y-6">
                     <div className="bg-gray-800 p-6 rounded-lg shadow-minecraft flex items-center justify-between">
-                        <div><h2 className="text-xl font-bold text-green-400 mb-2">Tax Summary</h2><p className="text-gray-300">Total Due: <span className="font-bold text-red-400">${sessionTaxData.taxDue?.toFixed(2) || '0.00'}</span></p><p className="text-gray-300">Paid in Session: <span className="font-bold text-green-400">${sessionTaxData.taxPaid?.toFixed(2) || '0.00'}</span></p><p className="text-gray-300">Advance Paid: <span className="font-bold text-blue-400">${sessionTaxData.advancePaid?.toFixed(2) || '0.00'}</span></p>{sessionTaxData.taxDue > 0 ? (<><button onClick={() => onPayTax(sessionTaxData.taxDue)} disabled={isPaying} className="mt-4 bg-green-600 text-white font-bold py-2 px-4 rounded-md hover:bg-green-700 disabled:bg-gray-500"> {isPaying ? 'Paying...' : 'Pay Full Amount'}</button><input type="number" value={customTaxAmount} onChange={(e) => setCustomTaxAmount(e.target.value)} placeholder="Custom Amount" className="ml-2 p-2 bg-gray-700 border border-gray-600 rounded-md" /><button onClick={() => onPayTax(parseFloat(customTaxAmount))} disabled={isPaying} className="ml-2 bg-green-600 text-white font-bold py-2 px-4 rounded-md hover:bg-green-700 disabled:bg-gray-500"> {isPaying ? 'Paying...' : 'Pay Custom'}</button></>) : (<div className="mt-4"><input type="number" value={customTaxAmount} onChange={(e) => setCustomTaxAmount(e.target.value)} placeholder="Advance Amount" className="p-2 bg-gray-700 border border-gray-600 rounded-md" /><button onClick={() => onAdvanceTax(parseFloat(customTaxAmount))} disabled={isPaying} className="ml-2 bg-blue-600 text-white font-bold py-2 px-4 rounded-md hover:bg-blue-700 disabled:bg-gray-500"> {isPaying ? 'Paying...' : 'Pay Advance'}</button></div>)}</div>
-                        <div className="w-24 h-24 rounded-full flex items-center justify-center text-white text-4xl font-bold shadow-md border-4 border-green-500 bg-minecraft-world overflow-hidden"><span className="relative z-10">{accountId.charAt(0).toUpperCase()}</span></div>
+                        <div><h2 className="text-xl font-bold text-green-400 mb-2">Tax Summary</h2><p className="text-gray-300">Total Due: <span className="font-bold text-red-400">${sessionTaxData.taxDue?.toFixed(2) || '0.00'}</span></p><p className="text-gray-300">Paid: <span className="font-bold text-green-400">${sessionTaxData.taxPaid?.toFixed(2) || '0.00'}</span></p><p className="text-gray-300">Advance Paid: <span className="font-bold text-blue-400">${sessionTaxData.advancePaid?.toFixed(2) || '0.00'}</span></p>{sessionTaxData.taxDue > 0 ? (<><button onClick={() => onPayTax(sessionTaxData.taxDue)} disabled={isPaying} className="mt-4 bg-green-600 text-white font-bold py-2 px-4 rounded-md hover:bg-green-700 disabled:bg-gray-500"> {isPaying ? 'Paying...' : 'Pay Full Amount'}</button><input type="number" value={customTaxAmount} onChange={(e) => setCustomTaxAmount(e.target.value)} placeholder="Custom Amount" className="ml-2 p-2 bg-gray-700 border border-gray-600 rounded-md" /><button onClick={() => onPayTax(parseFloat(customTaxAmount))} disabled={isPaying} className="ml-2 bg-green-600 text-white font-bold py-2 px-4 rounded-md hover:bg-green-700 disabled:bg-gray-500"> {isPaying ? 'Paying...' : 'Pay Custom'}</button></>) : (<div className="mt-4"><input type="number" value={customTaxAmount} onChange={(e) => setCustomTaxAmount(e.target.value)} placeholder="Advance Amount" className="p-2 bg-gray-700 border border-gray-600 rounded-md" /><button onClick={() => onAdvanceTax(parseFloat(customTaxAmount))} disabled={isPaying} className="ml-2 bg-blue-600 text-white font-bold py-2 px-4 rounded-md hover:bg-blue-700 disabled:bg-gray-500"> {isPaying ? 'Paying...' : 'Pay Advance'}</button></div>)}</div>
+                        <div className="w-24 h-24 rounded-full flex items-center justify-center text-white text-4xl font-bold shadow-md border-4 border-yellow-400 bg-minecraft-world overflow-hidden"><span className="relative z-10">$</span></div>
                     </div>
                     <div className="bg-gray-800 p-6 rounded-lg shadow-minecraft">
                         <div className="flex justify-between items-center mb-4"><h2 className="text-xl font-bold text-green-400">Tax Trend</h2><div className="flex gap-2"><button onClick={() => setChartDataType('applied')} className={`px-3 py-1 text-sm rounded-md ${chartDataType === 'applied' ? 'bg-green-600 text-white' : 'bg-gray-700'}`}>Applied</button><button onClick={() => setChartDataType('paid')} className={`px-3 py-1 text-sm rounded-md ${chartDataType === 'paid' ? 'bg-green-600 text-white' : 'bg-gray-700'}`}>Paid</button><button onClick={downloadReport} className="px-3 py-1 text-sm rounded-md bg-blue-600 text-white">Download</button></div></div>
@@ -920,12 +929,12 @@
                         type: 'debit',
                         amount: -amount,
                         date: new Date().toISOString(),
-                        description: `Tax payment for session ${data.taxData.currentSession}`
+                        description: `Tax payment`
                     }
                 ]
             };
             updateCurrentUser(updatedAccount);
-            showModal('Success', `Paid $${amount.toFixed(2)} in tax for session ${data.taxData.currentSession}.`, 'success');
+            showModal('Payment Successful', `Paid $${amount.toFixed(2)} in tax.`, 'success');
         } else {
             const errorData = await response.json();
             showModal('Error', errorData.message || 'Failed to pay tax.', 'error');
@@ -965,12 +974,12 @@ const handleAdvanceTax = async (amount) => {
                         type: 'debit',
                         amount: -amount,
                         date: new Date().toISOString(),
-                        description: `Advance tax payment for session ${data.taxData.currentSession}`
+                        description: `Advance tax payment`
                     }
                 ]
             };
             updateCurrentUser(updatedAccount);
-            showModal('Success', `Paid ${amount.toFixed(2)} in advance tax for session ${data.taxData.currentSession}.`, 'success');
+            showModal('Success', `Paid ${amount.toFixed(2)} in advance tax.`, 'success');
         } else {
             const errorData = await response.json();
             showModal('Error', errorData.message || 'Failed to pay advance tax.', 'error');
