@@ -4,8 +4,8 @@
     "Ansh": {
       "sessions": {
         "N3637": {
-          "taxDue": 183192.53200000015,
-          "taxPaid": 0,
+          "taxDue": 183191.53200000015,
+          "taxPaid": 1,
           "dailyCharges": [
             {
               "date": "2025-01-07",
@@ -311,8 +311,7 @@
               "date": "2025-05-26",
               "amount": 354.22360000000003
             }
-          ],
-          "advancePaid": null
+          ]
         }
       }
     },
