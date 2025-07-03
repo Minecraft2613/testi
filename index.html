@@ -1,4 +1,3 @@
-
 <!DOCTYPE html>
 <html lang="en">
 <head>
@@ -210,12 +209,13 @@
             );
         };
 
-                const TaxPage = ({ currentUserAccount, handlePayTax, handleAdvanceTax, showModal }) => {
+                const TaxPage = ({ currentUserAccount, setCurrentUserAccount, handlePayTax, handleAdvanceTax, showModal }) => {
             const chartRef = useRef(null);
             const chartInstanceRef = useRef(null); // Use a ref to store the chart instance
             const [chartDataType, setChartDataType] = useState('applied'); // Renamed from chartData to avoid confusion
             const [customTaxAmount, setCustomTaxAmount] = useState('');
             const [session, setSession] = useState(null);
+            const [isPaying, setIsPaying] = useState(false);
 
             if (!currentUserAccount) return null;
             const { taxData = {}, accountId, transactions = [] } = currentUserAccount;
@@ -329,10 +329,22 @@
                 showModal('Download Complete', 'Tax chart downloaded successfully!', 'success');
             };
 
+            const onPayTax = async (amount) => {
+                setIsPaying(true);
+                await handlePayTax(amount);
+                setIsPaying(false);
+            };
+
+            const onAdvanceTax = async (amount) => {
+                setIsPaying(true);
+                await handleAdvanceTax(amount);
+                setIsPaying(false);
+            };
+
             return (
                 <div className="space-y-6">
                     <div className="bg-gray-800 p-6 rounded-lg shadow-minecraft flex items-center justify-between">
-                        <div><h2 className="text-xl font-bold text-green-400 mb-2">Tax Summary for Session: {session}</h2><p className="text-gray-300">Total Due: <span className="font-bold text-red-400">${sessionTaxData.taxDue?.toFixed(2) || '0.00'}</span></p><p className="text-gray-300">Paid in Session: <span className="font-bold text-green-400">${sessionTaxData.taxPaid?.toFixed(2) || '0.00'}</span></p><p className="text-gray-300">Advance Paid: <span className="font-bold text-blue-400">${sessionTaxData.advancePaid?.toFixed(2) || '0.00'}</span></p>{sessionTaxData.taxDue > 0 ? (<><button onClick={() => handlePayTax(sessionTaxData.taxDue)} className="mt-4 bg-green-600 text-white font-bold py-2 px-4 rounded-md hover:bg-green-700">Pay Full Amount</button><input type="number" value={customTaxAmount} onChange={(e) => setCustomTaxAmount(e.target.value)} placeholder="Custom Amount" className="ml-2 p-2 bg-gray-700 border border-gray-600 rounded-md" /><button onClick={() => handlePayTax(parseFloat(customTaxAmount))} className="ml-2 bg-green-600 text-white font-bold py-2 px-4 rounded-md hover:bg-green-700">Pay Custom</button></>) : (<div className="mt-4"><input type="number" value={customTaxAmount} onChange={(e) => setCustomTaxAmount(e.target.value)} placeholder="Advance Amount" className="p-2 bg-gray-700 border border-gray-600 rounded-md" /><button onClick={() => handleAdvanceTax(parseFloat(customTaxAmount))} className="ml-2 bg-blue-600 text-white font-bold py-2 px-4 rounded-md hover:bg-blue-700">Pay Advance</button></div>)}</div>
+                        <div><h2 className="text-xl font-bold text-green-400 mb-2">Tax Summary</h2><p className="text-gray-300">Total Due: <span className="font-bold text-red-400">${sessionTaxData.taxDue?.toFixed(2) || '0.00'}</span></p><p className="text-gray-300">Paid in Session: <span className="font-bold text-green-400">${sessionTaxData.taxPaid?.toFixed(2) || '0.00'}</span></p><p className="text-gray-300">Advance Paid: <span className="font-bold text-blue-400">${sessionTaxData.advancePaid?.toFixed(2) || '0.00'}</span></p>{sessionTaxData.taxDue > 0 ? (<><button onClick={() => onPayTax(sessionTaxData.taxDue)} disabled={isPaying} className="mt-4 bg-green-600 text-white font-bold py-2 px-4 rounded-md hover:bg-green-700 disabled:bg-gray-500"> {isPaying ? 'Paying...' : 'Pay Full Amount'}</button><input type="number" value={customTaxAmount} onChange={(e) => setCustomTaxAmount(e.target.value)} placeholder="Custom Amount" className="ml-2 p-2 bg-gray-700 border border-gray-600 rounded-md" /><button onClick={() => onPayTax(parseFloat(customTaxAmount))} disabled={isPaying} className="ml-2 bg-green-600 text-white font-bold py-2 px-4 rounded-md hover:bg-green-700 disabled:bg-gray-500"> {isPaying ? 'Paying...' : 'Pay Custom'}</button></>) : (<div className="mt-4"><input type="number" value={customTaxAmount} onChange={(e) => setCustomTaxAmount(e.target.value)} placeholder="Advance Amount" className="p-2 bg-gray-700 border border-gray-600 rounded-md" /><button onClick={() => onAdvanceTax(parseFloat(customTaxAmount))} disabled={isPaying} className="ml-2 bg-blue-600 text-white font-bold py-2 px-4 rounded-md hover:bg-blue-700 disabled:bg-gray-500"> {isPaying ? 'Paying...' : 'Pay Advance'}</button></div>)}</div>
                         <div className="w-24 h-24 rounded-full flex items-center justify-center text-white text-4xl font-bold shadow-md border-4 border-green-500 bg-minecraft-world overflow-hidden"><span className="relative z-10">{accountId.charAt(0).toUpperCase()}</span></div>
                     </div>
                     <div className="bg-gray-800 p-6 rounded-lg shadow-minecraft">
@@ -1055,7 +1067,7 @@ const handleAdvanceTax = async (amount) => {
 
             const renderPage = () => {
                 if (loading) return <LoadingScreen loginSuccess={loginSuccess} message={loginSuccess ? 'Login Successful!' : 'Loading Bank Data...'} />;
-                const commonProps = { currentUserAccount, setCurrentPage, showModal, handleLogout, handleChangePassword, handleUpdateProfile, handlePayTax, handleAdvanceTax, handleApplyLoan, handleCancelLoan, handleAdminApproveLoan, handlePayLoan, session };
+                const commonProps = { currentUserAccount, setCurrentUserAccount, setCurrentPage, showModal, handleLogout, handleChangePassword, handleUpdateProfile, handlePayTax, handleAdvanceTax, handleApplyLoan, handleCancelLoan, handleAdminApproveLoan, handlePayLoan, session };
                 if (!currentUserAccount) {
                     switch (currentPage) {
                         case 'create-account': return <CreateAccountPage {...commonProps} handleCreateAccount={handleCreateAccount} />;
