@@ -1161,7 +1161,7 @@ const handleAdvanceTax = async (amount) => {
 
             const renderPage = () => {
                 if (loading) return <LoadingScreen loginSuccess={loginSuccess} message={loginSuccess ? 'Login Successful!' : 'Loading Bank Data...'} />;
-                const commonProps = { currentUserAccount, setCurrentUserAccount, setCurrentPage, showModal, handleLogout, handleChangePassword, handleUpdateProfile, handlePayTax, handleAdvanceTax, handleApplyLoan, handleCancelLoan, handleAdminApproveLoan, handlePayLoan, session };
+                const commonProps = { currentUserAccount, setCurrentUserAccount, setCurrentPage, showModal, handleLogout, handleChangePassword, handleUpdateProfile, handlePayTax, handleAdvanceTax, handleApplyLoan, handleCancelLoan, handleAdminApproveLoan, handlePayLoan, session, paymentAnimationDetails, setPaymentAnimationDetails };
                 if (!currentUserAccount) {
                     switch (currentPage) {
                         case 'create-account': return <CreateAccountPage {...commonProps} handleCreateAccount={handleCreateAccount} />;
