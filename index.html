@@ -28,8 +28,8 @@
         .front  { transform: translateZ(25px); } .back   { transform: rotateY(180deg) translateZ(25px); } .right  { transform: rotateY(90deg) translateZ(25px); } .left   { transform: rotateY(-90deg) translateZ(25px); } .top    { transform: rotateX(90deg) translateZ(25px); } .bottom { transform: rotateX(-90deg) translateZ(25px); }
         .cube-1 { animation: join-1 2.5s forwards; } .cube-2 { animation: join-2 2.5s forwards; } .cube-3 { animation: join-3 2.5s forwards; } .cube-4 { animation: join-4 2.5s forwards; }
 
-        /* Payment Loading Animation */
-        .payment-loading-overlay {
+        
+        .simple-payment-loading-overlay {
             position: fixed;
             top: 0;
             left: 0;
@@ -44,136 +44,38 @@
             color: white;
             font-size: 1.5rem;
             text-align: center;
-            overflow: hidden;
         }
 
-        .coin-container {
-            position: relative;
-            width: 100px;
-            height: 100px;
-            margin-bottom: 20px;
-            transform-style: preserve-3d;
-            animation: coinDrop 1.5s ease-out forwards;
-        }
-
-        .coin {
-            width: 100%;
-            height: 100%;
-            border-radius: 50%;
-            background: linear-gradient(to bottom, #FFD700, #FFA500);
-            position: absolute;
-            transform-style: preserve-3d;
-            animation: coinSpin 1.5s infinite linear;
-        }
-
-        .coin-face {
-            position: absolute;
-            width: 100%;
-            height: 100%;
-            border-radius: 50%;
-            backface-visibility: hidden;
+        .loading-box {
+            width: 200px;
+            height: 150px;
             display: flex;
+            flex-direction: column;
             align-items: center;
             justify-content: center;
+            border: 4px solid yellow;
+            border-radius: 8px;
+            transition: border-color 0.5s ease-in-out;
+        }
+
+        .loading-box.success {
+            border-color: green;
+        }
+
+        .dollar-symbol {
+            font-size: 4rem;
             font-weight: bold;
-            font-size: 1.8rem;
-            color: #333;
+            animation: dollarPulse 1.5s infinite alternate;
         }
 
-        .coin-front { transform: rotateY(0deg) translateZ(2px); background: linear-gradient(to bottom, #FFD700, #FFA500); }
-        .coin-back { transform: rotateY(180deg) translateZ(2px); background: linear-gradient(to bottom, #FFD700, #FFA500); }
-        .coin-edge { position: absolute; width: 4px; height: 100%; background: #DAA520; transform: rotateY(90deg) translateZ(48px); }
-
-        .coin-amount {
-            position: absolute;
-            top: 50%;
-            left: 50%;
-            transform: translate(-50%, -50%);
-            color: #333;
-            font-size: 1.5rem;
-            font-weight: bold;
+        @keyframes dollarPulse {
+            0% { transform: scale(1); text-shadow: 0 0 5px yellow; }
+            100% { transform: scale(1.1); text-shadow: 0 0 15px yellow; }
         }
 
-        .bank-office {
-            width: 150px;
-            height: 100px;
-            background-color: #556B2F; /* Dark Olive Green */
-            border: 5px solid #8B4513; /* Saddle Brown */
-            position: relative;
-            margin-top: 50px;
-            overflow: hidden;
-        }
-
-        .bank-office::before {
-            content: '🏦';
-            position: absolute;
-            top: 50%;
-            left: 50%;
-            transform: translate(-50%, -50%);
-            font-size: 3rem;
-        }
-
-        .hand {
-            width: 80px;
-            height: 120px;
-            background-color: #A0522D; /* Sienna */
-            border-radius: 10px;
-            position: absolute;
-            top: -150px; /* Start above screen */
-            left: 50%;
-            transform: translateX(-50%);
-            animation: handAppear 0.5s ease-out forwards;
-        }
-
-        @keyframes handAppear {
-            to { top: 20px; }
-        }
-
-        @keyframes coinDrop {
-            0% { transform: translateY(-200px) rotateX(0deg); opacity: 0; }
-            50% { opacity: 1; }
-            100% { transform: translateY(0) rotateX(360deg); }
-        }
-
-        @keyframes coinSpin {
-            from { transform: rotateY(0deg); }
-            to { transform: rotateY(360deg); }
-        }
-
-        .car {
-            width: 120px;
-            height: 60px;
-            background-color: #B22222; /* Firebrick */
-            border-radius: 10px;
-            position: absolute;
-            bottom: -100px; /* Start below screen */
-            left: -200px; /* Start off screen */
-            animation: carDrive 3s linear forwards;
-        }
-
-        .car::before, .car::after {
-            content: '';
-            position: absolute;
-            width: 20px;
-            height: 20px;
-            background-color: #333;
-            border-radius: 50%;
-            bottom: -10px;
-        }
-
-        .car::before { left: 10px; }
-        .car::after { right: 10px; }
-
-        @keyframes carDrive {
-            0% { left: -200px; }
-            100% { left: 50%; transform: translateX(-50%); }
-        }
-
-        .success-message {
-            margin-top: 30px;
-            font-size: 2rem;
-            color: #7FFF00; /* Chartreuse */
-            animation: fadeIn 1s ease-in-out;
+        .message-text {
+            margin-top: 15px;
+            font-size: 1.2rem;
         }
         @keyframes join-1 { 0% { transform: translate(-200vw, -200vh, -200px) rotateY(-90deg); } 70%, 100% { transform: translate(-25px, -25px, 0) rotateY(0deg); } }
         @keyframes join-2 { 0% { transform: translate(200vw, -200vh, -200px) rotateY(90deg); } 70%, 100% { transform: translate(25px, -25px, 0) rotateY(0deg); } }
@@ -256,8 +158,7 @@
             const handleChange = (e) => setFormState({ ...formState, [e.target.name]: e.target.value });
             const onSubmit = (e) => {
                 e.preventDefault();
-                const accountIdToSend = formState.edition === 'bedrock' && formState.accountId.startsWith('.') ? formState.accountId.substring(1) : formState.accountId; // Remove leading dot for bedrock if present
-                const success = handleCreateAccount({ ...formState, accountId: accountIdToSend, bankId: generatedBankId });
+                const success = handleCreateAccount({ ...formState, bankId: generatedBankId });
                 if (success) showModal('Account Created!', `Your Bank ID is: ${generatedBankId}. Please copy it and keep it safe!`, 'success', () => setCurrentPage('login'));
             };
             return (
@@ -265,8 +166,8 @@
                     <form onSubmit={onSubmit} className="space-y-4">
                         <input name="bankName" value={formState.bankName} onChange={handleChange} placeholder="Bank Name" required className="w-full p-3 bg-gray-700 text-gray-200 border border-gray-600 rounded-md focus:outline-none focus:ring-2 focus:ring-green-500" />
                         <input name="email" type="email" value={formState.email} onChange={handleChange} placeholder="Email Address" required className="w-full p-3 bg-gray-700 text-gray-200 border border-gray-600 rounded-md focus:outline-none focus:ring-2 focus:ring-green-500" />
-                        <select name="edition" value={formState.edition} onChange={handleChange} className="w-full p-3 bg-gray-700 text-gray-200 border border-gray-600 rounded-md focus:outline-none focus:ring-2 focus:ring-green-500"><option value="java">Java</option><option value="bedrock">Bedrock</option></select>
-                        <div className="flex"><input name="accountId" value={formState.accountId} onChange={handleChange} placeholder="Your in-game name" required className={`w-full p-3 bg-gray-700 text-gray-200 border border-gray-600 focus:outline-none focus:ring-2 focus:ring-green-500 ${formState.edition === 'bedrock' ? 'rounded-l-none rounded-r-md' : 'rounded-md'}`} /></div>
+                        
+                        <input name="accountId" value={formState.accountId} onChange={handleChange} placeholder="Your in-game name" required className="w-full p-3 bg-gray-700 text-gray-200 border border-gray-600 rounded-md" />
                         <input name="password" type="password" value={formState.password} onChange={handleChange} placeholder="Password" required className="w-full p-3 bg-gray-700 text-gray-200 border border-gray-600 rounded-md focus:outline-none focus:ring-2 focus:ring-green-500" />
                         {generatedBankId && <div className="p-3 bg-gray-700 rounded-md border border-green-500 flex items-center justify-between"><span className="text-green-300 text-sm font-mono break-all pr-2">Your Bank ID: <span className="font-bold text-lg">{generatedBankId}</span></span><button type="button" onClick={() => copyToClipboard(generatedBankId, showModal)} className="bg-green-500 hover:bg-green-600 text-white text-sm font-semibold py-1 px-3 rounded-md">Copy</button></div>}
                         <button type="submit" className="w-full bg-green-600 hover:bg-green-700 text-white font-bold py-3 px-6 rounded-md">Create Account</button>
@@ -1270,129 +1171,19 @@ const handleAdvanceTax = async (amount) => {
                     {paymentAnimationDetails.show && (
                         <PaymentLoadingAnimation
                             amount={paymentAnimationDetails.amount}
-                            onAnimationComplete={() => setPaymentAnimationDetails({ show: false, amount: 0 })}
                             status={paymentAnimationDetails.status}
+                            onAnimationComplete={() => setPaymentAnimationDetails({ show: false, amount: 0, status: '' })}
                         />
-                    )}
+                    )}}
                 </>
             );
         };
 
-        // New Payment Loading Animation Component
-        const PaymentLoadingAnimation = ({ amount, onAnimationComplete, status }) => {
-            const [animationPhase, setAnimationPhase] = useState('initial'); // initial, coinDrop, carArrive, success
-            const formattedAmount = amount >= 1000 ? `${(amount / 1000).toFixed(0)}K` : amount.toFixed(0);
+        
 
-            useEffect(() => {
-                if (status === 'processing') {
-                    setAnimationPhase('coinDrop');
-                    const carTimer = setTimeout(() => {
-                        setAnimationPhase('carArrive');
-                    }, 2500); // Car arrives after 2.5 seconds if still processing
+        
 
-                    return () => clearTimeout(carTimer);
-                } else if (status === 'success') {
-                    setAnimationPhase('success');
-                    const successTimer = setTimeout(() => {
-                        onAnimationComplete();
-                    }, 3000); // Show success message for 3 seconds
-                    return () => clearTimeout(successTimer);
-                }
-            }, [status, amount, onAnimationComplete]);
 
-            return (
-                <div className="payment-loading-overlay">
-                    {animationPhase === 'initial' && <p>Preparing payment...</p>}
-
-                    {animationPhase === 'coinDrop' && (
-                        <div className="flex flex-col items-center">
-                            <div className="hand"></div>
-                            <div className="coin-container">
-                                <div className="coin">
-                                    <div className="coin-face coin-front">${formattedAmount}</div>
-                                    <div className="coin-face coin-back"></div>
-                                    <div className="coin-edge"></div>
-                                </div>
-                            </div>
-                            <div className="bank-office"></div>
-                            <p className="mt-4">Dropping coin into the bank...</p>
-                        </div>
-                    )}
-
-                    {animationPhase === 'carArrive' && (
-                        <div className="flex flex-col items-center">
-                            <div className="car"></div>
-                            <p className="mt-4">Payment taking longer... sending to tax office!</p>
-                        </div>
-                    )}
-
-                    {animationPhase === 'success' && (
-                        <div className="success-message">
-                            <p>Payment successful!</p>
-                            <p>Thanks for paying the tax!</p>
-                        </div>
-                    )}
-                </div>
-            );
-        };
-
-        // New Payment Loading Animation Component
-        const PaymentLoadingAnimation = ({ amount, onAnimationComplete, status }) => {
-            const [animationPhase, setAnimationPhase] = useState('initial'); // initial, coinDrop, carArrive, success
-            const formattedAmount = amount >= 1000 ? `${(amount / 1000).toFixed(0)}K` : amount.toFixed(0);
-
-            useEffect(() => {
-                if (status === 'processing') {
-                    setAnimationPhase('coinDrop');
-                    const carTimer = setTimeout(() => {
-                        setAnimationPhase('carArrive');
-                    }, 2500); // Car arrives after 2.5 seconds if still processing
-
-                    return () => clearTimeout(carTimer);
-                } else if (status === 'success') {
-                    setAnimationPhase('success');
-                    const successTimer = setTimeout(() => {
-                        onAnimationComplete();
-                    }, 3000); // Show success message for 3 seconds
-                    return () => clearTimeout(successTimer);
-                }
-            }, [status, amount, onAnimationComplete]);
-
-            return (
-                <div className="payment-loading-overlay">
-                    {animationPhase === 'initial' && <p>Preparing payment...</p>}
-
-                    {animationPhase === 'coinDrop' && (
-                        <div className="flex flex-col items-center">
-                            <div className="hand"></div>
-                            <div className="coin-container">
-                                <div className="coin">
-                                    <div className="coin-face coin-front">${formattedAmount}</div>
-                                    <div className="coin-face coin-back"></div>
-                                    <div className="coin-edge"></div>
-                                </div>
-                            </div>
-                            <div className="bank-office"></div>
-                            <p className="mt-4">Dropping coin into the bank...</p>
-                        </div>
-                    )}
-
-                    {animationPhase === 'carArrive' && (
-                        <div className="flex flex-col items-center">
-                            <div className="car"></div>
-                            <p className="mt-4">Payment taking longer... sending to tax office!</p>
-                        </div>
-                    )}
-
-                    {animationPhase === 'success' && (
-                        <div className="success-message">
-                            <p>Payment successful!</p>
-                            <p>Thanks for paying the tax!</p>
-                        </div>
-                    )}
-                </div>
-            );
-        };
 
         ReactDOM.createRoot(document.getElementById('root')).render(<App />);
     </script>
