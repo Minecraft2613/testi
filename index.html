@@ -31,6 +31,74 @@
         @keyframes join-2 { 0% { transform: translate(200vw, -200vh, -200px) rotateY(90deg); } 70%, 100% { transform: translate(25px, -25px, 0) rotateY(0deg); } }
         @keyframes join-3 { 0% { transform: translate(-200vw, 200vh, -200px) rotateY(90deg); } 70%, 100% { transform: translate(-25px, 25px, 0) rotateY(0deg); } }
         @keyframes join-4 { 0% { transform: translate(200vw, 200vh, -200px) rotateY(-90deg); } 70%, 100% { transform: translate(25px, 25px, 0) rotateY(0deg); } }
+
+        /* New styles for payment loading animation */
+        .payment-loading-overlay {
+            position: absolute; /* Changed from fixed to absolute */
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            background-color: rgba(0, 0, 0, 0.7); /* Darker overlay */
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            z-index: 50; /* Below main loading screen, above tax content */
+            border-radius: 0.5rem; /* Match parent container */
+        }
+
+        .payment-loading-box {
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            justify-content: center;
+            padding: 2rem;
+            background-color: #1a202c; /* Dark background */
+            border: 4px solid #fbbf24; /* Yellow border for processing */
+            border-radius: 0.75rem;
+            box-shadow: 0 0 20px rgba(0, 0, 0, 0.5);
+            transition: border-color 0.5s ease-in-out, box-shadow 0.5s ease-in-out;
+            text-align: center;
+        }
+
+        .payment-loading-box.success {
+            border-color: #10b981; /* Green border for success */
+            box-shadow: 0 0 30px #10b981, 0 0 40px #10b981; /* Green glow */
+        }
+
+        .payment-loading-box.error {
+            border-color: #ef4444; /* Red border for error */
+        }
+
+        .payment-dollar-symbol {
+            font-size: 4rem;
+            font-weight: bold;
+            color: #fcd34d; /* Gold-like color for dollar */
+            animation: dollarBounce 1s infinite ease-in-out;
+            margin-bottom: 1rem;
+        }
+
+        @keyframes dollarBounce {
+            0%, 100% { transform: translateY(0); }
+            50% { transform: translateY(-15px); }
+        }
+
+        .payment-message-text {
+            font-size: 1.25rem;
+            color: #e2e8f0;
+            margin-top: 0.5rem;
+        }
+
+        /* Keyframes for glowing effect */
+        @keyframes glow-green {
+            0% { box-shadow: 0 0 10px #10b981; }
+            50% { box-shadow: 0 0 20px #10b981, 0 0 30px #10b981; }
+            100% { box-shadow: 0 0 10px #10b981; }
+        }
+
+        .payment-loading-box.success {
+            animation: glow-green 1.5s infinite alternate;
+        }
     </style>
 </head>
 <body class="bg-gray-800 text-gray-100 antialiased">
@@ -210,7 +278,7 @@
             );
         };
 
-                const TaxPage = ({ currentUserAccount, setCurrentUserAccount, handlePayTax, handleAdvanceTax, showModal }) => {
+                const TaxPage = ({ currentUserAccount, setCurrentUserAccount, handlePayTax, handleAdvanceTax, showModal, paymentAnimationDetails, setPaymentAnimationDetails }) => {
             const chartRef = useRef(null);
             const chartInstanceRef = useRef(null); // Use a ref to store the chart instance
             const [chartDataType, setChartDataType] = useState('applied'); // Renamed from chartData to avoid confusion
@@ -330,13 +398,13 @@
                 showModal('Download Complete', 'Tax chart downloaded successfully!', 'success');
             };
 
-            const onPayTax = async (amount) => {
+            const onPayTax = async (amount, isFullTax = false) => {
                 if (balance < amount) {
                     showModal('Insufficient Balance', 'Do you want to deduct the amount from your Minecraft account?', 'info');
                     return;
                 }
                 setIsPaying(true);
-                await handlePayTax(amount);
+                await handlePayTax(amount, isFullTax);
                 setIsPaying(false);
             };
 
@@ -351,9 +419,27 @@
             };
 
             return (
-                <div className="space-y-6">
+                <div className="space-y-6 relative"> {/* Added relative positioning */}
+                    {paymentAnimationDetails.show && (
+                        <PaymentLoadingAnimation
+                            amount={paymentAnimationDetails.amount}
+                            status={paymentAnimationDetails.status}
+                            paymentType={paymentAnimationDetails.paymentType}
+                            onAnimationComplete={() => setPaymentAnimationDetails({ show: false, amount: 0, status: 'processing', paymentType: '' })}
+                        />
+                    )}
+                    return (
+                <div className="space-y-6 relative"> {/* Added relative positioning */}
+                    {paymentAnimationDetails.show && (
+                        <PaymentLoadingAnimation
+                            amount={paymentAnimationDetails.amount}
+                            status={paymentAnimationDetails.status}
+                            paymentType={paymentAnimationDetails.paymentType}
+                            onAnimationComplete={() => setPaymentAnimationDetails({ show: false, amount: 0, status: 'processing', paymentType: '' })}
+                        />
+                    )}
                     <div className="bg-gray-800 p-6 rounded-lg shadow-minecraft flex items-center justify-between">
-                        <div><h2 className="text-xl font-bold text-green-400 mb-2">Tax Summary</h2><p className="text-gray-300">Total Due: <span className="font-bold text-red-400">${sessionTaxData.taxDue?.toFixed(2) || '0.00'}</span></p><p className="text-gray-300">Paid: <span className="font-bold text-green-400">${sessionTaxData.taxPaid?.toFixed(2) || '0.00'}</span></p><p className="text-gray-300">Advance Paid: <span className="font-bold text-blue-400">${sessionTaxData.advancePaid?.toFixed(2) || '0.00'}</span></p>{sessionTaxData.taxDue > 0 ? (<><button onClick={() => onPayTax(sessionTaxData.taxDue)} disabled={isPaying} className="mt-4 bg-green-600 text-white font-bold py-2 px-4 rounded-md hover:bg-green-700 disabled:bg-gray-500"> {isPaying ? 'Paying...' : 'Pay Full Amount'}</button><input type="number" value={customTaxAmount} onChange={(e) => setCustomTaxAmount(e.target.value)} placeholder="Custom Amount" className="ml-2 p-2 bg-gray-700 border border-gray-600 rounded-md" /><button onClick={() => onPayTax(parseFloat(customTaxAmount))} disabled={isPaying} className="ml-2 bg-green-600 text-white font-bold py-2 px-4 rounded-md hover:bg-green-700 disabled:bg-gray-500"> {isPaying ? 'Paying...' : 'Pay Custom'}</button></>) : (<div className="mt-4"><input type="number" value={customTaxAmount} onChange={(e) => setCustomTaxAmount(e.target.value)} placeholder="Advance Amount" className="p-2 bg-gray-700 border border-gray-600 rounded-md" /><button onClick={() => onAdvanceTax(parseFloat(customTaxAmount))} disabled={isPaying} className="ml-2 bg-blue-600 text-white font-bold py-2 px-4 rounded-md hover:bg-blue-700 disabled:bg-gray-500"> {isPaying ? 'Paying...' : 'Pay Advance'}</button></div>)}</div>
+                        <div><h2 className="text-xl font-bold text-green-400 mb-2">Tax Summary</h2><p className="text-gray-300">Total Due: <span className="font-bold text-red-400">${sessionTaxData.taxDue?.toFixed(2) || '0.00'}</span></p><p className="text-gray-300">Paid: <span className="font-bold text-green-400">${sessionTaxData.taxPaid?.toFixed(2) || '0.00'}</span></p><p className="text-gray-300">Advance Paid: <span className="font-bold text-blue-400">${sessionTaxData.advancePaid?.toFixed(2) || '0.00'}</span></p>{sessionTaxData.taxDue > 0 ? (<><button onClick={() => onPayTax(sessionTaxData.taxDue, true)} disabled={isPaying} className="mt-4 bg-green-600 text-white font-bold py-2 px-4 rounded-md hover:bg-green-700 disabled:bg-gray-500"> {isPaying ? 'Paying...' : 'Pay Full Amount'}</button><input type="number" value={customTaxAmount} onChange={(e) => setCustomTaxAmount(e.target.value)} placeholder="Custom Amount" className="ml-2 p-2 bg-gray-700 border border-gray-600 rounded-md" /><button onClick={() => onPayTax(parseFloat(customTaxAmount), false)} disabled={isPaying} className="ml-2 bg-green-600 text-white font-bold py-2 px-4 rounded-md hover:bg-green-700 disabled:bg-gray-500"> {isPaying ? 'Paying...' : 'Make Custom Payment'}</button></>) : (<div className="mt-4"><input type="number" value={customTaxAmount} onChange={(e) => setCustomTaxAmount(e.target.value)} placeholder="Advance Amount" className="p-2 bg-gray-700 border border-gray-600 rounded-md" /><button onClick={() => onAdvanceTax(parseFloat(customTaxAmount))} disabled={isPaying} className="ml-2 bg-blue-600 text-white font-bold py-2 px-4 rounded-md hover:bg-blue-700 disabled:bg-gray-500"> {isPaying ? 'Paying...' : 'Pay Advance'}</button></div>)}</div>
                         <div className="w-24 h-24 rounded-full flex items-center justify-center text-white text-4xl font-bold shadow-md border-4 border-yellow-400 bg-minecraft-world overflow-hidden"><span className="relative z-10">{currentUserAccount.accountId.charAt(0).toUpperCase()}</span></div>
                     </div>
                     <div className="bg-gray-800 p-6 rounded-lg shadow-minecraft">
@@ -753,6 +839,7 @@
             const [loading, setLoading] = useState(true);
             const [loginSuccess, setLoginSuccess] = useState(false);
             const [modal, setModal] = useState({ isOpen: false, title: '', message: '', type: 'info', callback: null });
+            const [paymentAnimationDetails, setPaymentAnimationDetails] = useState({ show: false, amount: 0, status: 'processing', paymentType: '' });
 
             const showModal = (title, message, type = 'info', callback = null) => setModal({ isOpen: true, title, message, type, callback });
             const closeModal = () => { if (modal.callback) modal.callback(); setModal({ isOpen: false, title: '', message: '', type: 'info', callback: null }); };
@@ -898,11 +985,13 @@
                 showModal('Success', 'Password changed successfully!', 'success');
             };
 
-         const handlePayTax = async (amount) => {
+         const handlePayTax = async (amount, isFullTax = false) => {
     if (currentUserAccount.balance < amount) {
         showModal('Error', 'Insufficient balance.', 'error');
         return;
     }
+
+    setPaymentAnimationDetails({ show: true, amount: amount, status: 'processing', paymentType: isFullTax ? 'fullTax' : 'customTax' });
 
     // Use player key from taxData if available
     const playerKey = Object.keys(currentUserAccount.taxData?.players || {})[0] || currentUserAccount.accountId;
@@ -933,14 +1022,16 @@
                     }
                 ]
             };
-            updateCurrentUser(updatedAccount);
-            showModal('Payment Successful', `Paid $${amount.toFixed(2)} in tax.`, 'success');
+            await updateCurrentUser(updatedAccount);
+            setPaymentAnimationDetails({ show: true, amount: amount, status: 'success', paymentType: isFullTax ? 'fullTax' : 'customTax' });
         } else {
             const errorData = await response.json();
+            setPaymentAnimationDetails({ show: true, amount: amount, status: 'error' });
             showModal('Error', errorData.message || 'Failed to pay tax.', 'error');
         }
     } catch (error) {
         console.error("Pay tax API error:", error);
+        setPaymentAnimationDetails({ show: true, amount: amount, status: 'error' });
         showModal('Error', 'Could not connect to the tax service.', 'error');
     }
 };
@@ -951,6 +1042,8 @@ const handleAdvanceTax = async (amount) => {
         showModal('Error', 'Insufficient balance.', 'error');
         return;
     }
+
+    setPaymentAnimationDetails({ show: true, amount: amount, status: 'processing', paymentType: 'advanceTax' });
 
     try {
         const response = await fetch(`${API_ENDPOINTS.TAX}/advance-tax`, {
@@ -978,14 +1071,16 @@ const handleAdvanceTax = async (amount) => {
                     }
                 ]
             };
-            updateCurrentUser(updatedAccount);
-            showModal('Success', `Paid ${amount.toFixed(2)} in advance tax.`, 'success');
+            await updateCurrentUser(updatedAccount);
+            setPaymentAnimationDetails({ show: true, amount: amount, status: 'success', paymentType: 'advanceTax' });
         } else {
             const errorData = await response.json();
+            setPaymentAnimationDetails({ show: true, amount: amount, status: 'error' });
             showModal('Error', errorData.message || 'Failed to pay advance tax.', 'error');
         }
     } catch (error) {
         console.error("Advance tax API error:", error);
+        setPaymentAnimationDetails({ show: true, amount: amount, status: 'error' });
         showModal('Error', 'Could not connect to the tax service.', 'error');
     }
 };
@@ -1090,12 +1185,50 @@ const handleAdvanceTax = async (amount) => {
                     case 'top-advance-tax-payers': pageComponent = <TopAdvanceTaxPayersPage {...commonProps} getAllAccounts={getAllAccounts} />; break;
                     case 'contact-us': pageComponent = <ContactUsPage {...commonProps} />; break;
                     case 'theme-setting': pageComponent = <ThemeSettingsPage {...commonProps} />; break;
+                    case 'tax-page': pageComponent = <TaxPage {...commonProps} paymentAnimationDetails={paymentAnimationDetails} setPaymentAnimationDetails={setPaymentAnimationDetails} />; break;
                     default: pageComponent = <Dashboard {...commonProps} />;
                 }
                 return <MainLayout {...commonProps}>{pageComponent}</MainLayout>;
             };
 
-            return <>{renderPage()}<Modal {...modal} onClose={closeModal} /></>;
+            return <>{renderPage()}{paymentAnimationDetails.show && <PaymentLoadingAnimation {...paymentAnimationDetails} onAnimationComplete={() => setPaymentAnimationDetails({ show: false, amount: 0, status: 'processing', paymentType: '' })} /> }<Modal {...modal} onClose={closeModal} /></>;
+        };
+
+        const PaymentLoadingAnimation = ({ amount, status, onAnimationComplete, paymentType }) => {
+            const [message, setMessage] = useState('Processing payment...');
+            const [boxClass, setBoxClass] = useState('');
+
+            useEffect(() => {
+                let timer;
+                if (status === 'success') {
+                    let successMessage = `Payment successful!`;
+                    if (paymentType === 'fullTax') {
+                        successMessage += ` Thanks for paying the tax.`;
+                    } else if (paymentType === 'advanceTax') {
+                        successMessage += ` Thanks for paying the tax advance.`;
+                    }
+                    setMessage(successMessage);
+                    setBoxClass('success');
+                    timer = setTimeout(() => onAnimationComplete(), Math.random() * (1500 - 500) + 500); // Random duration between 0.5 and 1.5 seconds
+                } else if (status === 'error') {
+                    setMessage('Payment failed. Please try again.');
+                    setBoxClass('error');
+                    timer = setTimeout(() => onAnimationComplete(), 3000); // Display error for 3 seconds
+                } else {
+                    setMessage(`Processing payment of ${amount.toFixed(2)}...`);
+                    setBoxClass('');
+                }
+                return () => clearTimeout(timer);
+            }, [status, amount, onAnimationComplete, paymentType]);
+
+            return (
+                <div className="payment-loading-overlay">
+                    <div className={`payment-loading-box ${boxClass}`}>
+                        <div className="payment-dollar-symbol">$</div>
+                        <div className="payment-message-text">{message}</div>
+                    </div>
+                </div>
+            );
         };
 
         ReactDOM.createRoot(document.getElementById('root')).render(<App />);
