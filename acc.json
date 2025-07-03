@@ -6,15 +6,15 @@
     "password": "26",
     "edition": "java",
     "bankId": "BANK512730",
-    "balance": 987,
+    "balance": 986,
     "taxData": {
       "currentSession": "N3637",
       "players": {
         "Ansh": {
           "sessions": {
             "N3637": {
-              "taxDue": 224066.13799999977,
-              "taxPaid": 3,
+              "taxDue": 224065.13799999977,
+              "taxPaid": 4,
               "dailyCharges": [
                 {
                   "date": "2025-01-07",
@@ -322,7 +322,7 @@
                 },
                 {
                   "date": "2025-07-03",
-                  "amount": 1
+                  "amount": 2
                 }
               ]
             }
@@ -667,6 +667,12 @@
         "type": "debit",
         "amount": -1,
         "date": "2025-07-03T16:25:01.699Z",
+        "description": "Tax payment"
+      },
+      {
+        "type": "debit",
+        "amount": -1,
+        "date": "2025-07-03T16:33:18.889Z",
         "description": "Tax payment"
       }
     ]
