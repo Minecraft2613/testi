@@ -6,7 +6,7 @@
     "password": "26",
     "edition": "java",
     "bankId": "BANK512730",
-    "balance": 998,
+    "balance": 997,
     "taxData": {
       "currentSession": "N3637",
       "players": {
@@ -603,6 +603,12 @@
         "type": "debit",
         "amount": -1,
         "date": "2025-07-03T09:52:18.622Z",
+        "description": "Tax payment for session N3637"
+      },
+      {
+        "type": "debit",
+        "amount": -1,
+        "date": "2025-07-03T09:52:42.688Z",
         "description": "Tax payment for session N3637"
       }
     ]
