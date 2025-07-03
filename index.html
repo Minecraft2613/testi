@@ -89,11 +89,17 @@
         const LoginPage = ({ setCurrentPage, handleLogin }) => {
             const [identifier, setIdentifier] = useState('');
             const [password, setPassword] = useState('');
+            const [edition, setEdition] = useState('java'); // Added edition state
+
             return (
                 <AuthPageLayout title="Minecraft Bank Login 🏦" footerText="Don't have an account?" footerButtonText="Create one!" onFooterClick={() => setCurrentPage('create-account')}>
-                    <form onSubmit={(e) => { e.preventDefault(); handleLogin(identifier, password); }} className="space-y-4">
+                    <form onSubmit={(e) => { e.preventDefault(); handleLogin(identifier, password, edition); }} className="space-y-4">
                         <input type="text" value={identifier} onChange={(e) => setIdentifier(e.target.value)} placeholder="Bank ID / MC Name / Email" required className="w-full p-3 bg-gray-700 text-gray-200 border border-gray-600 rounded-md focus:outline-none focus:ring-2 focus:ring-green-500" />
                         <input type="password" value={password} onChange={(e) => setPassword(e.target.value)} placeholder="********" required className="w-full p-3 bg-gray-700 text-gray-200 border border-gray-600 rounded-md focus:outline-none focus:ring-2 focus:ring-green-500" />
+                        <select name="edition" value={edition} onChange={(e) => setEdition(e.target.value)} className="w-full p-3 bg-gray-700 text-gray-200 border border-gray-600 rounded-md focus:outline-none focus:ring-2 focus:ring-green-500">
+                            <option value="java">Java</option>
+                            <option value="bedrock">Bedrock</option>
+                        </select>
                         <button type="submit" className="w-full bg-green-600 hover:bg-green-700 text-white font-bold py-3 px-6 rounded-md transition duration-200 shadow-md transform hover:scale-105">Login</button>
                     </form>
                 </AuthPageLayout>
@@ -107,7 +113,8 @@
             const handleChange = (e) => setFormState({ ...formState, [e.target.name]: e.target.value });
             const onSubmit = (e) => {
                 e.preventDefault();
-                const success = handleCreateAccount({ ...formState, bankId: generatedBankId });
+                const accountIdToSend = formState.edition === 'bedrock' && formState.accountId.startsWith('.') ? formState.accountId.substring(1) : formState.accountId; // Remove leading dot for bedrock if present
+                const success = handleCreateAccount({ ...formState, accountId: accountIdToSend, bankId: generatedBankId });
                 if (success) showModal('Account Created!', `Your Bank ID is: ${generatedBankId}. Please copy it and keep it safe!`, 'success', () => setCurrentPage('login'));
             };
             return (
@@ -139,12 +146,17 @@
             );
         };
 
-        const TopBar = ({ setIsSidebarOpen, currentUserAccount }) => (
-            <div className="bg-gray-800 p-4 flex items-center justify-between shadow-lg sticky top-0 z-10 border-b-2 border-gray-700">
-                <button onClick={() => setIsSidebarOpen(true)} className="text-green-400 text-3xl focus:outline-none p-2 rounded-md hover:bg-gray-700">☰</button>
-                {currentUserAccount && <div className="flex items-center space-x-4"><span className="text-md font-semibold text-gray-200 hidden sm:block">{currentUserAccount.accountId}</span><div className="w-10 h-10 bg-green-700 rounded-full flex items-center justify-center text-white text-lg font-bold border-2 border-green-500 shadow-md">{currentUserAccount.accountId.charAt(0).toUpperCase()}</div></div>}
-            </div>
-        );
+        const TopBar = ({ setIsSidebarOpen, currentUserAccount }) => {
+            const accountIdForAvatar = currentUserAccount.edition === 'bedrock' ? currentUserAccount.accountId.replace(/^\./, '') : currentUserAccount.accountId;
+            const avatarUrl = `https://crafatar.com/avatars/${accountIdForAvatar}?size=40&overlay`;
+
+            return (
+                <div className="bg-gray-800 p-4 flex items-center justify-between shadow-lg sticky top-0 z-10 border-b-2 border-gray-700">
+                    <button onClick={() => setIsSidebarOpen(true)} className="text-green-400 text-3xl focus:outline-none p-2 rounded-md hover:bg-gray-700">☰</button>
+                    {currentUserAccount && <div className="flex items-center space-x-4"><span className="text-md font-semibold text-gray-200 hidden sm:block">{currentUserAccount.accountId}</span><div className="w-10 h-10 rounded-full flex items-center justify-center text-white text-lg font-bold border-2 border-green-500 shadow-md" style={{ backgroundImage: `url(${avatarUrl})`, backgroundSize: 'cover' }}></div></div>}
+                </div>
+            );
+        };
 
         const Sidebar = ({ isOpen, setIsOpen, setCurrentPage, handleLogout }) => {
             const sidebarClass = isOpen ? 'translate-x-0' : '-translate-x-full';
@@ -455,6 +467,9 @@
             });
             const [editMode, setEditMode] = useState({ job: false, business: false, password: false });
 
+            const accountIdForAvatar = currentUserAccount.edition === 'bedrock' ? currentUserAccount.accountId.replace(/^\./, '') : currentUserAccount.accountId;
+            const avatarUrl = `https://crafatar.com/avatars/${accountIdForAvatar}?size=128&overlay`;
+
             const handleProfileChange = (e) => setProfile({ ...profile, [e.target.name]: e.target.value });
             const onProfileSubmit = (e) => { e.preventDefault(); handleUpdateProfile(profile); setEditMode({ ...editMode, job: false, business: false }); };
             const onPasswordSubmit = (e) => { e.preventDefault(); handleChangePassword(oldPassword, newPassword); setOldPassword(''); setNewPassword(''); setEditMode(prev => ({...prev, password: false})); };
@@ -464,7 +479,7 @@
                     <h1 className="text-3xl font-bold text-green-400">Account Settings</h1>
                     <div className="flex flex-col md:flex-row gap-8">
                         <div className="flex-shrink-0 md:w-1/3 flex flex-col items-center text-center">
-                            <div className="w-32 h-32 rounded-full flex items-center justify-center text-white text-6xl font-bold shadow-md border-4 border-green-500 bg-minecraft-world overflow-hidden"><span className="relative z-10">{currentUserAccount.accountId.charAt(0).toUpperCase()}</span></div>
+                            <div className="w-32 h-32 rounded-full flex items-center justify-center text-white text-6xl font-bold shadow-md border-4 border-green-500 overflow-hidden" style={{ backgroundImage: `url(${avatarUrl})`, backgroundSize: 'cover' }}></div>
                             <h3 className="text-2xl font-bold mt-4">{currentUserAccount.accountId}</h3>
                             <p className="text-gray-400"><strong>Email:</strong> {currentUserAccount.email}</p>
                             <p className="text-gray-400"><strong>Bank ID:</strong> {currentUserAccount.bankId}</p>
@@ -803,7 +818,7 @@
                 initializeApp();
             }, []);
 
-            const handleLogin = async (identifier, password) => {
+            const handleLogin = async (identifier, password, edition) => {
                 setLoading(true);
                 setLoginSuccess(false); 
 
@@ -811,7 +826,7 @@
                     const response = await fetch(`${API_ENDPOINTS.ACCOUNTS}/login`, {
                         method: 'POST',
                         headers: { 'Content-Type': 'application/json' },
-                        body: JSON.stringify({ identifier, password })
+                        body: JSON.stringify({ identifier, password, edition })
                     });
 
                     if (response.ok) {
