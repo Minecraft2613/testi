@@ -1196,7 +1196,7 @@ const handleAdvanceTax = async (amount) => {
                 return <MainLayout {...commonProps}>{pageComponent}</MainLayout>;
             };
 
-            return <>{renderPage()}<Modal {...modal} onClose={closeModal} /></>;
+            return <>{renderPage()}{paymentAnimationDetails.show && <PaymentLoadingAnimation {...paymentAnimationDetails} onAnimationComplete={() => setPaymentAnimationDetails({ show: false, amount: 0, status: 'processing', paymentType: '' })} /> }<Modal {...modal} onClose={closeModal} /></>;
         };
 
         const PaymentLoadingAnimation = ({ amount, status, onAnimationComplete, paymentType }) => {
