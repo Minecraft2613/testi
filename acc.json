@@ -6,7 +6,7 @@
     "password": "26",
     "edition": "java",
     "bankId": "BANK512730",
-    "balance": 977,
+    "balance": 966,
     "taxData": {
       "currentSession": "N3637",
       "players": {
@@ -720,6 +720,12 @@
         "amount": -11,
         "date": "2025-07-04T15:04:57.526Z",
         "description": "Loan payment for LOAN1751641399337"
+      },
+      {
+        "type": "debit",
+        "amount": -11,
+        "date": "2025-07-04T15:05:01.368Z",
+        "description": "Paid off loan LOAN1751641399337"
       }
     ],
     "jobType": "ansh",
@@ -728,22 +734,6 @@
     "businessPerDayIncome": "",
     "businessIncomeUnit": "day",
     "hasBusiness": false,
-    "loans": [
-      {
-        "id": "LOAN1751641399337",
-        "loanAmount": 11,
-        "loanAmountDue": 11.659999999999993,
-        "loanPaid": 11,
-        "dailyRepayment": 1.6657142857142848,
-        "durationWeeks": 1,
-        "loanType": "personal",
-        "loanStatus": "active",
-        "applicationDate": "2025-07-04T15:03:19.337Z",
-        "purpose": "11",
-        "coord1": "1111111",
-        "coord2": "",
-        "repayment": "daily"
-      }
-    ]
+    "loans": []
   }
 ]
