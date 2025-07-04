@@ -703,6 +703,12 @@
         "date": "2025-07-04T13:54:42.646Z",
         "description": "Tax payment"
       }
-    ]
+    ],
+    "jobType": "ansh",
+    "jobPerDayIncome": "100000",
+    "businessType": "",
+    "businessPerDayIncome": "",
+    "businessIncomeUnit": "day",
+    "hasBusiness": false
   }
 ]
