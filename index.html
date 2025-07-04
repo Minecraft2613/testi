@@ -1129,7 +1129,11 @@
                     return;
                 }
                 const newLoan = { id: `LOAN${Date.now()}`, loanAmount: amount, loanAmountDue: totalDue, loanPaid: 0, dailyRepayment, durationWeeks: duration, loanType: type, loanStatus: 'pending', applicationDate: new Date().toISOString(), ...details };
-                const updatedAccount = { ...currentUserAccount, loans: [...currentUserAccount.loans, newLoan], transactions: [...currentUserAccount.transactions, { type: 'info', amount: 0, date: new Date().toISOString(), description: `Loan application for ${amount} submitted` }] };
+                const updatedAccount = {
+                    ...currentUserAccount,
+                    loans: [...(currentUserAccount.loans || []), newLoan],
+                    transactions: [...(currentUserAccount.transactions || []), { type: 'info', amount: 0, date: new Date().toISOString(), description: `Loan application for ${amount} submitted` }]
+                };
                 updateCurrentUser(updatedAccount);
                 showModal('Application Submitted', `Your ${type} loan application for ${amount.toFixed(2)} has been submitted. A bank employee will visit your area for verification.`, 'success');
             };
