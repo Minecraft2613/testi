@@ -1014,101 +1014,101 @@
             };
 
          const handlePayTax = async (amount, isFullTax = false) => {
-    if (currentUserAccount.balance < amount) {
-        showModal('Error', 'Insufficient balance.', 'error');
-        return;
-    }
+                if (currentUserAccount.balance < amount) {
+                    showModal('Error', 'Insufficient balance.', 'error');
+                    return;
+                }
 
-    setPaymentAnimationDetails({ show: true, amount: amount, status: 'processing', paymentType: isFullTax ? 'fullTax' : 'customTax' });
+                setPaymentAnimationDetails({ show: true, amount: amount, status: 'processing', paymentType: isFullTax ? 'fullTax' : 'customTax' });
 
-    try {
-        const response = await fetch(`${API_ENDPOINTS.TAX}/pay-tax`, {
-            method: 'POST',
-            headers: { 'Content-Type': 'application/json' },
-            body: JSON.stringify({
-                player: currentUserAccount.accountId,
-                amount
-            }),
-        });
+                try {
+                    const response = await fetch(`${API_ENDPOINTS.TAX}/pay-tax`, {
+                        method: 'POST',
+                        headers: { 'Content-Type': 'application/json' },
+                        body: JSON.stringify({
+                            player: currentUserAccount.accountId,
+                            amount
+                        }),
+                    });
 
-        if (response.ok) {
-            const data = await response.json();
-            const updatedAccount = {
-                ...currentUserAccount,
-                balance: currentUserAccount.balance - amount,
-                taxData: data.taxData,
-                transactions: [
-                    ...currentUserAccount.transactions,
-                    {
-                        type: 'debit',
-                        amount: -amount,
-                        date: new Date().toISOString(),
-                        description: `Tax payment`
+                    if (response.ok) {
+                        const data = await response.json();
+                        const updatedAccount = {
+                            ...currentUserAccount,
+                            balance: currentUserAccount.balance - amount,
+                            taxData: data.taxData,
+                            transactions: [
+                                ...currentUserAccount.transactions,
+                                {
+                                    type: 'debit',
+                                    amount: -amount,
+                                    date: new Date().toISOString(),
+                                    description: `Tax payment`
+                                }
+                            ]
+                        };
+                        setCurrentUserAccount(updatedAccount); // Immediately update the state
+                        setPaymentAnimationDetails({ show: true, amount: amount, status: 'success', paymentType: isFullTax ? 'fullTax' : 'customTax' });
+                    } else {
+                        const errorData = await response.json();
+                        setPaymentAnimationDetails({ show: true, amount: amount, status: 'error' });
+                        showModal('Error', errorData.message || 'Failed to pay tax.', 'error');
                     }
-                ]
+                } catch (error) {
+                    console.error("Pay tax API error:", error);
+                    setPaymentAnimationDetails({ show: true, amount: amount, status: 'error' });
+                    showModal('Error', 'Could not connect to the tax service.', 'error');
+                }
             };
-            setCurrentUserAccount(updatedAccount); // Immediately update the state
-            setPaymentAnimationDetails({ show: true, amount: amount, status: 'success', paymentType: isFullTax ? 'fullTax' : 'customTax' });
-        } else {
-            const errorData = await response.json();
-            setPaymentAnimationDetails({ show: true, amount: amount, status: 'error' });
-            showModal('Error', errorData.message || 'Failed to pay tax.', 'error');
-        }
-    } catch (error) {
-        console.error("Pay tax API error:", error);
-        setPaymentAnimationDetails({ show: true, amount: amount, status: 'error' });
-        showModal('Error', 'Could not connect to the tax service.', 'error');
-    }
-};
 
 
-const handleAdvanceTax = async (amount) => {
-    if (currentUserAccount.balance < amount) {
-        showModal('Error', 'Insufficient balance.', 'error');
-        return;
-    }
+            const handleAdvanceTax = async (amount) => {
+                if (currentUserAccount.balance < amount) {
+                    showModal('Error', 'Insufficient balance.', 'error');
+                    return;
+                }
 
-    setPaymentAnimationDetails({ show: true, amount: amount, status: 'processing', paymentType: 'advanceTax' });
+                setPaymentAnimationDetails({ show: true, amount: amount, status: 'processing', paymentType: 'advanceTax' });
 
-    try {
-        const response = await fetch(`${API_ENDPOINTS.TAX}/advance-tax`, {
-            method: 'POST',
-            headers: { 'Content-Type': 'application/json' },
-            body: JSON.stringify({
-                player: currentUserAccount.accountId,
-                amount
-            }),
-        });
+                try {
+                    const response = await fetch(`${API_ENDPOINTS.TAX}/advance-tax`, {
+                        method: 'POST',
+                        headers: { 'Content-Type': 'application/json' },
+                        body: JSON.stringify({
+                            player: currentUserAccount.accountId,
+                            amount
+                        }),
+                    });
 
-        if (response.ok) {
-            const data = await response.json();
-            const updatedAccount = {
-                ...currentUserAccount,
-                balance: currentUserAccount.balance - amount,
-                taxData: data.taxData,
-                transactions: [
-                    ...currentUserAccount.transactions,
-                    {
-                        type: 'debit',
-                        amount: -amount,
-                        date: new Date().toISOString(),
-                        description: `Advance tax payment`
+                    if (response.ok) {
+                        const data = await response.json();
+                        const updatedAccount = {
+                            ...currentUserAccount,
+                            balance: currentUserAccount.balance - amount,
+                            taxData: data.taxData,
+                            transactions: [
+                                ...currentUserAccount.transactions,
+                                {
+                                    type: 'debit',
+                                    amount: -amount,
+                                    date: new Date().toISOString(),
+                                    description: `Advance tax payment`
+                                }
+                            ]
+                        };
+                        setCurrentUserAccount(updatedAccount); // Immediately update the state
+                        setPaymentAnimationDetails({ show: true, amount: amount, status: 'success', paymentType: 'advanceTax' });
+                    } else {
+                        const errorData = await response.json();
+                        setPaymentAnimationDetails({ show: true, amount: amount, status: 'error' });
+                        showModal('Error', errorData.message || 'Failed to pay advance tax.', 'error');
                     }
-                ]
+                } catch (error) {
+                    console.error("Advance tax API error:", error);
+                    setPaymentAnimationDetails({ show: true, amount: amount, status: 'error' });
+                    showModal('Error', 'Could not connect to the tax service.', 'error');
+                }
             };
-            setCurrentUserAccount(updatedAccount); // Immediately update the state
-            setPaymentAnimationDetails({ show: true, amount: amount, status: 'success', paymentType: 'advanceTax' });
-        } else {
-            const errorData = await response.json();
-            setPaymentAnimationDetails({ show: true, amount: amount, status: 'error' });
-            showModal('Error', errorData.message || 'Failed to pay advance tax.', 'error');
-        }
-    } catch (error) {
-        console.error("Advance tax API error:", error);
-        setPaymentAnimationDetails({ show: true, amount: amount, status: 'error' });
-        showModal('Error', 'Could not connect to the tax service.', 'error');
-    }
-};
 
 
             const handleApplyLoan = async ({ amount, duration, type, ...details }) => {
@@ -1123,7 +1123,7 @@ const handleAdvanceTax = async (amount) => {
                 totalDue = amount * Math.pow(1 + dailyRate, duration * 7);
                 dailyRepayment = totalDue / (duration * 7);
 
-                const existingDailyRepayment = currentUserAccount.loans.reduce((sum, loan) => loan.loanStatus === 'active' ? sum + loan.dailyRepayment : sum, 0);
+                const existingDailyRepayment = (currentUserAccount.loans || []).reduce((sum, loan) => loan.loanStatus === 'active' ? sum + loan.dailyRepayment : sum, 0);
                 if (existingDailyRepayment + dailyRepayment > maxDailyRepayment) {
                     showModal('Loan Rejected', `Your income is too low. Your max daily repayment is ${maxDailyRepayment.toFixed(2)}, but this loan would bring it to ${(existingDailyRepayment + dailyRepayment).toFixed(2)}.`, 'error');
                     return;
