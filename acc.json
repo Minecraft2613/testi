@@ -13,8 +13,8 @@
         "Ansh": {
           "sessions": {
             "N3637": {
-              "taxDue": 224056.13799999977,
-              "taxPaid": 13,
+              "taxDue": 224053.13799999977,
+              "taxPaid": 16,
               "dailyCharges": [
                 {
                   "date": "2025-01-07",
@@ -702,6 +702,12 @@
         "amount": -5,
         "date": "2025-07-04T13:54:42.646Z",
         "description": "Tax payment"
+      },
+      {
+        "type": "info",
+        "amount": 0,
+        "date": "2025-07-04T15:03:19.337Z",
+        "description": "Loan application for 11 submitted"
       }
     ],
     "jobType": "ansh",
@@ -709,6 +715,23 @@
     "businessType": "",
     "businessPerDayIncome": "",
     "businessIncomeUnit": "day",
-    "hasBusiness": false
+    "hasBusiness": false,
+    "loans": [
+      {
+        "id": "LOAN1751641399337",
+        "loanAmount": 11,
+        "loanAmountDue": 11.659999999999993,
+        "loanPaid": 0,
+        "dailyRepayment": 1.6657142857142848,
+        "durationWeeks": 1,
+        "loanType": "personal",
+        "loanStatus": "pending",
+        "applicationDate": "2025-07-04T15:03:19.337Z",
+        "purpose": "11",
+        "coord1": "1111111",
+        "coord2": "",
+        "repayment": "daily"
+      }
+    ]
   }
 ]
