@@ -64,7 +64,6 @@
         const AdminDashboard = ({ adminUser, setAdminUser }) => {
             const [accounts, setAccounts] = useState([]);
             const [view, setView] = useState(adminUser === 'admin22' ? 'user_edit' : 'loan_applications');
-            const [selectedAccount, setSelectedAccount] = useState(null);
 
             useEffect(() => {
                 const fetchAccounts = async () => {
@@ -77,20 +76,24 @@
                         const data = await response.json();
                         if (data.success) {
                             setAccounts(data.accounts);
+                        } else {
+                            console.error("Failed to fetch accounts:", data.message);
                         }
                     } catch (err) {
-                        console.error("Failed to fetch accounts:", err);
+                        console.error("Error fetching accounts:", err);
                     }
                 };
                 fetchAccounts();
             }, []);
 
             const handleApproveLoan = async (accountId, loanId) => {
-                // ... (existing approve loan logic)
+                // This function would call the backend to approve the loan
+                console.log(`Approving loan ${loanId} for ${accountId}`);
+                // You would then refetch or update the accounts state
             };
 
             const Admin22Dashboard = () => (
-                <div className="flex gap-4 mb-6">
+                <div className="flex flex-wrap gap-4 mb-6">
                     <button onClick={() => setView('user_edit')} className={`p-4 rounded-xl flex-1 text-left ${view === 'user_edit' ? 'bg-red-600' : 'bg-gray-700'}`}>User Edit</button>
                     <button onClick={() => setView('user_bank_info')} className={`p-4 rounded-xl flex-1 text-left ${view === 'user_bank_info' ? 'bg-red-600' : 'bg-gray-700'}`}>User Bank Info</button>
                     <button onClick={() => setView('all_loan_info')} className={`p-4 rounded-xl flex-1 text-left ${view === 'all_loan_info' ? 'bg-red-600' : 'bg-gray-700'}`}>All Loan Info</button>
@@ -99,7 +102,7 @@
             );
 
             const AdminsDashboard = () => (
-                <div className="flex gap-4 mb-6">
+                <div className="flex flex-wrap gap-4 mb-6">
                     <button onClick={() => setView('loan_applications')} className={`p-4 rounded-xl flex-1 text-left ${view === 'loan_applications' ? 'bg-red-600' : 'bg-gray-700'}`}>Loan Applications</button>
                     <button onClick={() => setView('pending_taxes')} className={`p-4 rounded-xl flex-1 text-left ${view === 'pending_taxes' ? 'bg-red-600' : 'bg-gray-700'}`}>Pending Taxes</button>
                 </div>
@@ -117,7 +120,6 @@
 
                     {adminUser === 'admin22' ? <Admin22Dashboard /> : <AdminsDashboard />}
 
-                    {/* Render views based on state */}
                     {view === 'user_edit' && adminUser === 'admin22' && <UserEditView accounts={accounts} setAccounts={setAccounts} />}
                     {view === 'user_bank_info' && adminUser === 'admin22' && <UserBankInfoView accounts={accounts} />}
                     {view === 'all_loan_info' && adminUser === 'admin22' && <AllLoanInfoView accounts={accounts} />}
