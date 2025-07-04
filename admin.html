@@ -1,0 +1,185 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Admin Panel - Minecraft Server Bank</title>
+    <script src="https://cdn.tailwindcss.com"></script>
+    <script src="https://unpkg.com/react@18/umd/react.development.js"></script>
+    <script src="https://unpkg.com/react-dom@18/umd/react-dom.development.js"></script>
+    <script src="https://unpkg.com/@babel/standalone/babel.min.js"></script>
+    <style>
+        body { background-color: #1a202c; color: #e2e8f0; }
+        .shadow-minecraft { box-shadow: 4px 4px 0px rgba(0, 0, 0, 0.4); border: 3px solid #2c3e50; }
+    </style>
+</head>
+<body>
+    <div id="root"></div>
+    <script type="text/babel">
+        const { useState, useEffect } = React;
+
+        const API_ENDPOINTS = {
+            ADMIN: 'https://bank-data.1987sakshamsingh.workers.dev/admin'
+        };
+
+        const AdminLogin = ({ setAdminUser }) => {
+            const [username, setUsername] = useState('');
+            const [password, setPassword] = useState('');
+            const [error, setError] = useState('');
+
+            const handleLogin = async (e) => {
+                e.preventDefault();
+                try {
+                    const response = await fetch(API_ENDPOINTS.ADMIN, {
+                        method: 'POST',
+                        headers: { 'Content-Type': 'application/json' },
+                        body: JSON.stringify({ action: 'login', username, password })
+                    });
+                    const data = await response.json();
+                    if (data.success) {
+                        setAdminUser(username);
+                    } else {
+                        setError(data.message);
+                    }
+                } catch (err) {
+                    setError('Failed to connect to the server.');
+                }
+            };
+
+            return (
+                <div className="flex items-center justify-center min-h-screen">
+                    <div className="bg-gray-800 p-8 rounded-xl w-full max-w-md shadow-minecraft">
+                        <h2 className="text-3xl font-bold text-red-400 mb-6 text-center">Admin Login</h2>
+                        <form onSubmit={handleLogin} className="space-y-4">
+                            <input type="text" value={username} onChange={(e) => setUsername(e.target.value)} placeholder="Username" required className="w-full p-3 bg-gray-700 text-gray-200 border border-gray-600 rounded-md focus:outline-none focus:ring-2 focus:ring-red-500" />
+                            <input type="password" value={password} onChange={(e) => setPassword(e.target.value)} placeholder="Password" required className="w-full p-3 bg-gray-700 text-gray-200 border border-gray-600 rounded-md focus:outline-none focus:ring-2 focus:ring-red-500" />
+                            {error && <p className="text-red-500 text-center">{error}</p>}
+                            <button type="submit" className="w-full bg-red-600 hover:bg-red-700 text-white font-bold py-3 px-6 rounded-md">Login</button>
+                        </form>
+                    </div>
+                </div>
+            );
+        };
+
+        const AdminDashboard = ({ adminUser, setAdminUser }) => {
+            const [accounts, setAccounts] = useState([]);
+            const [view, setView] = useState('loans'); // 'loans' or 'transactions'
+            const [selectedAccount, setSelectedAccount] = useState(null);
+
+            useEffect(() => {
+                const fetchAccounts = async () => {
+                    try {
+                        const response = await fetch(API_ENDPOINTS.ADMIN, {
+                            method: 'POST',
+                            headers: { 'Content-Type': 'application/json' },
+                            body: JSON.stringify({ action: 'get_all_data' })
+                        });
+                        const data = await response.json();
+                        if (data.success) {
+                            setAccounts(data.accounts);
+                        }
+                    } catch (err) {
+                        console.error("Failed to fetch accounts:", err);
+                    }
+                };
+                fetchAccounts();
+            }, []);
+
+            const handleApproveLoan = async (accountId, loanId) => {
+                try {
+                    const response = await fetch(API_ENDPOINTS.ADMIN, {
+                        method: 'POST',
+                        headers: { 'Content-Type': 'application/json' },
+                        body: JSON.stringify({ action: 'approve_loan', accountId, loanId })
+                    });
+                    const data = await response.json();
+                    if (data.success) {
+                        setAccounts(data.accounts);
+                        alert('Loan approved successfully!');
+                    } else {
+                        alert('Failed to approve loan: ' + data.message);
+                    }
+                } catch (err) {
+                    alert('Error approving loan.');
+                }
+            };
+
+            const pendingLoans = accounts.flatMap(acc => acc.loans.filter(l => l.loanStatus === 'pending').map(l => ({ ...l, accountId: acc.accountId, bankId: acc.bankId })));
+
+            return (
+                <div className="p-8">
+                    <div className="flex justify-between items-center mb-8">
+                        <h1 className="text-4xl font-bold text-red-400">Admin Dashboard</h1>
+                        <div>
+                            <span className="text-lg mr-4">Welcome, {adminUser}</span>
+                            <button onClick={() => setAdminUser(null)} className="bg-red-600 hover:bg-red-700 text-white font-bold py-2 px-4 rounded-md">Logout</button>
+                        </div>
+                    </div>
+
+                    <div className="flex gap-4 mb-6">
+                        <button onClick={() => setView('loans')} className={`p-4 rounded-xl flex-1 text-left ${view === 'loans' ? 'bg-red-600' : 'bg-gray-700'}`}>Pending Loans</button>
+                        <button onClick={() => setView('transactions')} className={`p-4 rounded-xl flex-1 text-left ${view === 'transactions' ? 'bg-red-600' : 'bg-gray-700'}`}>Player Transactions</button>
+                    </div>
+
+                    {view === 'loans' && (
+                        <div className="bg-gray-800 p-6 rounded-lg shadow-minecraft">
+                            <h2 className="text-2xl font-bold text-red-400 mb-4">Pending Loan Applications</h2>
+                            <div className="space-y-4">
+                                {pendingLoans.length > 0 ? pendingLoans.map(loan => (
+                                    <div key={loan.id} className="p-4 border border-gray-700 rounded-md bg-gray-700">
+                                        <p><strong>Player:</strong> {loan.accountId} ({loan.bankId})</p>
+                                        <p><strong>Amount:</strong> ${loan.loanAmount.toFixed(2)}</p>
+                                        <p><strong>Type:</strong> {loan.loanType}</p>
+                                        <p><strong>Purpose:</strong> {loan.purpose}</p>
+                                        <button onClick={() => handleApproveLoan(loan.accountId, loan.id)} className="mt-2 bg-green-600 hover:bg-green-700 text-white font-bold py-1 px-2 rounded">Approve</button>
+                                    </div>
+                                )) : <p>No pending loan applications.</p>}
+                            </div>
+                        </div>
+                    )}
+
+                    {view === 'transactions' && (
+                        <div className="bg-gray-800 p-6 rounded-lg shadow-minecraft">
+                            <h2 className="text-2xl font-bold text-red-400 mb-4">Player Transactions</h2>
+                            <select onChange={(e) => setSelectedAccount(accounts.find(a => a.accountId === e.target.value))} className="w-full p-3 bg-gray-700 text-gray-200 border border-gray-600 rounded-md mb-4">
+                                <option value="">Select a player</option>
+                                {accounts.map(acc => <option key={acc.accountId} value={acc.accountId}>{acc.accountId}</option>)}
+                            </select>
+                            {selectedAccount && (
+                                <div className="max-h-96 overflow-y-auto">
+                                    <table className="min-w-full text-sm text-left">
+                                        <thead className="bg-gray-700 sticky top-0">
+                                            <tr>
+                                                <th className="p-2">Date</th>
+                                                <th className="p-2">Description</th>
+                                                <th className="p-2 text-right">Amount</th>
+                                            </tr>
+                                        </thead>
+                                        <tbody>
+                                            {selectedAccount.transactions.slice().reverse().map((tx, index) => (
+                                                <tr key={index} className="border-b border-gray-700">
+                                                    <td className="p-2">{new Date(tx.date).toLocaleString()}</td>
+                                                    <td className="p-2">{tx.description}</td>
+                                                    <td className={`p-2 text-right font-semibold ${tx.amount < 0 ? 'text-red-400' : 'text-green-400'}`}>{tx.amount < 0 ? '-' : '+'}${Math.abs(tx.amount).toFixed(2)}</td>
+                                                </tr>
+                                            ))}
+                                        </tbody>
+                                    </table>
+                                </div>
+                            )}
+                        </div>
+                    )}
+                </div>
+            );
+        };
+
+        const App = () => {
+            const [adminUser, setAdminUser] = useState(null);
+
+            return adminUser ? <AdminDashboard adminUser={adminUser} setAdminUser={setAdminUser} /> : <AdminLogin setAdminUser={setAdminUser} />;
+        };
+
+        ReactDOM.createRoot(document.getElementById('root')).render(<App />);
+    </script>
+</body>
+</html>

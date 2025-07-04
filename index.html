@@ -1,4 +1,5 @@
 
+
 <!DOCTYPE html>
 <html lang="en">
 <head>
@@ -508,13 +509,41 @@
                 <div className="bg-gray-800 p-6 rounded-lg shadow-minecraft max-w-lg mx-auto">
                     <h2 className="text-xl font-bold text-green-400 mb-4">New Loan Application</h2>
                     <form onSubmit={onSubmitLoan} className="space-y-4">
-                        <select name="type" value={loanDetails.type} onChange={handleChange} className="w-full p-3 bg-gray-700 text-gray-200 border border-gray-600 rounded-md"><option value="personal">Personal</option><option value="home">Home</option><option value="business">Business</option><option value="homeStartup">Home Startup</option><option value="bizStartup">Business Startup</option></select>
-                        <input name="amount" type="number" value={loanDetails.amount} onChange={handleChange} placeholder="Loan Amount ($" required className="w-full p-3 bg-gray-700 text-gray-200 border border-gray-600 rounded-md" />
+                        <select name="type" value={loanDetails.type} onChange={handleChange} className="w-full p-3 bg-gray-700 text-gray-200 border border-gray-600 rounded-md">
+                            <option value="personal">Personal</option>
+                            <option value="home">Home</option>
+                            <option value="business">Business</option>
+                        </select>
+                        <input name="amount" type="number" value={loanDetails.amount} onChange={handleChange} placeholder="Loan Amount ($)" required className="w-full p-3 bg-gray-700 text-gray-200 border border-gray-600 rounded-md" />
                         <input name="duration" type="number" value={loanDetails.duration} onChange={handleChange} placeholder={`Duration (Weeks, max ${maxDuration})`} min="1" max={maxDuration} required className="w-full p-3 bg-gray-700 text-gray-200 border border-gray-600 rounded-md" />
-                        <select name="repayment" value={loanDetails.repayment} onChange={handleChange} className="w-full p-3 bg-gray-700 text-gray-200 border border-gray-600 rounded-md"><option value="daily">Daily</option><option value="weekly" disabled={loanDetails.duration < 2}>Weekly (2+ weeks)</option></select>
+                        <select name="repayment" value={loanDetails.repayment} onChange={handleChange} className="w-full p-3 bg-gray-700 text-gray-200 border border-gray-600 rounded-md">
+                            <option value="daily">Daily</option>
+                            <option value="weekly" disabled={loanDetails.duration < 2}>Weekly (2+ weeks)</option>
+                        </select>
                         <textarea name="purpose" value={loanDetails.purpose} onChange={handleChange} placeholder="What is the purpose of this loan?" required className="w-full p-3 bg-gray-700 text-gray-200 border border-gray-600 rounded-md h-24"></textarea>
-                        {showLoanSpecificFields && <div className="space-y-4 pt-2 border-t border-gray-700"><h3 className="text-lg font-semibold text-yellow-400">Property/Startup Details</h3><input name="coord1" value={loanDetails.coord1} onChange={handleChange} placeholder="Start Coordinates (X, Y, Z)" className="w-full p-3 bg-gray-700 text-gray-200 border border-gray-600 rounded-md" /><input name="coord2" value={loanDetails.coord2} onChange={handleChange} placeholder="End Coordinates (X, Y, Z)" className="w-full p-3 bg-gray-700 text-gray-200 border border-gray-600 rounded-md" /><label className="block"><span className="text-gray-300">Upload Picture (Mock)</span><input type="file" onChange={() => showModal('File Selected', 'This is a mock upload. No file was actually sent.', 'info')} className="block w-full text-sm text-gray-400 file:mr-4 file:py-2 file:px-4 file:rounded-full file:border-0 file:text-sm file:font-semibold file:bg-green-600 file:text-white hover:file:bg-green-700" /></label></div>}
-                        <div className="p-3 bg-gray-700 rounded-md text-center"><p className="text-gray-300">Payment per {loanDetails.repayment === 'daily' ? 'Day' : 'Week'}: <span className="font-bold text-yellow-400">${perPaymentAmount.toFixed(2)}</span></p><p className="text-gray-300 text-sm">(Principal: ${principalPerPayment.toFixed(2)}, Interest: ${interestPerPayment.toFixed(2)})</p><p className="text-gray-300">Total Interest: <span className="font-bold text-red-400">${totalInterestAmount.toFixed(2)}</span></p><p className="text-xs text-gray-400">Weekly Interest Rate: {weeklyInterestRateDisplay.toFixed(2)}%</p></div>
+                        
+                        {loanDetails.type === 'personal' && (
+                            <div className="space-y-4 pt-2 border-t border-gray-700">
+                                <h3 className="text-lg font-semibold text-yellow-400">Personal Loan Details</h3>
+                                <p className="text-sm text-gray-400">Please provide the coordinates for the location related to your loan purpose.</p>
+                                <input name="coord1" value={loanDetails.coord1} onChange={handleChange} placeholder="X, Y, Z Coordinates" className="w-full p-3 bg-gray-700 text-gray-200 border border-gray-600 rounded-md" />
+                            </div>
+                        )}
+
+                        {showLoanSpecificFields && (
+                            <div className="space-y-4 pt-2 border-t border-gray-700">
+                                <h3 className="text-lg font-semibold text-yellow-400">Property/Business Details</h3>
+                                <input name="coord1" value={loanDetails.coord1} onChange={handleChange} placeholder="Start Coordinates (X, Y, Z)" className="w-full p-3 bg-gray-700 text-gray-200 border border-gray-600 rounded-md" />
+                                <input name="coord2" value={loanDetails.coord2} onChange={handleChange} placeholder="End Coordinates (X, Y, Z)" className="w-full p-3 bg-gray-700 text-gray-200 border border-gray-600 rounded-md" />
+                            </div>
+                        )}
+
+                        <div className="p-3 bg-gray-700 rounded-md text-center">
+                            <p className="text-gray-300">Payment per {loanDetails.repayment === 'daily' ? 'Day' : 'Week'}: <span className="font-bold text-yellow-400">${perPaymentAmount.toFixed(2)}</span></p>
+                            <p className="text-gray-300 text-sm">(Principal: ${principalPerPayment.toFixed(2)}, Interest: ${interestPerPayment.toFixed(2)})</p>
+                            <p className="text-gray-300">Total Interest: <span className="font-bold text-red-400">${totalInterestAmount.toFixed(2)}</span></p>
+                            <p className="text-xs text-gray-400">Weekly Interest Rate: {weeklyInterestRateDisplay.toFixed(2)}%</p>
+                        </div>
                         <button type="submit" className="w-full bg-green-600 hover:bg-green-700 text-white font-bold py-3 px-6 rounded-md">Submit Application</button>
                         {!hasIncomeProfile && <p className="text-red-400 mt-4 text-sm text-center">Your income profile is not set up. You must set your income in Account Settings to apply for a loan.</p>}
                     </form>
@@ -992,15 +1021,12 @@
 
     setPaymentAnimationDetails({ show: true, amount: amount, status: 'processing', paymentType: isFullTax ? 'fullTax' : 'customTax' });
 
-    // Use player key from taxData if available
-    const playerKey = Object.keys(currentUserAccount.taxData?.players || {})[0] || currentUserAccount.accountId;
-
     try {
         const response = await fetch(`${API_ENDPOINTS.TAX}/pay-tax`, {
             method: 'POST',
             headers: { 'Content-Type': 'application/json' },
             body: JSON.stringify({
-                player: playerKey,
+                player: currentUserAccount.accountId,
                 amount
             }),
         });
@@ -1021,7 +1047,7 @@
                     }
                 ]
             };
-            await updateCurrentUser(updatedAccount);
+            setCurrentUserAccount(updatedAccount); // Immediately update the state
             setPaymentAnimationDetails({ show: true, amount: amount, status: 'success', paymentType: isFullTax ? 'fullTax' : 'customTax' });
         } else {
             const errorData = await response.json();
@@ -1049,7 +1075,7 @@ const handleAdvanceTax = async (amount) => {
             method: 'POST',
             headers: { 'Content-Type': 'application/json' },
             body: JSON.stringify({
-                player: currentUserAccount.accountId, // ✅ changed from bankId
+                player: currentUserAccount.accountId,
                 amount
             }),
         });
@@ -1070,7 +1096,7 @@ const handleAdvanceTax = async (amount) => {
                     }
                 ]
             };
-            await updateCurrentUser(updatedAccount);
+            setCurrentUserAccount(updatedAccount); // Immediately update the state
             setPaymentAnimationDetails({ show: true, amount: amount, status: 'success', paymentType: 'advanceTax' });
         } else {
             const errorData = await response.json();
@@ -1089,27 +1115,23 @@ const handleAdvanceTax = async (amount) => {
                 const jobIncome = currentUserAccount.jobPerDayIncome || 0;
                 const bizIncome = currentUserAccount.businessPerDayIncome || 0;
                 const maxDailyRepayment = (jobIncome * 0.55) + (bizIncome * (currentUserAccount.businessIncomeUnit === 'hour' ? 0.70 * 8 : 0.70));
-                const interestRates = { personal: 0.06, home: 0.02, business: 0.05, bizStartup: 0.05, homeStartup: 0.04 }; // These are WEEKLY rates
-                const isCompound = !type.includes('Startup');
+                const interestRates = { personal: 0.06, home: 0.02, business: 0.05 };
                 const weeklyRate = interestRates[type];
                 
                 let totalDue, dailyRepayment;
-                if (isCompound) {
-                    const dailyRate = Math.pow(1 + weeklyRate, 1/7) - 1; // Convert weekly rate to daily
-                    totalDue = amount * Math.pow(1 + dailyRate, duration * 7);
-                } else {
-                    totalDue = amount * (1 + weeklyRate * duration); // Simple interest based on weeks
-                }
+                const dailyRate = Math.pow(1 + weeklyRate, 1/7) - 1;
+                totalDue = amount * Math.pow(1 + dailyRate, duration * 7);
                 dailyRepayment = totalDue / (duration * 7);
+
                 const existingDailyRepayment = currentUserAccount.loans.reduce((sum, loan) => loan.loanStatus === 'active' ? sum + loan.dailyRepayment : sum, 0);
                 if (existingDailyRepayment + dailyRepayment > maxDailyRepayment) {
-                    showModal('Loan Rejected', `Your income is too low. Your max daily repayment is $${maxDailyRepayment.toFixed(2)}, but this loan would bring it to $${(existingDailyRepayment + dailyRepayment).toFixed(2)}.`, 'error');
+                    showModal('Loan Rejected', `Your income is too low. Your max daily repayment is ${maxDailyRepayment.toFixed(2)}, but this loan would bring it to ${(existingDailyRepayment + dailyRepayment).toFixed(2)}.`, 'error');
                     return;
                 }
                 const newLoan = { id: `LOAN${Date.now()}`, loanAmount: amount, loanAmountDue: totalDue, loanPaid: 0, dailyRepayment, durationWeeks: duration, loanType: type, loanStatus: 'pending', applicationDate: new Date().toISOString(), ...details };
-                const updatedAccount = { ...currentUserAccount, loans: [...currentUserAccount.loans, newLoan], transactions: [...currentUserAccount.transactions, { type: 'info', amount: 0, date: new Date().toISOString(), description: `Loan application for $${amount} submitted` }] };
+                const updatedAccount = { ...currentUserAccount, loans: [...currentUserAccount.loans, newLoan], transactions: [...currentUserAccount.transactions, { type: 'info', amount: 0, date: new Date().toISOString(), description: `Loan application for ${amount} submitted` }] };
                 updateCurrentUser(updatedAccount);
-                showModal('Application Submitted', `Your ${type} loan application for $${amount.toFixed(2)} has been submitted for admin approval.`, 'success');
+                showModal('Application Submitted', `Your ${type} loan application for ${amount.toFixed(2)} has been submitted. A bank employee will visit your area for verification.`, 'success');
             };
 
             const handleCancelLoan = async (loanId) => {
