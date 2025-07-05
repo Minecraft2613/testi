@@ -3,36 +3,42 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Admin Panel - Minecraft Server Bank</title>
+    <title>VIP Admin Panel</title>
     <script src="https://cdn.tailwindcss.com"></script>
     <script src="https://unpkg.com/react@18/umd/react.development.js"></script>
     <script src="https://unpkg.com/react-dom@18/umd/react-dom.development.js"></script>
     <script src="https://unpkg.com/@babel/standalone/babel.min.js"></script>
     <style>
-        body { background-color: #1a202c; color: #e2e8f0; }
-        .shadow-minecraft { box-shadow: 4px 4px 0px rgba(0, 0, 0, 0.4); border: 3px solid #2c3e50; }
+        body { background-color: #111827; color: #e5e7eb; font-family: 'Inter', sans-serif; }
+        .vip-loader {
+            width: 100px; height: 100px; 
+            border: 5px solid transparent;
+            border-top-color: #f59e0b;
+            border-radius: 50%;
+            animation: spin 1s linear infinite;
+            position: relative;
+        }
+        .vip-loader:before {
+            content: 'VIP';
+            position: absolute;
+            top: 50%; left: 50%;
+            transform: translate(-50%, -50%);
+            color: #f59e0b;
+            font-weight: bold;
+            font-size: 1.5rem;
+        }
+        @keyframes spin {
+            to { transform: rotate(360deg); }
+        }
     </style>
 </head>
 <body>
     <div id="root"></div>
     <script type="text/babel">
-        const { useState, useEffect, useMemo } = React;
+        const { useState, useEffect } = React;
 
-        const API_ENDPOINTS = {
-            ADMIN: 'https://bank-data.1987sakshamsingh.workers.dev/admin'
-        };
+        const API_URL = 'https://bank-data.1987sakshamsingh.workers.dev/admin';
 
-        // --- Loading Screen ---
-        const LoadingScreen = () => (
-            <div className="fixed inset-0 bg-gray-900 bg-opacity-75 flex items-center justify-center z-50">
-                <div className="text-center">
-                    <div className="w-16 h-16 border-4 border-dashed rounded-full animate-spin border-red-500 mx-auto"></div>
-                    <p className="text-white text-xl mt-4">Loading Admin Panel...</p>
-                </div>
-            </div>
-        );
-
-        // --- Main App ---
         const App = () => {
             const [adminUser, setAdminUser] = useState(null);
             const [loading, setLoading] = useState(false);
@@ -40,278 +46,164 @@
             const handleLogin = async (username, password) => {
                 setLoading(true);
                 try {
-                    const response = await fetch(API_ENDPOINTS.ADMIN, {
+                    const response = await fetch(API_URL, {
                         method: 'POST',
                         headers: { 'Content-Type': 'application/json' },
                         body: JSON.stringify({ action: 'login', username, password })
                     });
                     const data = await response.json();
-                    if (data.success) {
+                    if (response.ok && data.success) {
                         setAdminUser(username);
                     } else {
-                        alert(data.message);
+                        alert(data.message || 'Login failed');
                     }
-                } catch (err) {
-                    alert('Failed to connect to the server.');
+                } catch (e) {
+                    alert('Connection error');
                 } finally {
                     setLoading(false);
                 }
             };
 
-            const handleLogout = () => {
-                setAdminUser(null);
-            };
+            if (loading) return <div className="fixed inset-0 bg-black bg-opacity-80 flex items-center justify-center z-50"><div className="vip-loader"></div></div>;
 
-            if (loading) {
-                return <LoadingScreen />;
-            }
-
-            return adminUser ? 
-                <AdminDashboard adminUser={adminUser} handleLogout={handleLogout} /> : 
-                <AdminLogin handleLogin={handleLogin} />;
+            return adminUser ? <AdminDashboard adminUser={adminUser} setAdminUser={setAdminUser} /> : <AdminLogin onLogin={handleLogin} />;
         };
 
-        // --- Admin Login ---
-        const AdminLogin = ({ handleLogin }) => {
+        const AdminLogin = ({ onLogin }) => {
             const [username, setUsername] = useState('');
             const [password, setPassword] = useState('');
 
-            const onSubmit = (e) => {
-                e.preventDefault();
-                handleLogin(username, password);
-            };
-
             return (
-                <div className="flex items-center justify-center min-h-screen">
-                    <div className="bg-gray-800 p-8 rounded-xl w-full max-w-md shadow-minecraft">
-                        <h2 className="text-3xl font-bold text-red-400 mb-6 text-center">Admin Login</h2>
-                        <form onSubmit={onSubmit} className="space-y-4">
-                            <input type="text" value={username} onChange={(e) => setUsername(e.target.value)} placeholder="Username" required className="w-full p-3 bg-gray-700 text-gray-200 border border-gray-600 rounded-md focus:outline-none focus:ring-2 focus:ring-red-500" />
-                            <input type="password" value={password} onChange={(e) => setPassword(e.target.value)} placeholder="Password" required className="w-full p-3 bg-gray-700 text-gray-200 border border-gray-600 rounded-md focus:outline-none focus:ring-2 focus:ring-red-500" />
-                            <button type="submit" className="w-full bg-red-600 hover:bg-red-700 text-white font-bold py-3 px-6 rounded-md">Login</button>
+                <div className="min-h-screen flex items-center justify-center bg-gray-900">
+                    <div className="bg-gray-800 p-8 rounded-lg shadow-2xl w-full max-w-md">
+                        <h2 className="text-3xl font-bold text-center text-amber-400 mb-6">VIP Admin Access</h2>
+                        <form onSubmit={e => { e.preventDefault(); onLogin(username, password); }} className="space-y-6">
+                            <input type="text" placeholder="Username" value={username} onChange={e => setUsername(e.target.value)} className="w-full p-3 bg-gray-700 rounded-md border border-gray-600 focus:outline-none focus:ring-2 focus:ring-amber-500" />
+                            <input type="password" placeholder="Password" value={password} onChange={e => setPassword(e.target.value)} className="w-full p-3 bg-gray-700 rounded-md border border-gray-600 focus:outline-none focus:ring-2 focus:ring-amber-500" />
+                            <button type="submit" className="w-full bg-amber-500 hover:bg-amber-600 text-white font-bold py-3 rounded-md transition-transform transform hover:scale-105">Enter Secure Area</button>
                         </form>
                     </div>
                 </div>
             );
         };
 
-        // --- Admin Dashboard ---
-        const AdminDashboard = ({ adminUser, handleLogout }) => {
+        const AdminDashboard = ({ adminUser, setAdminUser }) => {
             const [view, setView] = useState('home');
-            const [isSidebarOpen, setSidebarOpen] = useState(true);
-            const [accounts, setAccounts] = useState([]);
-            const [taxData, setTaxData] = useState({ players: {} });
+            const [data, setData] = useState({ accounts: [], taxData: { players: {} } });
             const [loading, setLoading] = useState(true);
 
             const fetchData = async () => {
                 try {
-                    const response = await fetch(API_ENDPOINTS.ADMIN, {
-                        method: 'POST',
-                        headers: { 'Content-Type': 'application/json' },
-                        body: JSON.stringify({ action: 'get_all_data' })
-                    });
-                    const data = await response.json();
-                    if (data.success) {
-                        setAccounts(data.accounts);
-                        const taxResponse = await fetch('https://bank-data.1987sakshamsingh.workers.dev/tax-data');
-                        const taxJson = await taxResponse.json();
-                        setTaxData(taxJson);
+                    const res = await fetch(API_URL, { method: 'POST', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify({ action: 'get_all_data' }) });
+                    if(res.ok) {
+                        const allData = await res.json();
+                        setData(allData);
                     }
-                } catch (err) {
-                    console.error("Error fetching data:", err);
-                } finally {
-                    setLoading(false);
-                }
+                } catch (e) { console.error("Failed to fetch data", e); } 
+                finally { setLoading(false); }
             };
 
             useEffect(() => {
                 fetchData();
-                const interval = setInterval(fetchData, 5000); // Auto-refresh every 5 seconds
+                const interval = setInterval(fetchData, 5000);
                 return () => clearInterval(interval);
             }, []);
 
             const handleApproveLoan = async (accountId, loanId) => {
-                try {
-                    const response = await fetch(API_ENDPOINTS.ADMIN, {
-                        method: 'POST',
-                        headers: { 'Content-Type': 'application/json' },
-                        body: JSON.stringify({ action: 'approve_loan', userAccountId: accountId, loanId })
-                    });
-                    const data = await response.json();
-                    if (data.success) {
-                        setAccounts(data.accounts);
-                        alert('Loan approved!');
-                    } else {
-                        alert('Failed to approve loan: ' + data.message);
-                    }
-                } catch (err) {
-                    alert('Error approving loan.');
-                }
+                await fetch(API_URL, { 
+                    method: 'POST', 
+                    headers: { 'Content-Type': 'application/json' }, 
+                    body: JSON.stringify({ action: 'approve_loan', userAccountId: accountId, loanId })
+                });
+                fetchData(); // Refresh data after action
             };
-            
+
             const renderView = () => {
-                switch (view) {
-                    case 'home': return <HomeView accounts={accounts} taxData={taxData} handleApproveLoan={handleApproveLoan} />;
-                    case 'bank_info': return <BankInfoView accounts={accounts} adminUser={adminUser} setAccounts={setAccounts} />;
-                    case 'player_view': return <PlayerView accounts={accounts} />;
-                    case 'messages': return <MessagesView />;
-                    case 'theme_settings': return <ThemeSettingsView />;
-                    default: return <HomeView accounts={accounts} taxData={taxData} handleApproveLoan={handleApproveLoan} />;
+                if (loading) return <div className="text-center p-10"><div className="vip-loader mx-auto"></div></div>;
+                
+                const props = { data, adminUser, handleApproveLoan, setView };
+
+                switch(view) {
+                    case 'home': return <HomeView {...props} />;
+                    case 'bank_info': return <BankInfoView {...props} />;
+                    default: return <HomeView {...props} />;
                 }
             };
 
             return (
-                <div className="flex min-h-screen">
-                    <Sidebar isOpen={isSidebarOpen} setView={setView} handleLogout={handleLogout} adminUser={adminUser} />
-                    <div className={`flex-1 transition-all duration-300 ${isSidebarOpen ? 'ml-64' : 'ml-0'}`}>
-                        <div className="p-8">
-                            <button onClick={() => setSidebarOpen(!isSidebarOpen)} className="mb-4 text-white">
-                                <svg className="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24" xmlns="http://www.w3.org/2000/svg"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M4 6h16M4 12h16m-7 6h7"></path></svg>
-                            </button>
-                            {loading ? <LoadingScreen /> : renderView()}
-                        </div>
-                    </div>
+                <div className="flex">
+                    <Sidebar setView={setView} adminUser={adminUser} handleLogout={() => setAdminUser(null)} />
+                    <main className="flex-1 p-10">
+                        {renderView()}
+                    </main>
                 </div>
             );
         };
 
-        // --- Sidebar ---
-        const Sidebar = ({ isOpen, setView, handleLogout, adminUser }) => {
-            const commonViews = [
-                { name: 'Home', view: 'home' },
-                { name: 'Approved Loans', view: 'approved_loans' },
-                { name: 'Paid Tax', view: 'paid_tax' },
-                { name: 'Pending Tax', view: 'pending_tax' },
-                { name: 'Tax Payers History', view: 'tax_history' },
-                { name: 'Bank Info', view: 'bank_info' },
-                { name: 'Player View', view: 'player_view' },
-                { name: 'Messages', view: 'messages' },
-                { name: 'Theme Settings', view: 'theme_settings' },
+        const Sidebar = ({ setView, adminUser, handleLogout }) => {
+            const views = [
+                { name: 'Home', view: 'home', admin: true, admin22: true },
+                { name: 'Bank Info', view: 'bank_info', admin: true, admin22: true },
+                { name: 'Loan Approvals', view: 'loan_approvals', admin: false, admin22: true },
             ];
-            const menuItems = adminUser === 'admin22' ? commonViews.concat({ name: 'Loan Approval', view: 'loan_approval' }) : commonViews;
 
             return (
-                <div className={`fixed top-0 left-0 h-full bg-gray-800 text-white w-64 p-5 transition-transform duration-300 ${isOpen ? 'translate-x-0' : '-translate-x-full'}`}>
-                    <h2 className="text-2xl font-bold mb-10">Admin Menu</h2>
-                    <nav>
-                        <ul>
-                            {menuItems.map(item => (
-                                <li key={item.view} className="mb-4">
-                                    <button onClick={() => setView(item.view)} className="w-full text-left hover:bg-red-700 p-2 rounded">{item.name}</button>
-                                </li>
-                            ))}
-                        </ul>
+                <div className="w-64 h-screen bg-gray-800 p-5 flex flex-col shadow-2xl">
+                    <h1 className="text-2xl font-bold text-amber-400 mb-10">VIP Panel</h1>
+                    <nav className="flex-grow">
+                        {views.map(v => 
+                            ((adminUser === 'admin22' && v.admin22) || (adminUser !== 'admin22' && v.admin)) &&
+                            <button key={v.view} onClick={() => setView(v.view)} className="block w-full text-left p-3 mb-2 rounded-md hover:bg-gray-700 transition-colors">{v.name}</button>
+                        )}
                     </nav>
-                    <div className="absolute bottom-5 w-full pr-10">
-                        <button onClick={handleLogout} className="w-full bg-red-600 hover:bg-red-700 text-white font-bold py-2 px-4 rounded">Logout</button>
-                    </div>
+                    <button onClick={handleLogout} className="w-full bg-red-600 hover:bg-red-700 text-white font-bold py-2 rounded-md">Logout</button>
                 </div>
             );
         };
 
-        // --- Views ---
-        const HomeView = ({ accounts, taxData, handleApproveLoan }) => {
-            const pendingLoans = accounts.flatMap(acc => (acc.loans || []).filter(l => l.loanStatus === 'pending').map(l => ({ ...l, accountId: acc.accountId })));
-            const pendingTaxes = accounts.filter(acc => taxData && taxData.players && taxData.players[acc.accountId] && taxData.players[acc.accountId].sessions[taxData.currentSession] && taxData.players[acc.accountId].sessions[taxData.currentSession].taxDue > 0);
-            
+        const HomeView = ({ data, handleApproveLoan, adminUser }) => {
+            const pendingLoans = data.accounts.flatMap(acc => (acc.loans || []).filter(l => l.loanStatus === 'pending').map(l => ({ ...l, accountId: acc.accountId })));
             return (
                 <div>
-                    <h1 className="text-3xl font-bold text-red-400 mb-6">Dashboard</h1>
-                    <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
-                        <div>
-                            <h2 className="text-2xl font-bold text-red-400 mb-4">Pending Loan Applications</h2>
+                    <h2 class="text-3xl font-bold text-white mb-6">Dashboard</h2>
+                    {adminUser === 'admin22' &&
+                        <div className="bg-gray-800 p-6 rounded-lg shadow-lg">
+                            <h3 class="text-xl font-bold text-amber-400 mb-4">Pending Loan Applications</h3>
                             <div className="space-y-4">
                                 {pendingLoans.length > 0 ? pendingLoans.map(loan => (
-                                    <div key={loan.id} className="p-4 border border-gray-700 rounded-md bg-gray-700">
-                                        <p><strong>Player:</strong> {loan.accountId}</p>
-                                        <p><strong>Amount:</strong> ${loan.loanAmount.toFixed(2)}</p>
-                                        <p><strong>Type:</strong> {loan.loanType}</p>
-                                        <button onClick={() => handleApproveLoan(loan.accountId, loan.id)} className="mt-2 bg-green-600 hover:bg-green-700 text-white font-bold py-1 px-2 rounded">Approve</button>
+                                    <div key={loan.id} className="flex justify-between items-center bg-gray-700 p-4 rounded-md">
+                                        <div>
+                                            <p><strong>Player:</strong> {loan.accountId}</p>
+                                            <p><strong>Amount:</strong> ${loan.loanAmount.toFixed(2)}</p>
+                                        </div>
+                                        <button onClick={() => handleApproveLoan(loan.accountId, loan.id)} className="bg-green-500 hover:bg-green-600 text-white font-bold py-2 px-4 rounded-md">Approve</button>
                                     </div>
-                                )) : <p>No pending loan applications.</p>}
+                                )) : <p>No pending loans.</p>}
                             </div>
                         </div>
-                        <div>
-                            <h2 className="text-2xl font-bold text-red-400 mb-4">Players with Pending Taxes</h2>
-                            <div className="space-y-4">
-                                {pendingTaxes.length > 0 ? pendingTaxes.map(acc => (
-                                    <div key={acc.accountId} className="p-4 border border-gray-700 rounded-md bg-gray-700">
-                                        <p><strong>Player:</strong> {acc.accountId}</p>
-                                        <p><strong>Tax Due:</strong> ${taxData.players[acc.accountId].sessions[taxData.currentSession].taxDue.toFixed(2)}</p>
-                                    </div>
-                                )) : <p>No pending taxes.</p>}
-                            </div>
-                        </div>
-                    </div>
+                    }
                 </div>
             );
         };
 
-        const BankInfoView = ({ accounts, adminUser, setAccounts }) => {
+        const BankInfoView = ({ data, adminUser }) => {
             return (
                 <div>
-                    <h1 className="text-3xl font-bold text-red-400 mb-6">Bank Info</h1>
-                    <div className="space-y-4">
-                        {accounts.map(acc => (
-                            <div key={acc.accountId} className="bg-gray-800 p-4 rounded-lg shadow-minecraft">
-                                <div className="flex justify-between items-center">
-                                    <div>
-                                        <p><strong>Player:</strong> {acc.accountId}</p>
-                                        <p><strong>Bank ID:</strong> {acc.bankId}</p>
-                                        <p><strong>Email:</strong> {acc.email}</p>
-                                        <p><strong>Password:</strong> {acc.password}</p>
-                                    </div>
-                                    {adminUser === 'admin22' && (
-                                        <button className="bg-blue-600 hover:bg-blue-700 text-white font-bold py-1 px-2 rounded">Edit</button>
-                                    )}
-                                </div>
+                    <h2 class="text-3xl font-bold text-white mb-6">Player Bank Information</h2>
+                    <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
+                        {data.accounts.map(acc => (
+                            <div key={acc.accountId} className="bg-gray-800 p-6 rounded-lg shadow-lg">
+                                <h4 className="font-bold text-amber-400 text-lg mb-2">{acc.accountId}</h4>
+                                <p><strong>Bank ID:</strong> {acc.bankId}</p>
+                                <p><strong>Email:</strong> {acc.email}</p>
+                                <p><strong>Balance:</strong> ${acc.balance.toFixed(2)}</p>
+                                {adminUser === 'admin22' && <button className="mt-4 w-full bg-blue-500 hover:bg-blue-600 text-white py-2 rounded-md">Edit</button>}
                             </div>
                         ))}
                     </div>
                 </div>
             );
         };
-        
-        const PlayerView = ({ accounts }) => {
-             const [selectedPlayer, setSelectedPlayer] = useState(null);
-
-            return (
-                <div className="bg-gray-800 p-6 rounded-lg shadow-minecraft">
-                    <h2 className="text-2xl font-bold text-red-400 mb-4">View as Player</h2>
-                    <select onChange={(e) => setSelectedPlayer(accounts.find(acc => acc.accountId === e.target.value))} className="w-full p-3 bg-gray-700 text-gray-200 border border-gray-600 rounded-md mb-4">
-                        <option value="">Select a player</option>
-                        {accounts.map(acc => <option key={acc.accountId} value={acc.accountId}>{acc.accountId}</option>)}
-                    </select>
-
-                    {selectedPlayer && (
-                        <div className="border-t-4 border-red-500 pt-4 mt-4">
-                            <h3 className="text-xl font-bold text-white mb-4">Viewing: {selectedPlayer.accountId}</h3>
-                            <div className="space-y-6">
-                                <div className="bg-gray-700 p-4 rounded-lg"><p><strong>Balance:</strong> ${selectedPlayer.balance.toFixed(2)}</p></div>
-                                <div className="bg-gray-700 p-4 rounded-lg">
-                                    <h4 className="font-bold mb-2">Loans</h4>
-                                    {(selectedPlayer.loans || []).map(loan => <div key={loan.id}>{loan.loanType}: ${loan.loanAmount.toFixed(2)} ({loan.loanStatus})</div>)}
-                                </div>
-                                <div className="bg-gray-700 p-4 rounded-lg">
-                                    <h4 className="font-bold mb-2">Transactions</h4>
-                                    {(selectedPlayer.transactions || []).slice(-5).map((tx, i) => <div key={i}>{tx.description}: ${tx.amount.toFixed(2)}</div>)}
-                                </div>
-                            </div>
-                        </div>
-                    )}
-                </div>
-            );
-        }
-
-        const MessagesView = () => {
-            // Add Messages view logic here
-            return <div>Messages</div>
-        }
-
-        const ThemeSettingsView = () => {
-            // Add Theme settings view logic here
-            return <div>Theme Settings</div>
-        }
 
         ReactDOM.createRoot(document.getElementById('root')).render(<App />);
     </script>
