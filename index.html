@@ -561,12 +561,17 @@
                 businessType: currentUserAccount.businessType || '', 
                 businessPerDayIncome: currentUserAccount.businessPerDayIncome || '', 
                 businessIncomeUnit: currentUserAccount.businessIncomeUnit || 'day', 
-                hasBusiness: !!currentUserAccount.businessType 
+                hasBusiness: !!currentUserAccount.businessType,
+                bankName: currentUserAccount.bankName || '',
+                accountId: currentUserAccount.accountId || '',
+                bankId: currentUserAccount.bankId || '',
+                email: currentUserAccount.email || '',
+                edition: currentUserAccount.edition || '',
             });
-            const [editMode, setEditMode] = useState({ job: false, business: false, password: false });
+            const [editMode, setEditMode] = useState({ job: false, business: false, password: false, bankName: false, accountId: false, bankId: false, email: false, edition: false });
 
             const handleProfileChange = (e) => setProfile({ ...profile, [e.target.name]: e.target.value });
-            const onProfileSubmit = (e) => { e.preventDefault(); handleUpdateProfile(profile); setEditMode({ ...editMode, job: false, business: false }); };
+            const onProfileSubmit = (e) => { e.preventDefault(); handleUpdateProfile(profile); setEditMode({ ...editMode, job: false, business: false, bankName: false, accountId: false, bankId: false, email: false, edition: false }); };
             const onPasswordSubmit = (e) => { e.preventDefault(); handleChangePassword(oldPassword, newPassword); setOldPassword(''); setNewPassword(''); setEditMode(prev => ({...prev, password: false})); };
 
             return (
@@ -577,9 +582,59 @@
                             <div className="w-32 h-32 rounded-full flex items-center justify-center text-white text-6xl font-bold shadow-md border-4 border-green-500 bg-minecraft-world overflow-hidden"><span className="relative z-10">{currentUserAccount.accountId.charAt(0).toUpperCase()}</span></div>
                             <h3 className="text-2xl font-bold mt-4">{currentUserAccount.accountId}</h3>
                             <p className="text-gray-400"><strong>Email:</strong> {currentUserAccount.email}</p>
-                            <p className="text-gray-400"><strong>Bank ID:</strong> {currentUserAccount.bankId}</p>
-                            <p className="text-gray-400"><strong>Edition:</strong> {currentUserAccount.edition}</p>
-                            <p className="text-gray-400"><strong>Bank Name:</strong> {currentUserAccount.bankName}</p>
+                            <p className="text-gray-400"><strong>Bank ID:</strong> {currentUserAccount.bankId} <button onClick={() => setEditMode(prev => ({...prev, bankId: !prev.bankId}))} className="ml-2 text-blue-400 hover:underline text-sm">{editMode.bankId ? 'Cancel' : 'Edit'}</button></p>
+                            {editMode.bankId && (
+                                <div className="mt-2 space-y-2">
+                                    <input type="text" name="bankId" value={profile.bankId} onChange={handleProfileChange} placeholder="Bank ID" className="w-full p-2 bg-gray-700 text-gray-200 border border-gray-600 rounded-md" />
+                                    <button onClick={() => { handleUpdateProfile({ bankId: profile.bankId }); setEditMode(prev => ({...prev, bankId: false})); }} className="bg-green-600 hover:bg-green-700 text-white font-bold py-1 px-3 rounded-md">Save Bank ID</button>
+                                </div>
+                            )}
+                            <p className="text-gray-400"><strong>Edition:</strong> {currentUserAccount.edition} <button onClick={() => setEditMode(prev => ({...prev, edition: !prev.edition}))} className="ml-2 text-blue-400 hover:underline text-sm">{editMode.edition ? 'Cancel' : 'Edit'}</button></p>
+                            {editMode.edition && (
+                                <div className="mt-2 space-y-2">
+                                    <select name="edition" value={profile.edition} onChange={handleProfileChange} className="w-full p-2 bg-gray-700 text-gray-200 border border-gray-600 rounded-md">
+                                        <option value="java">Java</option>
+                                        <option value="bedrock">Bedrock</option>
+                                    </select>
+                                    <button onClick={() => { handleUpdateProfile({ edition: profile.edition }); setEditMode(prev => ({...prev, edition: false})); }} className="bg-green-600 hover:bg-green-700 text-white font-bold py-1 px-3 rounded-md">Save Edition</button>
+                                </div>
+                            )}
+                            <p className="text-gray-400"><strong>Bank Name:</strong> {currentUserAccount.bankName} <button onClick={() => setEditMode(prev => ({...prev, bankName: !prev.bankName}))} className="ml-2 text-blue-400 hover:underline text-sm">{editMode.bankName ? 'Cancel' : 'Edit'}</button></p>
+                            {editMode.bankName && (
+                                <div className="mt-2 space-y-2">
+                                    <input type="text" name="bankName" value={profile.bankName} onChange={handleProfileChange} placeholder="Bank Name" className="w-full p-2 bg-gray-700 text-gray-200 border border-gray-600 rounded-md" />
+                                    <button onClick={() => { handleUpdateProfile({ bankName: profile.bankName }); setEditMode(prev => ({...prev, bankName: false})); }} className="bg-green-600 hover:bg-green-700 text-white font-bold py-1 px-3 rounded-md">Save Bank Name</button>
+                                </div>
+                            )}
+                            <p className="text-gray-400"><strong>Minecraft Username:</strong> {currentUserAccount.accountId} <button onClick={() => setEditMode(prev => ({...prev, accountId: !prev.accountId}))} className="ml-2 text-blue-400 hover:underline text-sm">{editMode.accountId ? 'Cancel' : 'Edit'}</button></p>
+                            {editMode.accountId && (
+                                <div className="mt-2 space-y-2">
+                                    <input type="text" name="accountId" value={profile.accountId} onChange={handleProfileChange} placeholder="Minecraft Username" className="w-full p-2 bg-gray-700 text-gray-200 border border-gray-600 rounded-md" />
+                                    <button onClick={() => { handleUpdateProfile({ accountId: profile.accountId }); setEditMode(prev => ({...prev, accountId: false})); }} className="bg-green-600 hover:bg-green-700 text-white font-bold py-1 px-3 rounded-md">Save Username</button>
+                                </div>
+                            )}
+                            <p className="text-gray-400"><strong>Email:</strong> {currentUserAccount.email} <button onClick={() => setEditMode(prev => ({...prev, email: !prev.email}))} className="ml-2 text-blue-400 hover:underline text-sm">{editMode.email ? 'Cancel' : 'Edit'}</button></p>
+                            {editMode.email && (
+                                <div className="mt-2 space-y-2">
+                                    <input type="email" name="email" value={profile.email} onChange={handleProfileChange} placeholder="Email Address" className="w-full p-2 bg-gray-700 text-gray-200 border border-gray-600 rounded-md" />
+                                    <button onClick={() => { handleUpdateProfile({ email: profile.email }); setEditMode(prev => ({...prev, email: false})); }} className="bg-green-600 hover:bg-green-700 text-white font-bold py-1 px-3 rounded-md">Save Email</button>
+                                </div>
+                            )
+                            }
+                            <p className="text-gray-400"><strong>Minecraft Username:</strong> {currentUserAccount.accountId} <button onClick={() => setEditMode(prev => ({...prev, accountId: !prev.accountId}))} className="ml-2 text-blue-400 hover:underline text-sm">{editMode.accountId ? 'Cancel' : 'Edit'}</button></p>
+                            {editMode.accountId && (
+                                <div className="mt-2 space-y-2">
+                                    <input type="text" name="accountId" value={profile.accountId} onChange={handleProfileChange} placeholder="Minecraft Username" className="w-full p-2 bg-gray-700 text-gray-200 border border-gray-600 rounded-md" />
+                                    <button onClick={() => { handleUpdateProfile({ accountId: profile.accountId }); setEditMode(prev => ({...prev, accountId: false})); }} className="bg-green-600 hover:bg-green-700 text-white font-bold py-1 px-3 rounded-md">Save Username</button>
+                                </div>
+                            )}
+                            <p className="text-gray-400"><strong>Email:</strong> {currentUserAccount.email} <button onClick={() => setEditMode(prev => ({...prev, email: !prev.email}))} className="ml-2 text-blue-400 hover:underline text-sm">{editMode.email ? 'Cancel' : 'Edit'}</button></p>
+                            {editMode.email && (
+                                <div className="mt-2 space-y-2">
+                                    <input type="email" name="email" value={profile.email} onChange={handleProfileChange} placeholder="Email Address" className="w-full p-2 bg-gray-700 text-gray-200 border border-gray-600 rounded-md" />
+                                    <button onClick={() => { handleUpdateProfile({ email: profile.email }); setEditMode(prev => ({...prev, email: false})); }} className="bg-green-600 hover:bg-green-700 text-white font-bold py-1 px-3 rounded-md">Save Email</button>
+                                </div>
+                            )}
                         </div>
                         <div className="flex-1 space-y-6">
                             <div className="bg-gray-800 p-6 rounded-lg shadow-minecraft">
@@ -610,11 +665,12 @@
                                             {editMode.business ? <select name="businessIncomeUnit" value={profile.businessIncomeUnit} onChange={handleProfileChange} className="w-full p-3 bg-gray-700 text-gray-200 border border-gray-600 rounded-md"><option value="day">Per Day</option><option value="hour">Per Hour</option></select> : <span className="text-gray-200">{profile.businessIncomeUnit}</span>}
                                         </div>
                                     </>}
-                                    {(editMode.job || editMode.business || editMode.bankInfo) && <button type="submit" className="bg-green-600 hover:bg-green-700 text-white font-bold py-2 px-4 rounded-md">Save Changes</button>}
+                                    {(editMode.job || editMode.business) && <button type="submit" className="bg-green-600 hover:bg-green-700 text-white font-bold py-2 px-4 rounded-md">Save Changes</button>}
                                 </form>
                             </div>
                             <div className="bg-gray-800 p-6 rounded-lg shadow-minecraft"><h2 className="text-xl font-bold text-green-400 mb-4">Change Password</h2><form onSubmit={onPasswordSubmit} className="space-y-4 max-w-sm"><input type="password" value={oldPassword} onChange={(e) => setOldPassword(e.target.value)} placeholder="Old Password" required className="w-full p-3 bg-gray-700 text-gray-200 border border-gray-600 rounded-md" /><input type="password" value={newPassword} onChange={(e) => setNewPassword(e.target.value)} placeholder="New Password" required className="w-full p-3 bg-gray-700 text-gray-200 border border-gray-600 rounded-md" /><button type="submit" className="bg-green-600 text-white font-bold py-2 px-4 rounded-md hover:bg-green-700">Change Password</button></form></div></div>
                     </div>
+                </div>
                 </div>
             );
         };
