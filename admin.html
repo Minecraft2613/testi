@@ -188,10 +188,7 @@
                 { name: 'Messages', view: 'messages' },
                 { name: 'Theme Settings', view: 'theme_settings' },
             ];
-            const admin22Views = [
-                ...commonViews,
-            ];
-            const menuItems = adminUser === 'admin22' ? admin22Views : commonViews;
+            const menuItems = adminUser === 'admin22' ? commonViews.concat({ name: 'Loan Approval', view: 'loan_approval' }) : commonViews;
 
             return (
                 <div className={`fixed top-0 left-0 h-full bg-gray-800 text-white w-64 p-5 transition-transform duration-300 ${isOpen ? 'translate-x-0' : '-translate-x-full'}`}>
@@ -215,7 +212,7 @@
         // --- Views ---
         const HomeView = ({ accounts, taxData, handleApproveLoan }) => {
             const pendingLoans = accounts.flatMap(acc => (acc.loans || []).filter(l => l.loanStatus === 'pending').map(l => ({ ...l, accountId: acc.accountId })));
-            const pendingTaxes = accounts.filter(acc => taxData.players[acc.accountId] && taxData.players[acc.accountId].sessions[taxData.currentSession] && taxData.players[acc.accountId].sessions[taxData.currentSession].taxDue > 0);
+            const pendingTaxes = accounts.filter(acc => taxData && taxData.players && taxData.players[acc.accountId] && taxData.players[acc.accountId].sessions[taxData.currentSession] && taxData.players[acc.accountId].sessions[taxData.currentSession].taxDue > 0);
             
             return (
                 <div>

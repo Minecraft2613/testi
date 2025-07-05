@@ -924,8 +924,19 @@
                     if (response.ok) {
                         const data = await response.json();
                         // Fetch tax data after successful login
-                        const taxResponse = await fetch(`${API_ENDPOINTS.TAX}/tax-data`);
-                        const taxData = taxResponse.ok ? await taxResponse.json() : {};
+                        let taxData = {};
+                        try {
+                            const taxResponse = await fetch(`${API_ENDPOINTS.TAX}/tax-data`);
+                            if (taxResponse.ok) {
+                                taxData = await taxResponse.json();
+                            } else {
+                                console.error('Failed to fetch tax data, proceeding without it.');
+                                showModal('Warning', 'Could not load tax information. Some features may be unavailable.', 'error');
+                            }
+                        } catch (taxError) {
+                            console.error('Error fetching tax data:', taxError);
+                            showModal('Warning', 'Could not load tax information. Some features may be unavailable.', 'error');
+                        }
 
                         setLoginSuccess(true);
                         setTimeout(() => {
