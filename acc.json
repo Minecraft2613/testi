@@ -6,7 +6,7 @@
     "password": "26",
     "edition": "java",
     "bankId": "BANK512730",
-    "balance": 944,
+    "balance": 945,
     "taxData": {},
     "transactions": [
       {
@@ -194,6 +194,12 @@
         "amount": 0,
         "date": "2025-07-05T09:16:10.658Z",
         "description": "Loan application for 1 submitted"
+      },
+      {
+        "type": "credit",
+        "amount": 1,
+        "date": "2025-07-05T09:29:15.315Z",
+        "description": "Loan LOAN1751706970658 approved by admin"
       }
     ],
     "jobType": "ansh",
@@ -211,7 +217,7 @@
         "dailyRepayment": 0.15142857142857133,
         "durationWeeks": 1,
         "loanType": "personal",
-        "loanStatus": "pending",
+        "loanStatus": "active",
         "applicationDate": "2025-07-05T09:16:10.658Z",
         "purpose": "1",
         "coord1": "1",
