@@ -273,7 +273,7 @@
             return (
                 <div className="space-y-6">
                     <div className="bg-gray-800 p-6 rounded-lg shadow-minecraft"><h2 className="text-xl font-bold text-green-400 mb-4">Account Overview</h2><p className="text-gray-300"><strong>Bank Name:</strong> {bankName}</p><p className="text-2xl font-bold">Balance: <span className="text-green-400">${balance?.toFixed(2) || '0.00'}</span></p><p className="text-lg font-semibold mt-2">Total Income: <span className="text-yellow-400">${totalPerDayIncome}/day</span></p><p className="text-sm text-gray-400">Job: ${jobPerDayIncome}/day | Business: ${businessPerDayIncome}/{businessIncomeUnit}</p></div>
-                    <div className="bg-gray-800 p-6 rounded-lg shadow-minecraft"><h2 className="text-xl font-bold text-green-400 mb-4">Loans ({loans.length})</h2>{loans.length > 0 ? <div className="space-y-4">{loans.map((loan) => <div key={loan.id} className="p-4 border border-gray-700 rounded-md bg-gray-700"><div className="flex justify-between items-start"><div className="flex-grow"><p className="font-bold capitalize text-yellow-400">{loan.loanType} Loan</p><p className="text-gray-300">Amount: ${loan.loanAmount.toFixed(2)} | Total Due: ${loan.loanAmountDue.toFixed(2)}</p><p className="text-gray-300">Status: <span className={`font-semibold ${loan.loanStatus === 'pending' ? 'text-yellow-400' : 'text-green-400'}`}>{loan.loanStatus}</span></p></div><div className="flex flex-col items-end gap-2">{loan.loanStatus === 'pending' && <><button onClick={() => handleCancelLoan(loan.id)} className="text-xs bg-red-600 hover:bg-red-700 text-white font-bold py-1 px-2 rounded">Cancel</button><button onClick={() => handleAdminApproveLoan(loan.id)} className="text-xs bg-blue-600 hover:bg-blue-700 text-white font-bold py-1 px-2 rounded">Admin Approve</button></>}{loan.loanStatus === 'active' && <button onClick={() => handlePayLoan(loan.id)} className="text-xs bg-green-600 hover:bg-green-700 text-white font-bold py-1 px-2 rounded">Pay Full Amount</button>}</div></div></div>)}</div> : <p className="text-gray-400">No active loans.</p>}</div>
+                    <div className="flex flex-col items-end gap-2">{loan.loanStatus === 'pending' && <button onClick={() => handleCancelLoan(loan.id)} className="text-xs bg-red-600 hover:bg-red-700 text-white font-bold py-1 px-2 rounded">Cancel</button>}{loan.loanStatus === 'active' && <button onClick={() => handlePayLoan(loan.id)} className="text-xs bg-green-600 hover:bg-green-700 text-white font-bold py-1 px-2 rounded">Pay Full Amount</button>}</div>
                     <div className="bg-gray-800 p-6 rounded-lg shadow-minecraft"><h2 className="text-xl font-bold text-green-400 mb-4">Transaction History</h2>{transactions.length > 0 ? <div className="max-h-80 overflow-y-auto"><table className="min-w-full text-sm text-left"><thead className="bg-gray-700 sticky top-0"><tr><th className="p-2 text-gray-300">Date</th><th className="p-2 text-gray-300">Description</th><th className="p-2 text-right text-gray-300">Amount</th></tr></thead><tbody>{transactions.slice().reverse().map((tx, index) => <tr key={index} className="border-b border-gray-700 hover:bg-gray-700/50"><td className="p-2 text-gray-400">{new Date(tx.date).toLocaleDateString()}</td><td className="p-2 text-gray-300">{tx.description}</td><td className={`p-2 text-right font-semibold ${tx.amount < 0 ? 'text-red-400' : 'text-green-400'}`}>{tx.amount < 0 ? '-' : '+'}${Math.abs(tx.amount).toFixed(2)}</td></tr>)}</tbody></table></div> : <p className="text-gray-400">No transactions yet.</p>}</div>
                 </div>
             );
@@ -419,7 +419,7 @@
                     return;
                 }
                 setIsPaying(true);
-                await handleAdvanceTax(amount);
+                await handleAdvanceTax(amount, false);
                 setIsPaying(false);
             };
 
@@ -886,33 +886,29 @@
                 console.log("Save all accounts called. This should ideally go through a worker.", accounts);
             };
 
-            // Initial app load effect
             useEffect(() => {
-                const initializeApp = async () => {
-                    let accounts = await getAllAccounts();
-                    if (accounts.length === 0) {
-                        // Populate initial data if no accounts exist on GitHub
-                        const initialAccount = {
-                            bankName: 'Gemini Test Bank', accountId: 'tester', email: 'tester@gemini.com', password: '26', edition: 'java', bankId: 'BANK006443',
-                            balance: 10000, jobType: 'Diamond Miner', jobPerDayIncome: 250, businessType: 'Potion Shop', businessPerDayIncome: 150, businessIncomeUnit: 'day',
-                            taxData: { totalTax: 390, taxPaid: 0, advanceTaxPaid: 0, dailyTaxCharges: [30, 50, 20, 60, 80, 50, 100].map((amount, i) => ({ date: new Date(Date.now() - (6-i) * 86400000).toISOString(), amount })) },
-                            loans: [], transactions: []
-                        };
-                        // This initial save would go through the worker as well in a real app
-                        // For this simulation, we'll just add it to the in-memory accounts for now
-                        // and rely on the create-account endpoint for persistence.
-                        accounts.push(initialAccount);
-                        // In a real app, you'd call the worker to create this initial account
-                        // await fetch(`${API_ENDPOINTS.ACCOUNTS}/create-account`, { method: 'POST', body: JSON.stringify(initialAccount) });
+                const fetchAccountData = async () => {
+                    if (!currentUserAccount) return;
+                    try {
+                        const response = await fetch(`${API_ENDPOINTS.ACCOUNTS}/login`, {
+                            method: 'POST',
+                            headers: { 'Content-Type': 'application/json' },
+                            body: JSON.stringify({ identifier: currentUserAccount.accountId, password: currentUserAccount.password })
+                        });
+                        if (response.ok) {
+                            const data = await response.json();
+                            const taxResponse = await fetch(`${API_ENDPOINTS.TAX}/tax-data`);
+                            const taxData = taxResponse.ok ? await taxResponse.json() : {};
+                            setCurrentUserAccount({ ...data.account, taxData: taxData });
+                        }
+                    } catch (error) {
+                        console.error("Error polling for account data:", error);
                     }
-                    // Simulate initial loading time
-                    setTimeout(() => {
-                        setLoading(false);
-                        setCurrentPage('login');
-                    }, 2500);
                 };
-                initializeApp();
-            }, []);
+
+                const interval = setInterval(fetchAccountData, 5000); // Poll every 5 seconds
+                return () => clearInterval(interval);
+            }, [currentUserAccount]);
 
             const handleLogin = async (identifier, password) => {
                 setLoading(true);
@@ -1027,27 +1023,14 @@
                         headers: { 'Content-Type': 'application/json' },
                         body: JSON.stringify({
                             player: currentUserAccount.accountId,
-                            amount
+                            amount,
+                            isFullTax
                         }),
                     });
 
                     if (response.ok) {
                         const data = await response.json();
-                        const updatedAccount = {
-                            ...currentUserAccount,
-                            balance: currentUserAccount.balance - amount,
-                            taxData: data.taxData,
-                            transactions: [
-                                ...currentUserAccount.transactions,
-                                {
-                                    type: 'debit',
-                                    amount: -amount,
-                                    date: new Date().toISOString(),
-                                    description: `Tax payment`
-                                }
-                            ]
-                        };
-                        setCurrentUserAccount(updatedAccount); // Immediately update the state
+                        setCurrentUserAccount(data.account);
                         setPaymentAnimationDetails({ show: true, amount: amount, status: 'success', paymentType: isFullTax ? 'fullTax' : 'customTax' });
                     } else {
                         const errorData = await response.json();
@@ -1082,21 +1065,7 @@
 
                     if (response.ok) {
                         const data = await response.json();
-                        const updatedAccount = {
-                            ...currentUserAccount,
-                            balance: currentUserAccount.balance - amount,
-                            taxData: data.taxData,
-                            transactions: [
-                                ...currentUserAccount.transactions,
-                                {
-                                    type: 'debit',
-                                    amount: -amount,
-                                    date: new Date().toISOString(),
-                                    description: `Advance tax payment`
-                                }
-                            ]
-                        };
-                        setCurrentUserAccount(updatedAccount); // Immediately update the state
+                        setCurrentUserAccount(data.account);
                         setPaymentAnimationDetails({ show: true, amount: amount, status: 'success', paymentType: 'advanceTax' });
                     } else {
                         const errorData = await response.json();
@@ -1160,37 +1129,22 @@
                 let amountToPay = customAmount !== null ? customAmount : (loan.loanAmountDue - loan.loanPaid);
                 if (amountToPay <= 0) { showModal('Info', 'No amount to pay for this loan.', 'info'); return; }
 
-                const timeSinceApplication = Date.now() - new Date(loan.applicationDate).getTime();
-                let effectiveAmountToPay = amountToPay;
+                if (currentUserAccount.balance < amountToPay) { showModal('Error', 'Insufficient balance to pay the loan.', 'error'); return; }
 
-                // Apply interest reduction rules only if paying the full remaining amount
-                if (customAmount === null || customAmount >= (loan.loanAmountDue - loan.loanPaid)) {
-                    if (timeSinceApplication < 6 * 3600 * 1000) { // 6 hours
-                        effectiveAmountToPay = loan.loanAmount; // Only principal
-                        showModal('Interest Waived!', 'Paid within 6 hours! 0% interest applied.', 'success');
-                    } else if (timeSinceApplication < 2 * 24 * 3600 * 1000) { // 2 days
-                        const interest = loan.loanAmountDue - loan.loanAmount;
-                        effectiveAmountToPay = loan.loanAmount + (interest * 0.6); // 40% interest reduction
-                        showModal('Interest Reduced!', 'Paid within 2 days! Interest reduced by 40%.', 'success');
-                    }
-                }
-
-                if (currentUserAccount.balance < effectiveAmountToPay) { showModal('Error', 'Insufficient balance to pay the loan.', 'error'); return; }
-
-                const newLoanPaid = loan.loanPaid + effectiveAmountToPay;
+                const newLoanPaid = loan.loanPaid + amountToPay;
                 let updatedLoans;
-                let transactionDescription = `Loan payment for ${loan.id}`; 
+                let transactionDescription = `Loan payment for ${loan.id}`;
 
                 if (newLoanPaid >= loan.loanAmountDue) {
                     updatedLoans = currentUserAccount.loans.filter(l => l.id !== loanId);
-                    transactionDescription = `Paid off loan ${loan.id}`; 
+                    transactionDescription = `Paid off loan ${loan.id}`;
                     showModal('Loan Paid!', 'Loan has been fully paid off!', 'success');
                 } else {
                     updatedLoans = currentUserAccount.loans.map(l => l.id === loanId ? { ...l, loanPaid: newLoanPaid } : l);
-                    showModal('Payment Successful!', `Paid $${effectiveAmountToPay.toFixed(2)} towards loan ${loan.id}.`, 'success');
+                    showModal('Payment Successful!', `Paid ${amountToPay.toFixed(2)} towards loan ${loan.id}.`, 'success');
                 }
                 
-                const updatedAccount = { ...currentUserAccount, loans: updatedLoans, balance: currentUserAccount.balance - effectiveAmountToPay, transactions: [...currentUserAccount.transactions, { type: 'debit', amount: -effectiveAmountToPay, date: new Date().toISOString(), description: transactionDescription }] };
+                const updatedAccount = { ...currentUserAccount, loans: updatedLoans, balance: currentUserAccount.balance - amountToPay, transactions: [...currentUserAccount.transactions, { type: 'debit', amount: -amountToPay, date: new Date().toISOString(), description: transactionDescription }] };
                 await updateCurrentUser(updatedAccount);
             };
 

@@ -16,283 +16,29 @@
 <body>
     <div id="root"></div>
     <script type="text/babel">
-        const { useState, useEffect } = React;
+        const { useState, useEffect, useMemo } = React;
 
         const API_ENDPOINTS = {
             ADMIN: 'https://bank-data.1987sakshamsingh.workers.dev/admin'
         };
 
-        // --- Component: UserEditView ---
-        const UserEditView = ({ accounts, setAccounts }) => {
-            const [selectedUser, setSelectedUser] = useState(null);
-            const [formData, setFormData] = useState({});
-
-            const handleUserSelect = (accountId) => {
-                const user = accounts.find(acc => acc.accountId === accountId);
-                setSelectedUser(user);
-                setFormData(user || {});
-            };
-
-            const handleFormChange = (e) => {
-                setFormData({ ...formData, [e.target.name]: e.target.value });
-            };
-
-            const handleFormSubmit = async (e) => {
-                e.preventDefault();
-                // In a real app, you'd have an API call here to update the user
-                const updatedAccounts = accounts.map(acc => acc.accountId === selectedUser.accountId ? formData : acc);
-                setAccounts(updatedAccounts);
-                alert('User data updated successfully! (Frontend only)');
-            };
-
-            return (
-                <div className="bg-gray-800 p-6 rounded-lg shadow-minecraft">
-                    <h2 className="text-2xl font-bold text-red-400 mb-4">Edit User Data</h2>
-                    <select onChange={(e) => handleUserSelect(e.target.value)} className="w-full p-3 bg-gray-700 text-gray-200 border border-gray-600 rounded-md mb-4">
-                        <option value="">Select a user to edit</option>
-                        {accounts.map(acc => <option key={acc.accountId} value={acc.accountId}>{acc.accountId}</option>)}
-                    </select>
-
-                    {selectedUser && (
-                        <form onSubmit={handleFormSubmit} className="space-y-4">
-                            <input type="text" name="bankName" value={formData.bankName || ''} onChange={handleFormChange} placeholder="Bank Name" className="w-full p-3 bg-gray-700" />
-                            <input type="text" name="email" value={formData.email || ''} onChange={handleFormChange} placeholder="Email" className="w-full p-3 bg-gray-700" />
-                            <input type="number" name="balance" value={formData.balance || 0} onChange={handleFormChange} placeholder="Balance" className="w-full p-3 bg-gray-700" />
-                            <button type="submit" className="w-full bg-red-600 hover:bg-red-700 text-white font-bold py-3 px-6 rounded-md">Save Changes</button>
-                        </form>
-                    )}
-                </div>
-            );
-        };
-
-        // --- Component: UserBankInfoView ---
-        const UserBankInfoView = ({ accounts }) => (
-            <div className="bg-gray-800 p-6 rounded-lg shadow-minecraft">
-                <h2 className="text-2xl font-bold text-red-400 mb-4">All User Bank Info</h2>
-                <div className="max-h-96 overflow-y-auto">
-                    <table className="min-w-full text-sm text-left">
-                        <thead className="bg-gray-700 sticky top-0">
-                            <tr>
-                                <th className="p-2">Account ID</th>
-                                <th className="p-2">Bank Name</th>
-                                <th className="p-2">Email</th>
-                                <th className="p-2 text-right">Balance</th>
-                            </tr>
-                        </thead>
-                        <tbody>
-                            {accounts.map(acc => (
-                                <tr key={acc.accountId} className="border-b border-gray-700">
-                                    <td className="p-2">{acc.accountId}</td>
-                                    <td className="p-2">{acc.bankName}</td>
-                                    <td className="p-2">{acc.email}</td>
-                                    <td className="p-2 text-right">${(acc.balance || 0).toFixed(2)}</td>
-                                </tr>
-                            ))}
-                        </tbody>
-                    </table>
+        // --- Loading Screen ---
+        const LoadingScreen = () => (
+            <div className="fixed inset-0 bg-gray-900 bg-opacity-75 flex items-center justify-center z-50">
+                <div className="text-center">
+                    <div className="w-16 h-16 border-4 border-dashed rounded-full animate-spin border-red-500 mx-auto"></div>
+                    <p className="text-white text-xl mt-4">Loading Admin Panel...</p>
                 </div>
             </div>
         );
 
-        // --- Component: AllLoanInfoView ---
-        const AllLoanInfoView = ({ accounts }) => {
-            const approvedLoans = accounts.flatMap(acc => (acc.loans || []).filter(l => l.loanStatus === 'active').map(l => ({ ...l, accountId: acc.accountId })));
-            return (
-                <div className="bg-gray-800 p-6 rounded-lg shadow-minecraft">
-                    <h2 className="text-2xl font-bold text-red-400 mb-4">All Approved Loans</h2>
-                    <div className="max-h-96 overflow-y-auto">
-                        <table className="min-w-full text-sm text-left">
-                            <thead className="bg-gray-700 sticky top-0">
-                                <tr>
-                                    <th className="p-2">Account ID</th>
-                                    <th className="p-2">Loan ID</th>
-                                    <th className="p-2">Amount</th>
-                                    <th className="p-2">Type</th>
-                                    <th className="p-2">Status</th>
-                                </tr>
-                            </thead>
-                            <tbody>
-                                {approvedLoans.map(loan => (
-                                    <tr key={loan.id} className="border-b border-gray-700">
-                                        <td className="p-2">{loan.accountId}</td>
-                                        <td className="p-2">{loan.id}</td>
-                                        <td className="p-2">${loan.loanAmount.toFixed(2)}</td>
-                                        <td className="p-2">{loan.loanType}</td>
-                                        <td className="p-2 text-green-400">{loan.loanStatus}</td>
-                                    </tr>
-                                ))}
-                            </tbody>
-                        </table>
-                    </div>
-                </div>
-            );
-        };
+        // --- Main App ---
+        const App = () => {
+            const [adminUser, setAdminUser] = useState(null);
+            const [loading, setLoading] = useState(false);
 
-        // --- Component: AllTaxInfoView ---
-        const AllTaxInfoView = ({ accounts }) => (
-            <div className="bg-gray-800 p-6 rounded-lg shadow-minecraft">
-                <h2 className="text-2xl font-bold text-red-400 mb-4">All Player Tax Info</h2>
-                <div className="max-h-96 overflow-y-auto">
-                    <table className="min-w-full text-sm text-left">
-                        <thead className="bg-gray-700 sticky top-0">
-                            <tr>
-                                <th className="p-2">Username</th>
-                                <th className="p-2">Edition</th>
-                                <th className="p-2">Total Tax Paid</th>
-                                <th className="p-2">Session Details</th>
-                            </tr>
-                        </thead>
-                        <tbody>
-                            {accounts.map(acc => (
-                                <tr key={acc.accountId} className="border-b border-gray-700">
-                                    <td className="p-2">{acc.accountId}</td>
-                                    <td className="p-2">{acc.edition}</td>
-                                    <td className="p-2">${(acc.taxData?.totalTaxPaid || 0).toFixed(2)}</td>
-                                    <td className="p-2">
-                                        {acc.taxData?.sessions && Object.entries(acc.taxData.sessions).map(([session, data]) => (
-                                            <div key={session} className="mb-2">
-                                                <strong>Session: {session}</strong><br />
-                                                Tax Due: ${data.taxDue.toFixed(2)}<br />
-                                                Tax Paid: ${data.taxPaid.toFixed(2)}
-                                            </div>
-                                        ))}
-                                    </td>
-                                </tr>
-                            ))}
-                        </tbody>
-                    </table>
-                </div>
-            </div>
-        );
-
-        // --- Component: LoanApplicationsView ---
-        const LoanApplicationsView = ({ accounts, handleApproveLoan }) => {
-            const pendingLoans = accounts.flatMap(acc => (acc.loans || []).filter(l => l.loanStatus === 'pending').map(l => ({ ...l, accountId: acc.accountId, bankId: acc.bankId })));
-            return (
-                <div className="bg-gray-800 p-6 rounded-lg shadow-minecraft">
-                    <h2 className="text-2xl font-bold text-red-400 mb-4">Pending Loan Applications</h2>
-                    <div className="space-y-4">
-                        {pendingLoans.length > 0 ? pendingLoans.map(loan => (
-                            <div key={loan.id} className="p-4 border border-gray-700 rounded-md bg-gray-700">
-                                <p><strong>Player:</strong> {loan.accountId} ({loan.bankId})</p>
-                                <p><strong>Amount:</strong> ${loan.loanAmount.toFixed(2)}</p>
-                                <p><strong>Type:</strong> {loan.loanType}</p>
-                                <p><strong>Purpose:</strong> {loan.purpose}</p>
-                                <button onClick={() => handleApproveLoan(loan.accountId, loan.id)} className="mt-2 bg-green-600 hover:bg-green-700 text-white font-bold py-1 px-2 rounded">Approve</button>
-                            </div>
-                        )) : <p>No pending loan applications.</p>}
-                    </div>
-                </div>
-            );
-        };
-
-        // --- Component: PendingTaxesView ---
-        const PendingTaxesView = ({ accounts }) => {
-            const pendingTaxes = accounts.filter(acc => acc.taxData && acc.taxData.taxDue > 0);
-            return (
-                <div className="bg-gray-800 p-6 rounded-lg shadow-minecraft">
-                    <h2 className="text-2xl font-bold text-red-400 mb-4">Players with Pending Taxes</h2>
-                    <div className="max-h-96 overflow-y-auto">
-                        <table className="min-w-full text-sm text-left">
-                            <thead className="bg-gray-700 sticky top-0">
-                                <tr>
-                                    <th className="p-2">Username</th>
-                                    <th className="p-2">Tax Due</th>
-                                </tr>
-                            </thead>
-                            <tbody>
-                                {pendingTaxes.map(acc => (
-                                    <tr key={acc.accountId} className="border-b border-gray-700">
-                                        <td className="p-2">{acc.accountId}</td>
-                                        <td className="p-2 text-red-400">${acc.taxData.taxDue.toFixed(2)}</td>
-                                    </tr>
-                                ))}
-                            </tbody>
-                        </table>
-                    </div>
-                </div>
-            );
-        };
-
-        // --- Component: AdminDashboard ---
-        const AdminDashboard = ({ adminUser, setAdminUser }) => {
-            const [accounts, setAccounts] = useState([]);
-            const [view, setView] = useState(adminUser === 'admin22' ? 'user_edit' : 'loan_applications');
-
-            useEffect(() => {
-                const fetchAccounts = async () => {
-                    try {
-                        const response = await fetch(API_ENDPOINTS.ADMIN, {
-                            method: 'POST',
-                            headers: { 'Content-Type': 'application/json' },
-                            body: JSON.stringify({ action: 'get_all_data' })
-                        });
-                        const data = await response.json();
-                        if (data.success) {
-                            setAccounts(data.accounts);
-                        } else {
-                            console.error("Failed to fetch accounts:", data.message);
-                        }
-                    } catch (err) {
-                        console.error("Error fetching accounts:", err);
-                    }
-                };
-                fetchAccounts();
-            }, []);
-
-            const handleApproveLoan = async (accountId, loanId) => {
-                // This function would call the backend to approve the loan
-                console.log(`Approving loan ${loanId} for ${accountId}`);
-                // You would then refetch or update the accounts state
-            };
-
-            const Admin22Dashboard = () => (
-                <div className="flex flex-wrap gap-4 mb-6">
-                    <button onClick={() => setView('user_edit')} className={`p-4 rounded-xl flex-1 text-left ${view === 'user_edit' ? 'bg-red-600' : 'bg-gray-700'}`}>User Edit</button>
-                    <button onClick={() => setView('user_bank_info')} className={`p-4 rounded-xl flex-1 text-left ${view === 'user_bank_info' ? 'bg-red-600' : 'bg-gray-700'}`}>User Bank Info</button>
-                    <button onClick={() => setView('all_loan_info')} className={`p-4 rounded-xl flex-1 text-left ${view === 'all_loan_info' ? 'bg-red-600' : 'bg-gray-700'}`}>All Loan Info</button>
-                    <button onClick={() => setView('all_tax_info')} className={`p-4 rounded-xl flex-1 text-left ${view === 'all_tax_info' ? 'bg-red-600' : 'bg-gray-700'}`}>All Tax Info</button>
-                </div>
-            );
-
-            const AdminsDashboard = () => (
-                <div className="flex flex-wrap gap-4 mb-6">
-                    <button onClick={() => setView('loan_applications')} className={`p-4 rounded-xl flex-1 text-left ${view === 'loan_applications' ? 'bg-red-600' : 'bg-gray-700'}`}>Loan Applications</button>
-                    <button onClick={() => setView('pending_taxes')} className={`p-4 rounded-xl flex-1 text-left ${view === 'pending_taxes' ? 'bg-red-600' : 'bg-gray-700'}`}>Pending Taxes</button>
-                </div>
-            );
-
-            return (
-                <div className="p-8">
-                    <div className="flex justify-between items-center mb-8">
-                        <h1 className="text-4xl font-bold text-red-400">Admin Dashboard</h1>
-                        <div>
-                            <span className="text-lg mr-4">Welcome, {adminUser}</span>
-                            <button onClick={() => setAdminUser(null)} className="bg-red-600 hover:bg-red-700 text-white font-bold py-2 px-4 rounded-md">Logout</button>
-                        </div>
-                    </div>
-
-                    {adminUser === 'admin22' ? <Admin22Dashboard /> : <AdminsDashboard />}
-
-                    {view === 'user_edit' && adminUser === 'admin22' && <UserEditView accounts={accounts} setAccounts={setAccounts} />}
-                    {view === 'user_bank_info' && adminUser === 'admin22' && <UserBankInfoView accounts={accounts} />}
-                    {view === 'all_loan_info' && adminUser === 'admin22' && <AllLoanInfoView accounts={accounts} />}
-                    {view === 'all_tax_info' && adminUser === 'admin22' && <AllTaxInfoView accounts={accounts} />}
-
-                    {view === 'loan_applications' && <LoanApplicationsView accounts={accounts} handleApproveLoan={handleApproveLoan} />}
-                    {view === 'pending_taxes' && <PendingTaxesView accounts={accounts} />}
-                </div>
-            );
-        };
-        
-        // --- Component: AdminLogin ---
-        const AdminLogin = ({ setAdminUser }) => {
-            const [username, setUsername] = useState('');
-            const [password, setPassword] = useState('');
-            const [error, setError] = useState('');
-
-            const handleLogin = async (e) => {
-                e.preventDefault();
+            const handleLogin = async (username, password) => {
+                setLoading(true);
                 try {
                     const response = await fetch(API_ENDPOINTS.ADMIN, {
                         method: 'POST',
@@ -303,21 +49,45 @@
                     if (data.success) {
                         setAdminUser(username);
                     } else {
-                        setError(data.message);
+                        alert(data.message);
                     }
                 } catch (err) {
-                    setError('Failed to connect to the server.');
+                    alert('Failed to connect to the server.');
+                } finally {
+                    setLoading(false);
                 }
+            };
+
+            const handleLogout = () => {
+                setAdminUser(null);
+            };
+
+            if (loading) {
+                return <LoadingScreen />;
+            }
+
+            return adminUser ? 
+                <AdminDashboard adminUser={adminUser} handleLogout={handleLogout} /> : 
+                <AdminLogin handleLogin={handleLogin} />;
+        };
+
+        // --- Admin Login ---
+        const AdminLogin = ({ handleLogin }) => {
+            const [username, setUsername] = useState('');
+            const [password, setPassword] = useState('');
+
+            const onSubmit = (e) => {
+                e.preventDefault();
+                handleLogin(username, password);
             };
 
             return (
                 <div className="flex items-center justify-center min-h-screen">
                     <div className="bg-gray-800 p-8 rounded-xl w-full max-w-md shadow-minecraft">
                         <h2 className="text-3xl font-bold text-red-400 mb-6 text-center">Admin Login</h2>
-                        <form onSubmit={handleLogin} className="space-y-4">
+                        <form onSubmit={onSubmit} className="space-y-4">
                             <input type="text" value={username} onChange={(e) => setUsername(e.target.value)} placeholder="Username" required className="w-full p-3 bg-gray-700 text-gray-200 border border-gray-600 rounded-md focus:outline-none focus:ring-2 focus:ring-red-500" />
                             <input type="password" value={password} onChange={(e) => setPassword(e.target.value)} placeholder="Password" required className="w-full p-3 bg-gray-700 text-gray-200 border border-gray-600 rounded-md focus:outline-none focus:ring-2 focus:ring-red-500" />
-                            {error && <p className="text-red-500 text-center">{error}</p>}
                             <button type="submit" className="w-full bg-red-600 hover:bg-red-700 text-white font-bold py-3 px-6 rounded-md">Login</button>
                         </form>
                     </div>
@@ -325,12 +95,226 @@
             );
         };
 
-        // --- Main App Component ---
-        const App = () => {
-            const [adminUser, setAdminUser] = useState(null);
+        // --- Admin Dashboard ---
+        const AdminDashboard = ({ adminUser, handleLogout }) => {
+            const [view, setView] = useState('home');
+            const [isSidebarOpen, setSidebarOpen] = useState(true);
+            const [accounts, setAccounts] = useState([]);
+            const [taxData, setTaxData] = useState({ players: {} });
+            const [loading, setLoading] = useState(true);
 
-            return adminUser ? <AdminDashboard adminUser={adminUser} setAdminUser={setAdminUser} /> : <AdminLogin setAdminUser={setAdminUser} />;
+            const fetchData = async () => {
+                try {
+                    const response = await fetch(API_ENDPOINTS.ADMIN, {
+                        method: 'POST',
+                        headers: { 'Content-Type': 'application/json' },
+                        body: JSON.stringify({ action: 'get_all_data' })
+                    });
+                    const data = await response.json();
+                    if (data.success) {
+                        setAccounts(data.accounts);
+                        const taxResponse = await fetch('https://bank-data.1987sakshamsingh.workers.dev/tax-data');
+                        const taxJson = await taxResponse.json();
+                        setTaxData(taxJson);
+                    }
+                } catch (err) {
+                    console.error("Error fetching data:", err);
+                } finally {
+                    setLoading(false);
+                }
+            };
+
+            useEffect(() => {
+                fetchData();
+                const interval = setInterval(fetchData, 5000); // Auto-refresh every 5 seconds
+                return () => clearInterval(interval);
+            }, []);
+
+            const handleApproveLoan = async (accountId, loanId) => {
+                try {
+                    const response = await fetch(API_ENDPOINTS.ADMIN, {
+                        method: 'POST',
+                        headers: { 'Content-Type': 'application/json' },
+                        body: JSON.stringify({ action: 'approve_loan', userAccountId: accountId, loanId })
+                    });
+                    const data = await response.json();
+                    if (data.success) {
+                        setAccounts(data.accounts);
+                        alert('Loan approved!');
+                    } else {
+                        alert('Failed to approve loan: ' + data.message);
+                    }
+                } catch (err) {
+                    alert('Error approving loan.');
+                }
+            };
+            
+            const renderView = () => {
+                switch (view) {
+                    case 'home': return <HomeView accounts={accounts} taxData={taxData} handleApproveLoan={handleApproveLoan} />;
+                    case 'bank_info': return <BankInfoView accounts={accounts} adminUser={adminUser} setAccounts={setAccounts} />;
+                    case 'player_view': return <PlayerView accounts={accounts} />;
+                    case 'messages': return <MessagesView />;
+                    case 'theme_settings': return <ThemeSettingsView />;
+                    default: return <HomeView accounts={accounts} taxData={taxData} handleApproveLoan={handleApproveLoan} />;
+                }
+            };
+
+            return (
+                <div className="flex min-h-screen">
+                    <Sidebar isOpen={isSidebarOpen} setView={setView} handleLogout={handleLogout} adminUser={adminUser} />
+                    <div className={`flex-1 transition-all duration-300 ${isSidebarOpen ? 'ml-64' : 'ml-0'}`}>
+                        <div className="p-8">
+                            <button onClick={() => setSidebarOpen(!isSidebarOpen)} className="mb-4 text-white">
+                                <svg className="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24" xmlns="http://www.w3.org/2000/svg"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M4 6h16M4 12h16m-7 6h7"></path></svg>
+                            </button>
+                            {loading ? <LoadingScreen /> : renderView()}
+                        </div>
+                    </div>
+                </div>
+            );
         };
+
+        // --- Sidebar ---
+        const Sidebar = ({ isOpen, setView, handleLogout, adminUser }) => {
+            const commonViews = [
+                { name: 'Home', view: 'home' },
+                { name: 'Approved Loans', view: 'approved_loans' },
+                { name: 'Paid Tax', view: 'paid_tax' },
+                { name: 'Pending Tax', view: 'pending_tax' },
+                { name: 'Tax Payers History', view: 'tax_history' },
+                { name: 'Bank Info', view: 'bank_info' },
+                { name: 'Player View', view: 'player_view' },
+                { name: 'Messages', view: 'messages' },
+                { name: 'Theme Settings', view: 'theme_settings' },
+            ];
+            const admin22Views = [
+                ...commonViews,
+            ];
+            const menuItems = adminUser === 'admin22' ? admin22Views : commonViews;
+
+            return (
+                <div className={`fixed top-0 left-0 h-full bg-gray-800 text-white w-64 p-5 transition-transform duration-300 ${isOpen ? 'translate-x-0' : '-translate-x-full'}`}>
+                    <h2 className="text-2xl font-bold mb-10">Admin Menu</h2>
+                    <nav>
+                        <ul>
+                            {menuItems.map(item => (
+                                <li key={item.view} className="mb-4">
+                                    <button onClick={() => setView(item.view)} className="w-full text-left hover:bg-red-700 p-2 rounded">{item.name}</button>
+                                </li>
+                            ))}
+                        </ul>
+                    </nav>
+                    <div className="absolute bottom-5 w-full pr-10">
+                        <button onClick={handleLogout} className="w-full bg-red-600 hover:bg-red-700 text-white font-bold py-2 px-4 rounded">Logout</button>
+                    </div>
+                </div>
+            );
+        };
+
+        // --- Views ---
+        const HomeView = ({ accounts, taxData, handleApproveLoan }) => {
+            const pendingLoans = accounts.flatMap(acc => (acc.loans || []).filter(l => l.loanStatus === 'pending').map(l => ({ ...l, accountId: acc.accountId })));
+            const pendingTaxes = accounts.filter(acc => taxData.players[acc.accountId] && taxData.players[acc.accountId].sessions[taxData.currentSession] && taxData.players[acc.accountId].sessions[taxData.currentSession].taxDue > 0);
+            
+            return (
+                <div>
+                    <h1 className="text-3xl font-bold text-red-400 mb-6">Dashboard</h1>
+                    <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
+                        <div>
+                            <h2 className="text-2xl font-bold text-red-400 mb-4">Pending Loan Applications</h2>
+                            <div className="space-y-4">
+                                {pendingLoans.length > 0 ? pendingLoans.map(loan => (
+                                    <div key={loan.id} className="p-4 border border-gray-700 rounded-md bg-gray-700">
+                                        <p><strong>Player:</strong> {loan.accountId}</p>
+                                        <p><strong>Amount:</strong> ${loan.loanAmount.toFixed(2)}</p>
+                                        <p><strong>Type:</strong> {loan.loanType}</p>
+                                        <button onClick={() => handleApproveLoan(loan.accountId, loan.id)} className="mt-2 bg-green-600 hover:bg-green-700 text-white font-bold py-1 px-2 rounded">Approve</button>
+                                    </div>
+                                )) : <p>No pending loan applications.</p>}
+                            </div>
+                        </div>
+                        <div>
+                            <h2 className="text-2xl font-bold text-red-400 mb-4">Players with Pending Taxes</h2>
+                            <div className="space-y-4">
+                                {pendingTaxes.length > 0 ? pendingTaxes.map(acc => (
+                                    <div key={acc.accountId} className="p-4 border border-gray-700 rounded-md bg-gray-700">
+                                        <p><strong>Player:</strong> {acc.accountId}</p>
+                                        <p><strong>Tax Due:</strong> ${taxData.players[acc.accountId].sessions[taxData.currentSession].taxDue.toFixed(2)}</p>
+                                    </div>
+                                )) : <p>No pending taxes.</p>}
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            );
+        };
+
+        const BankInfoView = ({ accounts, adminUser, setAccounts }) => {
+            return (
+                <div>
+                    <h1 className="text-3xl font-bold text-red-400 mb-6">Bank Info</h1>
+                    <div className="space-y-4">
+                        {accounts.map(acc => (
+                            <div key={acc.accountId} className="bg-gray-800 p-4 rounded-lg shadow-minecraft">
+                                <div className="flex justify-between items-center">
+                                    <div>
+                                        <p><strong>Player:</strong> {acc.accountId}</p>
+                                        <p><strong>Bank ID:</strong> {acc.bankId}</p>
+                                        <p><strong>Email:</strong> {acc.email}</p>
+                                        <p><strong>Password:</strong> {acc.password}</p>
+                                    </div>
+                                    {adminUser === 'admin22' && (
+                                        <button className="bg-blue-600 hover:bg-blue-700 text-white font-bold py-1 px-2 rounded">Edit</button>
+                                    )}
+                                </div>
+                            </div>
+                        ))}
+                    </div>
+                </div>
+            );
+        };
+        
+        const PlayerView = ({ accounts }) => {
+             const [selectedPlayer, setSelectedPlayer] = useState(null);
+
+            return (
+                <div className="bg-gray-800 p-6 rounded-lg shadow-minecraft">
+                    <h2 className="text-2xl font-bold text-red-400 mb-4">View as Player</h2>
+                    <select onChange={(e) => setSelectedPlayer(accounts.find(acc => acc.accountId === e.target.value))} className="w-full p-3 bg-gray-700 text-gray-200 border border-gray-600 rounded-md mb-4">
+                        <option value="">Select a player</option>
+                        {accounts.map(acc => <option key={acc.accountId} value={acc.accountId}>{acc.accountId}</option>)}
+                    </select>
+
+                    {selectedPlayer && (
+                        <div className="border-t-4 border-red-500 pt-4 mt-4">
+                            <h3 className="text-xl font-bold text-white mb-4">Viewing: {selectedPlayer.accountId}</h3>
+                            <div className="space-y-6">
+                                <div className="bg-gray-700 p-4 rounded-lg"><p><strong>Balance:</strong> ${selectedPlayer.balance.toFixed(2)}</p></div>
+                                <div className="bg-gray-700 p-4 rounded-lg">
+                                    <h4 className="font-bold mb-2">Loans</h4>
+                                    {(selectedPlayer.loans || []).map(loan => <div key={loan.id}>{loan.loanType}: ${loan.loanAmount.toFixed(2)} ({loan.loanStatus})</div>)}
+                                </div>
+                                <div className="bg-gray-700 p-4 rounded-lg">
+                                    <h4 className="font-bold mb-2">Transactions</h4>
+                                    {(selectedPlayer.transactions || []).slice(-5).map((tx, i) => <div key={i}>{tx.description}: ${tx.amount.toFixed(2)}</div>)}
+                                </div>
+                            </div>
+                        </div>
+                    )}
+                </div>
+            );
+        }
+
+        const MessagesView = () => {
+            // Add Messages view logic here
+            return <div>Messages</div>
+        }
+
+        const ThemeSettingsView = () => {
+            // Add Theme settings view logic here
+            return <div>Theme Settings</div>
+        }
 
         ReactDOM.createRoot(document.getElementById('root')).render(<App />);
     </script>

@@ -1,1 +1,14 @@
-{}
+{
+  "currentSession": "S2025",
+  "players": {
+    "tester": {
+      "sessions": {
+        "S2025": {
+          "taxDue": 390,
+          "taxPaid": 0,
+          "advancePaid": 0
+        }
+      }
+    }
+  }
+}
