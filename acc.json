@@ -14,6 +14,26 @@
         "date": "2025-07-05T12:05:36.476Z",
         "description": "Initial deposit"
       }
-    ]
+    ],
+    "taxData": {
+      "currentSession": "S2025",
+      "players": {
+        "tester": {
+          "sessions": {
+            "S2025": {
+              "taxDue": 390,
+              "taxPaid": 0,
+              "advancePaid": 0
+            }
+          }
+        }
+      }
+    },
+    "jobType": "ansh",
+    "jobPerDayIncome": "1111111",
+    "businessType": "",
+    "businessPerDayIncome": "",
+    "businessIncomeUnit": "day",
+    "hasBusiness": false
   }
 ]
