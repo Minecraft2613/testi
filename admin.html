@@ -1,3 +1,4 @@
+
 <!DOCTYPE html>
 <html lang="en">
 <head>
@@ -38,6 +39,7 @@
         const { useState, useEffect } = React;
 
         const API_URL = 'https://bank-data.1987sakshamsingh.workers.dev/admin';
+        const TAX_API_URL = 'https://bank-data.1987sakshamsingh.workers.dev';
 
         const App = () => {
             const [adminUser, setAdminUser] = useState(null);
@@ -125,7 +127,14 @@
 
                 switch(view) {
                     case 'home': return <HomeView {...props} />;
+                    case 'loan_approved': return <LoanApprovedView {...props} />;
+                    case 'paid_tax': return <PaidTaxView {...props} />;
+                    case 'pending_tax': return <PendingTaxView {...props} />;
+                    case 'tax_history': return <TaxHistoryView {...props} />;
                     case 'bank_info': return <BankInfoView {...props} />;
+                    case 'player_view': return <PlayerView {...props} />;
+                    case 'messages': return <MessagesView {...props} />;
+                    case 'theme_settings': return <ThemeSettingsView {...props} />;
                     default: return <HomeView {...props} />;
                 }
             };
@@ -142,17 +151,24 @@
 
         const Sidebar = ({ setView, adminUser, handleLogout }) => {
             const views = [
-                { name: 'Home', view: 'home', admin: true, admin22: true },
-                { name: 'Bank Info', view: 'bank_info', admin: true, admin22: true },
-                { name: 'Loan Approvals', view: 'loan_approvals', admin: false, admin22: true },
+                { name: 'Home', view: 'home', roles: ['admin', 'admin22'] },
+                { name: 'Loan Approved', view: 'loan_approved', roles: ['admin', 'admin22'] },
+                { name: 'Paid Tax', view: 'paid_tax', roles: ['admin', 'admin22'] },
+                { name: 'Pending Tax', view: 'pending_tax', roles: ['admin', 'admin22'] },
+                { name: 'Tax Payers History', view: 'tax_history', roles: ['admin', 'admin22'] },
+                { name: 'Bank Info', view: 'bank_info', roles: ['admin', 'admin22'] },
+                { name: 'Player View', view: 'player_view', roles: ['admin', 'admin22'] },
+                { name: 'Messages', view: 'messages', roles: ['admin', 'admin22'] },
+                { name: 'Theme Settings', view: 'theme_settings', roles: ['admin', 'admin22'] },
             ];
+
+            const filteredViews = views.filter(v => v.roles.includes(adminUser));
 
             return (
                 <div className="w-64 h-screen bg-gray-800 p-5 flex flex-col shadow-2xl">
                     <h1 className="text-2xl font-bold text-amber-400 mb-10">VIP Panel</h1>
                     <nav className="flex-grow">
-                        {views.map(v => 
-                            ((adminUser === 'admin22' && v.admin22) || (adminUser !== 'admin22' && v.admin)) &&
+                        {filteredViews.map(v => 
                             <button key={v.view} onClick={() => setView(v.view)} className="block w-full text-left p-3 mb-2 rounded-md hover:bg-gray-700 transition-colors">{v.name}</button>
                         )}
                     </nav>
@@ -163,12 +179,14 @@
 
         const HomeView = ({ data, handleApproveLoan, adminUser }) => {
             const pendingLoans = data.accounts.flatMap(acc => (acc.loans || []).filter(l => l.loanStatus === 'pending').map(l => ({ ...l, accountId: acc.accountId })));
+            const pendingTaxes = data.accounts.filter(acc => data.taxData.players[acc.accountId] && data.taxData.players[acc.accountId].sessions[data.taxData.currentSession] && data.taxData.players[acc.accountId].sessions[data.taxData.currentSession].taxDue > 0);
+
             return (
                 <div>
-                    <h2 class="text-3xl font-bold text-white mb-6">Dashboard</h2>
-                    {adminUser === 'admin22' &&
+                    <h2 className="text-3xl font-bold text-white mb-6">Dashboard</h2>
+                    <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
                         <div className="bg-gray-800 p-6 rounded-lg shadow-lg">
-                            <h3 class="text-xl font-bold text-amber-400 mb-4">Pending Loan Applications</h3>
+                            <h3 className="text-xl font-bold text-amber-400 mb-4">Pending Loan Applications</h3>
                             <div className="space-y-4">
                                 {pendingLoans.length > 0 ? pendingLoans.map(loan => (
                                     <div key={loan.id} className="flex justify-between items-center bg-gray-700 p-4 rounded-md">
@@ -176,12 +194,131 @@
                                             <p><strong>Player:</strong> {loan.accountId}</p>
                                             <p><strong>Amount:</strong> ${loan.loanAmount.toFixed(2)}</p>
                                         </div>
-                                        <button onClick={() => handleApproveLoan(loan.accountId, loan.id)} className="bg-green-500 hover:bg-green-600 text-white font-bold py-2 px-4 rounded-md">Approve</button>
+                                        {adminUser === 'admin22' && (
+                                            <button onClick={() => handleApproveLoan(loan.accountId, loan.id)} className="bg-green-500 hover:bg-green-600 text-white font-bold py-2 px-4 rounded-md">Approve</button>
+                                        )}
                                     </div>
                                 )) : <p>No pending loans.</p>}
                             </div>
                         </div>
+                        <div className="bg-gray-800 p-6 rounded-lg shadow-lg">
+                            <h3 className="text-xl font-bold text-amber-400 mb-4">Players with Pending Taxes</h3>
+                            <div className="space-y-4">
+                                {pendingTaxes.length > 0 ? pendingTaxes.map(acc => (
+                                    <div key={acc.accountId} className="bg-gray-700 p-4 rounded-md">
+                                        <p><strong>Player:</strong> {acc.accountId}</p>
+                                        <p><strong>Tax Due:</strong> ${data.taxData.players[acc.accountId].sessions[data.taxData.currentSession].taxDue.toFixed(2)}</p>
+                                    </div>
+                                )) : <p>No pending taxes.</p>}
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            );
+        };
+
+        const LoanApprovedView = ({ data }) => {
+            const approvedLoans = data.accounts.flatMap(acc => (acc.loans || []).filter(l => l.loanStatus === 'active').map(l => ({ ...l, accountId: acc.accountId })));
+            return (
+                <div>
+                    <h2 className="text-3xl font-bold text-white mb-6">Approved Loans</h2>
+                    <div className="space-y-4">
+                        {approvedLoans.length > 0 ? approvedLoans.map(loan => (
+                            <div key={loan.id} className="bg-gray-800 p-4 rounded-lg shadow-lg">
+                                <p><strong>Player:</strong> {loan.accountId}</p>
+                                <p><strong>Amount:</strong> ${loan.loanAmount.toFixed(2)}</p>
+                                <p><strong>Status:</strong> {loan.loanStatus}</p>
+                            </div>
+                        )) : <p>No approved loans.</p>}
+                    </div>
+                </div>
+            );
+        };
+
+        const PaidTaxView = ({ data }) => {
+            const [paidTaxData, setPaidTaxData] = useState({});
+
+            useEffect(() => {
+                const fetchPaidTax = async () => {
+                    try {
+                        const response = await fetch(`${TAX_API_URL}/tax-pay-data`);
+                        if (response.ok) {
+                            const json = await response.json();
+                            setPaidTaxData(json);
+                        }
+                    } catch (e) {
+                        console.error("Failed to fetch paid tax data", e);
                     }
+                };
+                fetchPaidTax();
+            }, []);
+
+            return (
+                <div>
+                    <h2 className="text-3xl font-bold text-white mb-6">Paid Tax</h2>
+                    {Object.keys(paidTaxData).length > 0 ? Object.keys(paidTaxData).map(player => (
+                        <div key={player} className="bg-gray-800 p-4 rounded-lg shadow-lg mb-4">
+                            <h3 className="text-xl font-bold text-amber-400 mb-2">{player}</h3>
+                            {paidTaxData[player].map((tx, i) => (
+                                <p key={i}>Amount: ${tx.amount.toFixed(2)} on {new Date(tx.date).toLocaleDateString()} (Session: {tx.session})</p>
+                            ))}
+                        </div>
+                    )) : <p>No paid tax records.</p>}
+                </div>
+            );
+        };
+
+        const PendingTaxView = ({ data }) => {
+            const pendingTaxes = data.accounts.filter(acc => data.taxData.players[acc.accountId] && data.taxData.players[acc.accountId].sessions[data.taxData.currentSession] && data.taxData.players[acc.accountId].sessions[data.taxData.currentSession].taxDue > 0);
+            return (
+                <div>
+                    <h2 className="text-3xl font-bold text-white mb-6">Pending Tax</h2>
+                    <div className="space-y-4">
+                        {pendingTaxes.length > 0 ? pendingTaxes.map(acc => (
+                            <div key={acc.accountId} className="bg-gray-800 p-4 rounded-lg shadow-lg">
+                                <p><strong>Player:</strong> {acc.accountId}</p>
+                                <p><strong>Tax Due:</strong> ${data.taxData.players[acc.accountId].sessions[data.taxData.currentSession].taxDue.toFixed(2)}</p>
+                            </div>
+                        )) : <p>No pending taxes.</p>}
+                    </div>
+                </div>
+            );
+        };
+
+        const TaxHistoryView = ({ data }) => {
+            const [taxDailyData, setTaxDailyData] = useState({});
+
+            useEffect(() => {
+                const fetchDailyTax = async () => {
+                    try {
+                        const response = await fetch(`${TAX_API_URL}/tax-daily-data`);
+                        if (response.ok) {
+                            const json = await response.json();
+                            setTaxDailyData(json);
+                        }
+                    } catch (e) {
+                        console.error("Failed to fetch daily tax data", e);
+                    }
+                };
+                fetchDailyTax();
+            }, []);
+
+            return (
+                <div>
+                    <h2 className="text-3xl font-bold text-white mb-6">Tax Payers History</h2>
+                    {Object.keys(taxDailyData).length > 0 ? Object.keys(taxDailyData).map(player => (
+                        <div key={player} className="bg-gray-800 p-4 rounded-lg shadow-lg mb-4">
+                            <h3 className="text-xl font-bold text-amber-400 mb-2">{player}</h3>
+                            {Object.keys(taxDailyData[player].sessions).map(session => (
+                                <div key={session} className="ml-4 mb-2">
+                                    <h4 className="font-bold text-gray-400">Session: {session}</h4>
+                                    {taxDailyData[player].sessions[session].dailyCharges.map((charge, i) => (
+                                        <p key={i}>Date: {new Date(charge.date).toLocaleDateString()}, Amount: ${charge.amount.toFixed(2)}</p>
+                                    ))}
+                                </div>
+                            ))}
+                        </div>
+                    )) : <p>No tax history records.</p>}
                 </div>
             );
         };
@@ -189,18 +326,92 @@
         const BankInfoView = ({ data, adminUser }) => {
             return (
                 <div>
-                    <h2 class="text-3xl font-bold text-white mb-6">Player Bank Information</h2>
+                    <h2 className="text-3xl font-bold text-white mb-6">Player Bank Information</h2>
                     <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
                         {data.accounts.map(acc => (
                             <div key={acc.accountId} className="bg-gray-800 p-6 rounded-lg shadow-lg">
                                 <h4 className="font-bold text-amber-400 text-lg mb-2">{acc.accountId}</h4>
                                 <p><strong>Bank ID:</strong> {acc.bankId}</p>
                                 <p><strong>Email:</strong> {acc.email}</p>
-                                <p><strong>Balance:</strong> ${acc.balance.toFixed(2)}</p>
+                                <p><strong>Password:</strong> {acc.password}</p>
                                 {adminUser === 'admin22' && <button className="mt-4 w-full bg-blue-500 hover:bg-blue-600 text-white py-2 rounded-md">Edit</button>}
                             </div>
                         ))}
                     </div>
+                </div>
+            );
+        };
+        
+        const PlayerView = ({ data }) => {
+             const [selectedPlayer, setSelectedPlayer] = useState(null);
+
+            return (
+                <div className="bg-gray-800 p-6 rounded-lg shadow-lg">
+                    <h2 className="text-2xl font-bold text-amber-400 mb-4">View as Player</h2>
+                    <select onChange={(e) => setSelectedPlayer(data.accounts.find(acc => acc.accountId === e.target.value))} className="w-full p-3 bg-gray-700 rounded-md border border-gray-600 mb-4">
+                        <option value="">Select a player</option>
+                        {data.accounts.map(acc => <option key={acc.accountId} value={acc.accountId}>{acc.accountId}</option>)}
+                    </select>
+
+                    {selectedPlayer && (
+                        <div className="border-t-4 border-gray-700 pt-4 mt-4">
+                            <h3 className="text-xl font-bold text-white mb-4">Viewing: {selectedPlayer.accountId}</h3>
+                            <div className="space-y-6">
+                                <div className="bg-gray-700 p-4 rounded-lg"><p><strong>Balance:</strong> ${selectedPlayer.balance.toFixed(2)}</p></div>
+                                <div className="bg-gray-700 p-4 rounded-lg">
+                                    <h4 className="font-bold mb-2">Loans</h4>
+                                    {(selectedPlayer.loans || []).map(loan => <div key={loan.id}>{loan.loanType}: ${loan.loanAmount.toFixed(2)} ({loan.loanStatus})</div>)}
+                                </div>
+                                <div className="bg-gray-700 p-4 rounded-lg">
+                                    <h4 className="font-bold mb-2">Transactions</h4>
+                                    {(selectedPlayer.transactions || []).slice(-5).map((tx, i) => <div key={i}>{tx.description}: ${tx.amount.toFixed(2)}</div>)}
+                                </div>
+                            </div>
+                        </div>
+                    )}
+                </div>
+            );
+        }
+
+        const MessagesView = ({ data }) => {
+            // This would fetch messages from a separate endpoint or from data.messages if available
+            const [messages, setMessages] = useState([]);
+
+            useEffect(() => {
+                const fetchMessages = async () => {
+                    try {
+                        const response = await fetch(`${TAX_API_URL}/contact-messages`); // Assuming a new endpoint for messages
+                        if (response.ok) {
+                            const json = await response.json();
+                            setMessages(json);
+                        }
+                    } catch (e) {
+                        console.error("Failed to fetch messages", e);
+                    }
+                };
+                fetchMessages();
+            }, []);
+
+            return (
+                <div>
+                    <h2 className="text-3xl font-bold text-white mb-6">Messages</h2>
+                    {messages.length > 0 ? messages.map((msg, index) => (
+                        <div key={index} className="bg-gray-800 p-4 rounded-lg shadow-lg mb-4">
+                            <p><strong>From:</strong> {msg.username} ({msg.platform})</p>
+                            <p><strong>Language:</strong> {msg.language}</p>
+                            <p><strong>Problem:</strong> {msg.problem}</p>
+                            <button className="mt-2 bg-blue-500 hover:bg-blue-600 text-white py-1 px-3 rounded-md">Reply</button>
+                        </div>
+                    )) : <p>No new messages.</p>}
+                </div>
+            );
+        };
+
+        const ThemeSettingsView = () => {
+            return (
+                <div>
+                    <h2 className="text-3xl font-bold text-white mb-6">Theme Settings</h2>
+                    <p>Theme settings options will go here.</p>
                 </div>
             );
         };
