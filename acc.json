@@ -6,7 +6,7 @@
     "password": "2",
     "edition": "java",
     "bankId": "BANK963231",
-    "balance": 1011,
+    "balance": 1000,
     "transactions": [
       {
         "type": "credit",
@@ -25,6 +25,12 @@
         "amount": 11,
         "date": "2025-07-05T13:06:18.230Z",
         "description": "Loan LOAN1751720756525 approved by admin"
+      },
+      {
+        "type": "debit",
+        "amount": -11,
+        "date": "2025-07-05T17:59:54.415Z",
+        "description": "Loan payment for LOAN1751720756525"
       }
     ],
     "taxData": {
@@ -52,7 +58,7 @@
         "id": "LOAN1751720756525",
         "loanAmount": 11,
         "loanAmountDue": 11.659999999999993,
-        "loanPaid": 0,
+        "loanPaid": 11,
         "dailyRepayment": 1.6657142857142848,
         "durationWeeks": 1,
         "loanType": "personal",
