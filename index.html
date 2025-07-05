@@ -1145,8 +1145,12 @@ const handleAdvanceTax = async (amount) => {
                 const loans = currentUserAccount.loans.map(loan => loan.id === loanId ? { ...loan, loanStatus: 'active' } : loan);
                 const approvedLoan = loans.find(loan => loan.id === loanId);
                 const updatedAccount = { ...currentUserAccount, loans, balance: currentUserAccount.balance + approvedLoan.loanAmount, transactions: [...currentUserAccount.transactions, { type: 'credit', amount: approvedLoan.loanAmount, date: new Date().toISOString(), description: `Loan ${loanId} approved` }] };
-                await updateCurrentUser(updatedAccount);
-                showModal('Admin Action', 'Loan has been approved!', 'success');
+                const success = await updateCurrentUser(updatedAccount);
+                if (success) {
+                    showModal('Admin Action', 'Loan has been approved!', 'success');
+                } else {
+                    showModal('Error', 'Failed to update account after loan approval.', 'error');
+                }
             };
 
             const handlePayLoan = async (loanId, customAmount = null) => {
