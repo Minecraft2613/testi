@@ -182,6 +182,12 @@
         "amount": 0,
         "date": "2025-07-05T08:54:37.323Z",
         "description": "Loan application for 122 submitted"
+      },
+      {
+        "type": "info",
+        "amount": 0,
+        "date": "2025-07-05T09:14:45.377Z",
+        "description": "Loan application LOAN1751705677323 cancelled"
       }
     ],
     "jobType": "ansh",
@@ -190,22 +196,6 @@
     "businessPerDayIncome": "",
     "businessIncomeUnit": "day",
     "hasBusiness": false,
-    "loans": [
-      {
-        "id": "LOAN1751705677323",
-        "loanAmount": 122,
-        "loanAmountDue": 129.31999999999994,
-        "loanPaid": 0,
-        "dailyRepayment": 18.474285714285706,
-        "durationWeeks": 1,
-        "loanType": "personal",
-        "loanStatus": "pending",
-        "applicationDate": "2025-07-05T08:54:37.323Z",
-        "purpose": "cc",
-        "coord1": "cc",
-        "coord2": "",
-        "repayment": "daily"
-      }
-    ]
+    "loans": []
   }
 ]
