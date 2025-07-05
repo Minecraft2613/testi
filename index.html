@@ -578,10 +578,43 @@
                 <div className="space-y-8">
                     <h1 className="text-3xl font-bold text-green-400">Account Settings</h1>
                     <div className="flex flex-col md:flex-row gap-8">
+                        const AccountSettingsPage = ({ currentUserAccount, handleChangePassword, handleUpdateProfile }) => {
+            if (!currentUserAccount) return null;
+            const [oldPassword, setOldPassword] = useState('');
+            const [newPassword, setNewPassword] = useState('');
+            const [profile, setProfile] = useState({ 
+                jobType: currentUserAccount.jobType || '', 
+                jobPerDayIncome: currentUserAccount.jobPerDayIncome || '', 
+                businessType: currentUserAccount.businessType || '', 
+                businessPerDayIncome: currentUserAccount.businessPerDayIncome || '', 
+                businessIncomeUnit: currentUserAccount.businessIncomeUnit || 'day', 
+                hasBusiness: !!currentUserAccount.hasBusiness,
+                bankName: currentUserAccount.bankName || '',
+                accountId: currentUserAccount.accountId || '',
+                bankId: currentUserAccount.bankId || '',
+                email: currentUserAccount.email || '',
+                edition: currentUserAccount.edition || '',
+            });
+            const [editMode, setEditMode] = useState({ job: false, business: false, password: false, bankName: false, accountId: false, bankId: false, email: false, edition: false });
+
+            const handleProfileChange = (e) => setProfile({ ...profile, [e.target.name]: e.target.value });
+            const onProfileSubmit = (e) => { e.preventDefault(); handleUpdateProfile(profile); setEditMode({ ...editMode, job: false, business: false, bankName: false, accountId: false, bankId: false, email: false, edition: false }); };
+            const onPasswordSubmit = (e) => { e.preventDefault(); handleChangePassword(oldPassword, newPassword); setOldPassword(''); setNewPassword(''); setEditMode(prev => ({...prev, password: false})); };
+
+            return (
+                <div className="space-y-8">
+                    <h1 className="text-3xl font-bold text-green-400">Account Settings</h1>
+                    <div className="flex flex-col md:flex-row gap-8">
                         <div className="flex-shrink-0 md:w-1/3 flex flex-col items-center text-center">
                             <div className="w-32 h-32 rounded-full flex items-center justify-center text-white text-6xl font-bold shadow-md border-4 border-green-500 bg-minecraft-world overflow-hidden"><span className="relative z-10">{currentUserAccount.accountId.charAt(0).toUpperCase()}</span></div>
                             <h3 className="text-2xl font-bold mt-4">{currentUserAccount.accountId}</h3>
-                            <p className="text-gray-400"><strong>Email:</strong> {currentUserAccount.email}</p>
+                            <p className="text-gray-400"><strong>Email:</strong> {currentUserAccount.email} <button onClick={() => setEditMode(prev => ({...prev, email: !prev.email}))} className="ml-2 text-blue-400 hover:underline text-sm">{editMode.email ? 'Cancel' : 'Edit'}</button></p>
+                            {editMode.email && (
+                                <div className="mt-2 space-y-2">
+                                    <input type="email" name="email" value={profile.email} onChange={handleProfileChange} placeholder="Email Address" className="w-full p-2 bg-gray-700 text-gray-200 border border-gray-600 rounded-md" />
+                                    <button onClick={() => { handleUpdateProfile({ email: profile.email }); setEditMode(prev => ({...prev, email: false})); }} className="bg-green-600 hover:bg-green-700 text-white font-bold py-1 px-3 rounded-md">Save Email</button>
+                                </div>
+                            )}
                             <p className="text-gray-400"><strong>Bank ID:</strong> {currentUserAccount.bankId} <button onClick={() => setEditMode(prev => ({...prev, bankId: !prev.bankId}))} className="ml-2 text-blue-400 hover:underline text-sm">{editMode.bankId ? 'Cancel' : 'Edit'}</button></p>
                             {editMode.bankId && (
                                 <div className="mt-2 space-y-2">
@@ -613,14 +646,44 @@
                                     <button onClick={() => { handleUpdateProfile({ accountId: profile.accountId }); setEditMode(prev => ({...prev, accountId: false})); }} className="bg-green-600 hover:bg-green-700 text-white font-bold py-1 px-3 rounded-md">Save Username</button>
                                 </div>
                             )}
-                            <p className="text-gray-400"><strong>Email:</strong> {currentUserAccount.email} <button onClick={() => setEditMode(prev => ({...prev, email: !prev.email}))} className="ml-2 text-blue-400 hover:underline text-sm">{editMode.email ? 'Cancel' : 'Edit'}</button></p>
-                            {editMode.email && (
-                                <div className="mt-2 space-y-2">
-                                    <input type="email" name="email" value={profile.email} onChange={handleProfileChange} placeholder="Email Address" className="w-full p-2 bg-gray-700 text-gray-200 border border-gray-600 rounded-md" />
-                                    <button onClick={() => { handleUpdateProfile({ email: profile.email }); setEditMode(prev => ({...prev, email: false})); }} className="bg-green-600 hover:bg-green-700 text-white font-bold py-1 px-3 rounded-md">Save Email</button>
-                                </div>
-                            )}
                         </div>
+                        <div className="flex-1 space-y-6">
+                            <div className="bg-gray-800 p-6 rounded-lg shadow-minecraft">
+                                <h2 className="text-xl font-bold text-green-400 mb-4">Income Profile</h2>
+                                <form onSubmit={onProfileSubmit} className="space-y-4">
+                                    <div>
+                                        <label className="text-gray-300">Job Type: </label>
+                                        {editMode.job ? <input name="jobType" value={profile.jobType} onChange={handleProfileChange} className="w-full p-3 bg-gray-700 text-gray-200 border border-gray-600 rounded-md" /> : <span className="text-gray-200">{profile.jobType || 'N/A'}</span>}
+                                        <button type="button" onClick={() => setEditMode(prev => ({ ...prev, job: !prev.job }))} className="ml-2 bg-blue-600 hover:bg-blue-700 text-white font-bold py-1 px-2 rounded-md">{editMode.job ? 'Cancel' : 'Edit'}</button>
+                                    </div>
+                                    <div>
+                                        <label className="text-gray-300">Job Income per Day: </label>
+                                        {editMode.job ? <input name="jobPerDayIncome" type="number" value={profile.jobPerDayIncome} onChange={handleProfileChange} className="w-full p-3 bg-gray-700 text-gray-200 border border-gray-600 rounded-md" /> : <span className="text-gray-200">${profile.jobPerDayIncome || '0'}/day</span>}
+                                    </div>
+                                    <div className="flex items-center gap-4 mt-4"><label className="text-gray-300">Have a business?</label><input type="checkbox" checked={profile.hasBusiness} onChange={(e) => setProfile({...profile, hasBusiness: e.target.checked})} className="h-5 w-5 rounded bg-gray-700 border-gray-600 text-green-500 focus:ring-green-500" /></div>
+                                    {profile.hasBusiness && <>
+                                        <div>
+                                            <label className="text-gray-300">Business Type: </label>
+                                            {editMode.business ? <input name="businessType" value={profile.businessType} onChange={handleProfileChange} className="w-full p-3 bg-gray-700 text-gray-200 border border-gray-600 rounded-md" /> : <span className="text-gray-200">{profile.businessType || 'N/A'}</span>}
+                                            <button type="button" onClick={() => setEditMode(prev => ({ ...prev, business: !prev.business }))} className="ml-2 bg-blue-600 hover:bg-blue-700 text-white font-bold py-1 px-2 rounded-md">{editMode.business ? 'Cancel' : 'Edit'}</button>
+                                        </div>
+                                        <div>
+                                            <label className="text-gray-300">Business Income: </label>
+                                            {editMode.business ? <input name="businessPerDayIncome" type="number" value={profile.businessPerDayIncome} onChange={handleProfileChange} className="w-full p-3 bg-gray-700 text-gray-200 border border-gray-600 rounded-md" /> : <span className="text-gray-200">${profile.businessPerDayIncome || '0'}/{profile.businessIncomeUnit}</span>}
+                                        </div>
+                                        <div>
+                                            <label className="text-gray-300">Income Unit: </label>
+                                            {editMode.business ? <select name="businessIncomeUnit" value={profile.businessIncomeUnit} onChange={handleProfileChange} className="w-full p-3 bg-gray-700 text-gray-200 border border-gray-600 rounded-md"><option value="day">Per Day</option><option value="hour">Per Hour</option></select> : <span className="text-gray-200">{profile.businessIncomeUnit}</span>}
+                                        </div>
+                                    </>}<
+                                    {(editMode.job || editMode.business) && <button type="submit" className="bg-green-600 hover:bg-green-700 text-white font-bold py-2 px-4 rounded-md">Save Changes</button>}<
+                                </form>
+                            </div>
+                            <div className="bg-gray-800 p-6 rounded-lg shadow-minecraft"><h2 className="text-xl font-bold text-green-400 mb-4">Change Password</h2><form onSubmit={onPasswordSubmit} className="space-y-4 max-w-sm"><input type="password" value={oldPassword} onChange={(e) => setOldPassword(e.target.value)} placeholder="Old Password" required className="w-full p-3 bg-gray-700 text-gray-200 border border-gray-600 rounded-md" /><input type="password" value={newPassword} onChange={(e) => setNewPassword(e.target.value)} placeholder="New Password" required className="w-full p-3 bg-gray-700 text-gray-200 border border-gray-600 rounded-md" /><button type="submit" className="bg-green-600 text-white font-bold py-2 px-4 rounded-md hover:bg-green-700">Change Password</button></form></div>
+                        </div>
+                    </div>
+                </div>
+            );
                         <div className="flex-1 space-y-6">
                             <div className="bg-gray-800 p-6 rounded-lg shadow-minecraft">
                                 <h2 className="text-xl font-bold text-green-400 mb-4">Income Profile</h2>
@@ -654,10 +717,6 @@
                                 </form>
                             </div>
                             <div className="bg-gray-800 p-6 rounded-lg shadow-minecraft"><h2 className="text-xl font-bold text-green-400 mb-4">Change Password</h2><form onSubmit={onPasswordSubmit} className="space-y-4 max-w-sm"><input type="password" value={oldPassword} onChange={(e) => setOldPassword(e.target.value)} placeholder="Old Password" required className="w-full p-3 bg-gray-700 text-gray-200 border border-gray-600 rounded-md" /><input type="password" value={newPassword} onChange={(e) => setNewPassword(e.target.value)} placeholder="New Password" required className="w-full p-3 bg-gray-700 text-gray-200 border border-gray-600 rounded-md" /><button type="submit" className="bg-green-600 text-white font-bold py-2 px-4 rounded-md hover:bg-green-700">Change Password</button></form></div>
-                        </div>
-                    </div>
-                </div>
-            );
                         </div>
                     </div>
                 </div>
