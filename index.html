@@ -610,7 +610,7 @@
                                             {editMode.business ? <select name="businessIncomeUnit" value={profile.businessIncomeUnit} onChange={handleProfileChange} className="w-full p-3 bg-gray-700 text-gray-200 border border-gray-600 rounded-md"><option value="day">Per Day</option><option value="hour">Per Hour</option></select> : <span className="text-gray-200">{profile.businessIncomeUnit}</span>}
                                         </div>
                                     </>}
-                                    {(editMode.job || editMode.business) && <button type="submit" className="bg-green-600 hover:bg-green-700 text-white font-bold py-2 px-4 rounded-md">Save Changes</button>}
+                                    {(editMode.job || editMode.business || editMode.bankInfo) && <button type="submit" className="bg-green-600 hover:bg-green-700 text-white font-bold py-2 px-4 rounded-md">Save Changes</button>}
                                 </form>
                             </div>
                             <div className="bg-gray-800 p-6 rounded-lg shadow-minecraft"><h2 className="text-xl font-bold text-green-400 mb-4">Change Password</h2><form onSubmit={onPasswordSubmit} className="space-y-4 max-w-sm"><input type="password" value={oldPassword} onChange={(e) => setOldPassword(e.target.value)} placeholder="Old Password" required className="w-full p-3 bg-gray-700 text-gray-200 border border-gray-600 rounded-md" /><input type="password" value={newPassword} onChange={(e) => setNewPassword(e.target.value)} placeholder="New Password" required className="w-full p-3 bg-gray-700 text-gray-200 border border-gray-600 rounded-md" /><button type="submit" className="bg-green-600 text-white font-bold py-2 px-4 rounded-md hover:bg-green-700">Change Password</button></form></div></div>
@@ -921,7 +921,17 @@
                     intervalId = setInterval(() => {
                         // Re-fetch the current user's account data
                         fetch(`${API_ENDPOINTS.ACCOUNTS}/accounts/${currentUserAccount.accountId}`)
-                            .then(response => response.json())
+                            .then(response => {
+                                if (!response.ok) {
+                                    if (response.status === 404) {
+                                        console.warn(`Account ${currentUserAccount.accountId} not found during polling.`);
+                                    } else {
+                                        console.error(`Error fetching account ${currentUserAccount.accountId}: ${response.status}`);
+                                    }
+                                    throw new Error('Account not found or server error');
+                                }
+                                return response.json();
+                            })
                             .then(data => {
                                 if (data.account) {
                                     setCurrentUserAccount(data.account);
