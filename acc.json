@@ -13,6 +13,12 @@
         "amount": 1000,
         "date": "2025-07-05T12:05:36.476Z",
         "description": "Initial deposit"
+      },
+      {
+        "type": "info",
+        "amount": 0,
+        "date": "2025-07-05T13:05:56.525Z",
+        "description": "Loan application for 11 submitted"
       }
     ],
     "taxData": {
@@ -34,6 +40,23 @@
     "businessType": "",
     "businessPerDayIncome": "",
     "businessIncomeUnit": "day",
-    "hasBusiness": false
+    "hasBusiness": false,
+    "loans": [
+      {
+        "id": "LOAN1751720756525",
+        "loanAmount": 11,
+        "loanAmountDue": 11.659999999999993,
+        "loanPaid": 0,
+        "dailyRepayment": 1.6657142857142848,
+        "durationWeeks": 1,
+        "loanType": "personal",
+        "loanStatus": "pending",
+        "applicationDate": "2025-07-05T13:05:56.525Z",
+        "purpose": "111",
+        "coord1": "111",
+        "coord2": "",
+        "repayment": "daily"
+      }
+    ]
   }
 ]
