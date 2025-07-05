@@ -179,7 +179,7 @@
 
         const HomeView = ({ data, handleApproveLoan, adminUser }) => {
             const pendingLoans = data.accounts.flatMap(acc => (acc.loans || []).filter(l => l.loanStatus === 'pending').map(l => ({ ...l, accountId: acc.accountId })));
-            const pendingTaxes = data.accounts.filter(acc => data.taxData.players[acc.accountId] && data.taxData.players[acc.accountId].sessions[data.taxData.currentSession] && data.taxData.players[acc.accountId].sessions[data.taxData.currentSession].taxDue > 0);
+            const pendingTaxes = data.accounts.filter(acc => data.taxData?.players?.[acc.accountId]?.sessions?.[data.taxData.currentSession]?.taxDue > 0);
 
             return (
                 <div>
@@ -207,7 +207,7 @@
                                 {pendingTaxes.length > 0 ? pendingTaxes.map(acc => (
                                     <div key={acc.accountId} className="bg-gray-700 p-4 rounded-md">
                                         <p><strong>Player:</strong> {acc.accountId}</p>
-                                        <p><strong>Tax Due:</strong> ${data.taxData.players[acc.accountId].sessions[data.taxData.currentSession].taxDue.toFixed(2)}</p>
+                                <p><strong>Tax Due:</strong> ${data.taxData?.players?.[acc.accountId]?.sessions?.[data.taxData.currentSession]?.taxDue?.toFixed(2) || '0.00'}</p>
                                     </div>
                                 )) : <p>No pending taxes.</p>}
                             </div>
@@ -269,7 +269,7 @@
         };
 
         const PendingTaxView = ({ data }) => {
-            const pendingTaxes = data.accounts.filter(acc => data.taxData.players[acc.accountId] && data.taxData.players[acc.accountId].sessions[data.taxData.currentSession] && data.taxData.players[acc.accountId].sessions[data.taxData.currentSession].taxDue > 0);
+            const pendingTaxes = data.accounts.filter(acc => data.taxData?.players?.[acc.accountId]?.sessions?.[data.taxData.currentSession]?.taxDue > 0);
             return (
                 <div>
                     <h2 className="text-3xl font-bold text-white mb-6">Pending Tax</h2>
@@ -277,7 +277,7 @@
                         {pendingTaxes.length > 0 ? pendingTaxes.map(acc => (
                             <div key={acc.accountId} className="bg-gray-800 p-4 rounded-lg shadow-lg">
                                 <p><strong>Player:</strong> {acc.accountId}</p>
-                                <p><strong>Tax Due:</strong> ${data.taxData.players[acc.accountId].sessions[data.taxData.currentSession].taxDue.toFixed(2)}</p>
+                                <p><strong>Tax Due:</strong> ${data.taxData?.players?.[acc.accountId]?.sessions?.[data.taxData.currentSession]?.taxDue?.toFixed(2) || '0.00'}</p>
                             </div>
                         )) : <p>No pending taxes.</p>}
                     </div>
