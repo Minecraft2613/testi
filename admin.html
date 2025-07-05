@@ -416,6 +416,36 @@
             );
         };
 
+        const LoanDetailModal = ({ loan, onClose }) => {
+            if (!loan) return null;
+
+            return (
+                <div className="fixed inset-0 bg-black bg-opacity-70 flex items-center justify-center p-4 z-50">
+                    <div className="bg-gray-800 rounded-lg shadow-2xl p-6 max-w-md w-full border-t-4 border-amber-500 relative">
+                        <button onClick={onClose} className="absolute top-3 right-3 text-gray-400 hover:text-white text-2xl">&times;</button>
+                        <h3 className="text-2xl font-bold text-amber-400 mb-4">Loan Details for {loan.accountId}</h3>
+                        <div className="space-y-2 text-gray-300">
+                            <p><strong>Loan ID:</strong> {loan.id}</p>
+                            <p><strong>Amount:</strong> ${loan.loanAmount?.toFixed(2)}</p>
+                            <p><strong>Loan Type:</strong> {loan.loanType}</p>
+                            <p><strong>Duration:</strong> {loan.durationWeeks} weeks</p>
+                            <p><strong>Repayment:</strong> {loan.repayment}</p>
+                            <p><strong>Purpose:</strong> {loan.purpose}</p>
+                            {loan.coord1 && <p><strong>Coordinates 1:</strong> {loan.coord1}</p>}
+                            {loan.coord2 && <p><strong>Coordinates 2:</strong> {loan.coord2}</p>}
+                            <p><strong>Status:</strong> <span className="capitalize">{loan.loanStatus}</span></p>
+                            <p><strong>Application Date:</strong> {new Date(loan.applicationDate).toLocaleDateString()}</p>
+                            <p><strong>Amount Due:</strong> ${loan.loanAmountDue?.toFixed(2)}</p>
+                            <p><strong>Amount Paid:</strong> ${loan.loanPaid?.toFixed(2)}</p>
+                        </div>
+                        <div className="flex justify-end mt-6">
+                            <button onClick={onClose} className="px-5 py-2 bg-amber-600 text-white font-semibold rounded-md hover:bg-amber-700 focus:outline-none focus:ring-2 focus:ring-amber-500 focus:ring-opacity-75 transition duration-200">Close</button>
+                        </div>
+                    </div>
+                </div>
+            );
+        };
+
         ReactDOM.createRoot(document.getElementById('root')).render(<App />);
     </script>
 </body>
