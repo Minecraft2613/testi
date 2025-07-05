@@ -579,51 +579,33 @@
                     <h1 className="text-3xl font-bold text-green-400">Account Settings</h1>
                     <div className="flex flex-col md:flex-row gap-8">
                         <div className="flex-shrink-0 md:w-1/3 flex flex-col items-center text-center">
-                            <div className="flex-shrink-0 md:w-1/3 flex flex-col items-center text-center">
-                            <>
-                                <div className="w-32 h-32 rounded-full flex items-center justify-center text-white text-6xl font-bold shadow-md border-4 border-green-500 bg-minecraft-world overflow-hidden"><span className="relative z-10">{currentUserAccount.accountId.charAt(0).toUpperCase()}</span></div>
-                                <h3 className="text-2xl font-bold mt-4">{currentUserAccount.accountId}</h3>
-                                <p className="text-gray-400"><strong>Email:</strong> {currentUserAccount.email}</p>
-                                <p className="text-gray-400"><strong>Bank ID:</strong> {currentUserAccount.bankId} <button onClick={() => setEditMode(prev => ({...prev, bankId: !prev.bankId}))} className="ml-2 text-blue-400 hover:underline text-sm">{editMode.bankId ? 'Cancel' : 'Edit'}</button></p>
-                                {editMode.bankId && (
-                                    <div className="mt-2 space-y-2">
-                                        <input type="text" name="bankId" value={profile.bankId} onChange={handleProfileChange} placeholder="Bank ID" className="w-full p-2 bg-gray-700 text-gray-200 border border-gray-600 rounded-md" />
-                                        <button onClick={() => { handleUpdateProfile({ bankId: profile.bankId }); setEditMode(prev => ({...prev, bankId: false})); }} className="bg-green-600 hover:bg-green-700 text-white font-bold py-1 px-3 rounded-md">Save Bank ID</button>
-                                    </div>
-                                )}
-                                <p className="text-gray-400"><strong>Edition:</strong> {currentUserAccount.edition} <button onClick={() => setEditMode(prev => ({...prev, edition: !prev.edition}))} className="ml-2 text-blue-400 hover:underline text-sm">{editMode.edition ? 'Cancel' : 'Edit'}</button></p>
-                                {editMode.edition && (
-                                    <div className="mt-2 space-y-2">
-                                        <select name="edition" value={profile.edition} onChange={handleProfileChange} className="w-full p-2 bg-gray-700 text-gray-200 border border-gray-600 rounded-md">
-                                            <option value="java">Java</option>
-                                            <option value="bedrock">Bedrock</option>
-                                        </select>
-                                        <button onClick={() => { handleUpdateProfile({ edition: profile.edition }); setEditMode(prev => ({...prev, edition: false})); }} className="bg-green-600 hover:bg-green-700 text-white font-bold py-1 px-3 rounded-md">Save Edition</button>
-                                    </div>
-                                )}
-                                <p className="text-gray-400"><strong>Bank Name:</strong> {currentUserAccount.bankName} <button onClick={() => setEditMode(prev => ({...prev, bankName: !prev.bankName}))} className="ml-2 text-blue-400 hover:underline text-sm">{editMode.bankName ? 'Cancel' : 'Edit'}</button></p>
-                                {editMode.bankName && (
-                                    <div className="mt-2 space-y-2">
-                                        <input type="text" name="bankName" value={profile.bankName} onChange={handleProfileChange} placeholder="Bank Name" className="w-full p-2 bg-gray-700 text-gray-200 border border-gray-600 rounded-md" />
-                                        <button onClick={() => { handleUpdateProfile({ bankName: profile.bankName }); setEditMode(prev => ({...prev, bankName: false})); }} className="bg-green-600 hover:bg-green-700 text-white font-bold py-1 px-3 rounded-md">Save Bank Name</button>
-                                    </div>
-                                )}
-                                <p className="text-gray-400"><strong>Minecraft Username:</strong> {currentUserAccount.accountId} <button onClick={() => setEditMode(prev => ({...prev, accountId: !prev.accountId}))} className="ml-2 text-blue-400 hover:underline text-sm">{editMode.accountId ? 'Cancel' : 'Edit'}</button></p>
-                                {editMode.accountId && (
-                                    <div className="mt-2 space-y-2">
-                                        <input type="text" name="accountId" value={profile.accountId} onChange={handleProfileChange} placeholder="Minecraft Username" className="w-full p-2 bg-gray-700 text-gray-200 border border-gray-600 rounded-md" />
-                                        <button onClick={() => { handleUpdateProfile({ accountId: profile.accountId }); setEditMode(prev => ({...prev, accountId: false})); }} className="bg-green-600 hover:bg-green-700 text-white font-bold py-1 px-3 rounded-md">Save Username</button>
-                                    </div>
-                                )}
-                                <p className="text-gray-400"><strong>Email:</strong> {currentUserAccount.email} <button onClick={() => setEditMode(prev => ({...prev, email: !prev.email}))} className="ml-2 text-blue-400 hover:underline text-sm">{editMode.email ? 'Cancel' : 'Edit'}</button></p>
-                                {editMode.email && (
-                                    <div className="mt-2 space-y-2">
-                                        <input type="email" name="email" value={profile.email} onChange={handleProfileChange} placeholder="Email Address" className="w-full p-2 bg-gray-700 text-gray-200 border border-gray-600 rounded-md" />
-                                        <button onClick={() => { handleUpdateProfile({ email: profile.email }); setEditMode(prev => ({...prev, email: false})); }} className="bg-green-600 hover:bg-green-700 text-white font-bold py-1 px-3 rounded-md">Save Email</button>
-                                    </div>
-                                )}
-                            </>
-                        </div>
+                            <div className="w-32 h-32 rounded-full flex items-center justify-center text-white text-6xl font-bold shadow-md border-4 border-green-500 bg-minecraft-world overflow-hidden"><span className="relative z-10">{currentUserAccount.accountId.charAt(0).toUpperCase()}</span></div>
+                            <h3 className="text-2xl font-bold mt-4">{currentUserAccount.accountId}</h3>
+                            <p className="text-gray-400"><strong>Email:</strong> {currentUserAccount.email}</p>
+                            <p className="text-gray-400"><strong>Bank ID:</strong> {currentUserAccount.bankId} <button onClick={() => setEditMode(prev => ({...prev, bankId: !prev.bankId}))} className="ml-2 text-blue-400 hover:underline text-sm">{editMode.bankId ? 'Cancel' : 'Edit'}</button></p>
+                            {editMode.bankId && (
+                                <div className="mt-2 space-y-2">
+                                    <input type="text" name="bankId" value={profile.bankId} onChange={handleProfileChange} placeholder="Bank ID" className="w-full p-2 bg-gray-700 text-gray-200 border border-gray-600 rounded-md" />
+                                    <button onClick={() => { handleUpdateProfile({ bankId: profile.bankId }); setEditMode(prev => ({...prev, bankId: false})); }} className="bg-green-600 hover:bg-green-700 text-white font-bold py-1 px-3 rounded-md">Save Bank ID</button>
+                                </div>
+                            )}
+                            <p className="text-gray-400"><strong>Edition:</strong> {currentUserAccount.edition} <button onClick={() => setEditMode(prev => ({...prev, edition: !prev.edition}))} className="ml-2 text-blue-400 hover:underline text-sm">{editMode.edition ? 'Cancel' : 'Edit'}</button></p>
+                            {editMode.edition && (
+                                <div className="mt-2 space-y-2">
+                                    <select name="edition" value={profile.edition} onChange={handleProfileChange} className="w-full p-2 bg-gray-700 text-gray-200 border border-gray-600 rounded-md">
+                                        <option value="java">Java</option>
+                                        <option value="bedrock">Bedrock</option>
+                                    </select>
+                                    <button onClick={() => { handleUpdateProfile({ edition: profile.edition }); setEditMode(prev => ({...prev, edition: false})); }} className="bg-green-600 hover:bg-green-700 text-white font-bold py-1 px-3 rounded-md">Save Edition</button>
+                                </div>
+                            )}
+                            <p className="text-gray-400"><strong>Bank Name:</strong> {currentUserAccount.bankName} <button onClick={() => setEditMode(prev => ({...prev, bankName: !prev.bankName}))} className="ml-2 text-blue-400 hover:underline text-sm">{editMode.bankName ? 'Cancel' : 'Edit'}</button></p>
+                            {editMode.bankName && (
+                                <div className="mt-2 space-y-2">
+                                    <input type="text" name="bankName" value={profile.bankName} onChange={handleProfileChange} placeholder="Bank Name" className="w-full p-2 bg-gray-700 text-gray-200 border border-gray-600 rounded-md" />
+                                    <button onClick={() => { handleUpdateProfile({ bankName: profile.bankName }); setEditMode(prev => ({...prev, bankName: false})); }} className="bg-green-600 hover:bg-green-700 text-white font-bold py-1 px-3 rounded-md">Save Bank Name</button>
+                                </div>
+                            )}
                             <p className="text-gray-400"><strong>Minecraft Username:</strong> {currentUserAccount.accountId} <button onClick={() => setEditMode(prev => ({...prev, accountId: !prev.accountId}))} className="ml-2 text-blue-400 hover:underline text-sm">{editMode.accountId ? 'Cancel' : 'Edit'}</button></p>
                             {editMode.accountId && (
                                 <div className="mt-2 space-y-2">
