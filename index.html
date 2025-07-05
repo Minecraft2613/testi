@@ -273,7 +273,7 @@
             return (
                 <div className="space-y-6">
                     <div className="bg-gray-800 p-6 rounded-lg shadow-minecraft"><h2 className="text-xl font-bold text-green-400 mb-4">Account Overview</h2><p className="text-gray-300"><strong>Bank Name:</strong> {bankName}</p><p className="text-2xl font-bold">Balance: <span className="text-green-400">${balance?.toFixed(2) || '0.00'}</span></p><p className="text-lg font-semibold mt-2">Total Income: <span className="text-yellow-400">${totalPerDayIncome}/day</span></p><p className="text-sm text-gray-400">Job: ${jobPerDayIncome}/day | Business: ${businessPerDayIncome}/{businessIncomeUnit}</p></div>
-                    <div className="bg-gray-800 p-6 rounded-lg shadow-minecraft"><h2 className="text-xl font-bold text-green-400 mb-4">Loans ({loans.length})</h2>{loans.length > 0 ? <div className="space-y-4">{loans.map((loan) => <div key={loan.id} className="p-4 border border-gray-700 rounded-md bg-gray-700"><div className="flex justify-between items-start"><div className="flex-grow"><p className="font-bold capitalize text-yellow-400">{loan.loanType} Loan</p><p className="text-gray-300">Amount: ${loan.loanAmount.toFixed(2)} | Total Due: ${loan.loanAmountDue.toFixed(2)}</p><p className="text-gray-300">Status: <span className={`font-semibold ${loan.loanStatus === 'pending' ? 'text-yellow-400' : 'text-green-400'}`}>{loan.loanStatus}</span></p></div><div className="flex flex-col items-end gap-2">{loan.loanStatus === 'pending' && <><button onClick={() => handleCancelLoan(loan.id)} className="text-xs bg-red-600 hover:bg-red-700 text-white font-bold py-1 px-2 rounded">Cancel</button><button onClick={() => handleAdminApproveLoan(loan.id)} className="text-xs bg-blue-600 hover:bg-blue-700 text-white font-bold py-1 px-2 rounded">Admin Approve</button></>}{loan.loanStatus === 'active' && <button onClick={() => handlePayLoan(loan.id)} className="text-xs bg-green-600 hover:bg-green-700 text-white font-bold py-1 px-2 rounded">Pay Full Amount</button>}</div></div></div>)}</div> : <p className="text-gray-400">No active loans.</p>}</div>
+                    <div className="bg-gray-800 p-6 rounded-lg shadow-minecraft"><h2 className="text-xl font-bold text-green-400 mb-4">Loans ({loans.length})</h2>{loans.length > 0 ? <div className="space-y-4">{loans.map((loan) => <div key={loan.id} className="p-4 border border-gray-700 rounded-md bg-gray-700"><div className="flex justify-between items-start"><div className="flex-grow"><p className="font-bold capitalize text-yellow-400">{loan.loanType} Loan</p><p className="text-gray-300">Amount: ${loan.loanAmount.toFixed(2)} | Total Due: ${loan.loanAmountDue.toFixed(2)}</p><p className="text-gray-300">Status: <span className={`font-semibold ${loan.loanStatus === 'pending' ? 'text-yellow-400' : 'text-green-400'}`}>{loan.loanStatus}</span></p></div><div className="flex flex-col items-end gap-2">{loan.loanStatus === 'pending' && <><button onClick={() => handleCancelLoan(loan.id)} className="text-xs bg-red-600 hover:bg-red-700 text-white font-bold py-1 px-2 rounded">Cancel</button></>}{loan.loanStatus === 'active' && <button onClick={() => handlePayLoan(loan.id)} className="text-xs bg-green-600 hover:bg-green-700 text-white font-bold py-1 px-2 rounded">Pay Full Amount</button>}</div></div></div>)}</div> : <p className="text-gray-400">No active loans.</p>}</div>
                     <div className="bg-gray-800 p-6 rounded-lg shadow-minecraft"><h2 className="text-xl font-bold text-green-400 mb-4">Transaction History</h2>{transactions.length > 0 ? <div className="max-h-80 overflow-y-auto"><table className="min-w-full text-sm text-left"><thead className="bg-gray-700 sticky top-0"><tr><th className="p-2 text-gray-300">Date</th><th className="p-2 text-gray-300">Description</th><th className="p-2 text-right text-gray-300">Amount</th></tr></thead><tbody>{transactions.slice().reverse().map((tx, index) => <tr key={index} className="border-b border-gray-700 hover:bg-gray-700/50"><td className="p-2 text-gray-400">{new Date(tx.date).toLocaleDateString()}</td><td className="p-2 text-gray-300">{tx.description}</td><td className={`p-2 text-right font-semibold ${tx.amount < 0 ? 'text-red-400' : 'text-green-400'}`}>{tx.amount < 0 ? '-' : '+'}${Math.abs(tx.amount).toFixed(2)}</td></tr>)}</tbody></table></div> : <p className="text-gray-400">No transactions yet.</p>}</div>
                 </div>
             );
@@ -434,8 +434,8 @@
                         />
                     )}
                     <div className="bg-gray-800 p-6 rounded-lg shadow-minecraft flex items-center justify-between">
-                        <div><h2 className="text-xl font-bold text-green-400 mb-2">Tax Summary</h2><p className="text-gray-300">Total Due: <span className="font-bold text-red-400">${sessionTaxData.taxDue?.toFixed(2) || '0.00'}</span></p><p className="text-gray-300">Current Session Paid: <span className="font-bold text-green-400">${sessionTaxData.taxPaid?.toFixed(2) || '0.00'}</span></p>
-<p className="text-gray-300">Total Tax Paid (All Sessions): <span className="font-bold text-green-400">${totalTaxPaidTillYet.toFixed(2)}</span></p><p className="text-gray-300">Total Tax Paid: <span className="font-bold text-green-400">${totalTaxPaidTillYet.toFixed(2)}</span></p><p className="text-gray-300">Advance Paid: <span className="font-bold text-blue-400">${sessionTaxData.advancePaid?.toFixed(2) || '0.00'}</span></p>{sessionTaxData.taxDue > 0 ? (<><button onClick={() => onPayTax(sessionTaxData.taxDue, true)} disabled={isPaying} className="mt-4 bg-green-600 text-white font-bold py-2 px-4 rounded-md hover:bg-green-700 disabled:bg-gray-500"> {isPaying ? 'Paying...' : 'Pay Full Amount'}</button><input type="number" value={customTaxAmount} onChange={(e) => setCustomTaxAmount(e.target.value)} placeholder="Custom Amount" className="ml-2 p-2 bg-gray-700 border border-gray-600 rounded-md" /><button onClick={() => onPayTax(parseFloat(customTaxAmount), false)} disabled={isPaying} className="ml-2 bg-green-600 text-white font-bold py-2 px-4 rounded-md hover:bg-green-700 disabled:bg-gray-500"> {isPaying ? 'Paying...' : 'Make Custom Payment'}</button></>) : (<div className="mt-4"><input type="number" value={customTaxAmount} onChange={(e) => setCustomTaxAmount(e.target.value)} placeholder="Advance Amount" className="p-2 bg-gray-700 border border-gray-600 rounded-md" /><button onClick={() => onAdvanceTax(parseFloat(customTaxAmount))} disabled={isPaying} className="ml-2 bg-blue-600 text-white font-bold py-2 px-4 rounded-md hover:bg-blue-700 disabled:bg-gray-500"> {isPaying ? 'Paying...' : 'Pay Advance'}</button></div>)}</div>
+                        <div><h2 className="text-xl font-bold text-green-400 mb-2">Tax Summary for Session: {session}</h2><p className="text-gray-300">Total Due: <span className="font-bold text-red-400">${sessionTaxData.taxDue?.toFixed(2) || '0.00'}</span></p><p className="text-gray-300">Current Session Paid: <span className="font-bold text-green-400">${sessionTaxData.taxPaid?.toFixed(2) || '0.00'}</span></p>
+<p className="text-gray-300">Total Tax Paid (All Sessions): <span className="font-bold text-green-400">${totalTaxPaidTillYet.toFixed(2)}</span></p><p className="text-gray-300">Advance Paid: <span className="font-bold text-blue-400">${sessionTaxData.advancePaid?.toFixed(2) || '0.00'}</span></p>{sessionTaxData.taxDue > 0 ? (<><button onClick={() => onPayTax(sessionTaxData.taxDue, true)} disabled={isPaying} className="mt-4 bg-green-600 text-white font-bold py-2 px-4 rounded-md hover:bg-green-700 disabled:bg-gray-500"> {isPaying ? 'Paying...' : 'Pay Full Amount'}</button><input type="number" value={customTaxAmount} onChange={(e) => setCustomTaxAmount(e.target.value)} placeholder="Custom Amount" className="ml-2 p-2 bg-gray-700 border border-gray-600 rounded-md" /><button onClick={() => onPayTax(parseFloat(customTaxAmount), false)} disabled={isPaying} className="ml-2 bg-green-600 text-white font-bold py-2 px-4 rounded-md hover:bg-green-700 disabled:bg-gray-500"> {isPaying ? 'Paying...' : 'Make Custom Payment'}</button></>) : (<div className="mt-4"><input type="number" value={customTaxAmount} onChange={(e) => setCustomTaxAmount(e.target.value)} placeholder="Advance Amount" className="p-2 bg-gray-700 border border-gray-600 rounded-md" /><button onClick={() => onAdvanceTax(parseFloat(customTaxAmount))} disabled={isPaying} className="ml-2 bg-blue-600 text-white font-bold py-2 px-4 rounded-md hover:bg-blue-700 disabled:bg-gray-500"> {isPaying ? 'Paying...' : 'Pay Advance'}</button></div>)}</div>
                         <div className="w-24 h-24 rounded-full flex items-center justify-center text-white text-4xl font-bold shadow-md border-4 border-yellow-400 bg-minecraft-world overflow-hidden"><span className="relative z-10">{currentUserAccount.accountId.charAt(0).toUpperCase()}</span></div>
                     </div>
                     <div className="bg-gray-800 p-6 rounded-lg shadow-minecraft">
@@ -561,12 +561,44 @@
                 businessType: currentUserAccount.businessType || '', 
                 businessPerDayIncome: currentUserAccount.businessPerDayIncome || '', 
                 businessIncomeUnit: currentUserAccount.businessIncomeUnit || 'day', 
-                hasBusiness: !!currentUserAccount.businessType 
+                hasBusiness: !!currentUserAccount.businessType,
+                bankName: currentUserAccount.bankName || '',
+                accountId: currentUserAccount.accountId || '',
+                bankId: currentUserAccount.bankId || '',
+                email: currentUserAccount.email || '',
+                edition: currentUserAccount.edition || '',
             });
-            const [editMode, setEditMode] = useState({ job: false, business: false, password: false });
+            const [editMode, setEditMode] = useState({ job: false, business: false, password: false, bankName: false, accountId: false, bankId: false, email: false, edition: false });
 
             const handleProfileChange = (e) => setProfile({ ...profile, [e.target.name]: e.target.value });
-            const onProfileSubmit = (e) => { e.preventDefault(); handleUpdateProfile(profile); setEditMode({ ...editMode, job: false, business: false }); };
+            const onProfileSubmit = (e) => { e.preventDefault(); handleUpdateProfile(profile); setEditMode({ ...editMode, job: false, business: false, bankName: false, accountId: false, bankId: false, email: false, edition: false }); };
+            const onPasswordSubmit = (e) => { e.preventDefault(); handleChangePassword(oldPassword, newPassword); setOldPassword(''); setNewPassword(''); setEditMode(prev => ({...prev, password: false})); };
+
+            return (
+                <div className="space-y-8">
+                    <h1 className="text-3xl font-bold text-green-400">Account Settings</h1>
+                    <div className="flex flex-col md:flex-row gap-8">
+                        const AccountSettingsPage = ({ currentUserAccount, handleChangePassword, handleUpdateProfile }) => {
+            if (!currentUserAccount) return null;
+            const [oldPassword, setOldPassword] = useState('');
+            const [newPassword, setNewPassword] = useState('');
+            const [profile, setProfile] = useState({ 
+                jobType: currentUserAccount.jobType || '', 
+                jobPerDayIncome: currentUserAccount.jobPerDayIncome || '', 
+                businessType: currentUserAccount.businessType || '', 
+                businessPerDayIncome: currentUserAccount.businessPerDayIncome || '', 
+                businessIncomeUnit: currentUserAccount.businessIncomeUnit || 'day', 
+                hasBusiness: !!currentUserAccount.hasBusiness,
+                bankName: currentUserAccount.bankName || '',
+                accountId: currentUserAccount.accountId || '',
+                bankId: currentUserAccount.bankId || '',
+                email: currentUserAccount.email || '',
+                edition: currentUserAccount.edition || '',
+            });
+            const [editMode, setEditMode] = useState({ job: false, business: false, password: false, bankName: false, accountId: false, bankId: false, email: false, edition: false });
+
+            const handleProfileChange = (e) => setProfile({ ...profile, [e.target.name]: e.target.value });
+            const onProfileSubmit = (e) => { e.preventDefault(); handleUpdateProfile(profile); setEditMode({ ...editMode, job: false, business: false, bankName: false, accountId: false, bankId: false, email: false, edition: false }); };
             const onPasswordSubmit = (e) => { e.preventDefault(); handleChangePassword(oldPassword, newPassword); setOldPassword(''); setNewPassword(''); setEditMode(prev => ({...prev, password: false})); };
 
             return (
@@ -576,11 +608,82 @@
                         <div className="flex-shrink-0 md:w-1/3 flex flex-col items-center text-center">
                             <div className="w-32 h-32 rounded-full flex items-center justify-center text-white text-6xl font-bold shadow-md border-4 border-green-500 bg-minecraft-world overflow-hidden"><span className="relative z-10">{currentUserAccount.accountId.charAt(0).toUpperCase()}</span></div>
                             <h3 className="text-2xl font-bold mt-4">{currentUserAccount.accountId}</h3>
-                            <p className="text-gray-400"><strong>Email:</strong> {currentUserAccount.email}</p>
-                            <p className="text-gray-400"><strong>Bank ID:</strong> {currentUserAccount.bankId}</p>
-                            <p className="text-gray-400"><strong>Edition:</strong> {currentUserAccount.edition}</p>
-                            <p className="text-gray-400"><strong>Bank Name:</strong> {currentUserAccount.bankName}</p>
+                            <p className="text-gray-400"><strong>Email:</strong> {currentUserAccount.email} <button onClick={() => setEditMode(prev => ({...prev, email: !prev.email}))} className="ml-2 text-blue-400 hover:underline text-sm">{editMode.email ? 'Cancel' : 'Edit'}</button></p>
+                            {editMode.email && (
+                                <div className="mt-2 space-y-2">
+                                    <input type="email" name="email" value={profile.email} onChange={handleProfileChange} placeholder="Email Address" className="w-full p-2 bg-gray-700 text-gray-200 border border-gray-600 rounded-md" />
+                                    <button onClick={() => { handleUpdateProfile({ email: profile.email }); setEditMode(prev => ({...prev, email: false})); }} className="bg-green-600 hover:bg-green-700 text-white font-bold py-1 px-3 rounded-md">Save Email</button>
+                                </div>
+                            )}
+                            <p className="text-gray-400"><strong>Bank ID:</strong> {currentUserAccount.bankId} <button onClick={() => setEditMode(prev => ({...prev, bankId: !prev.bankId}))} className="ml-2 text-blue-400 hover:underline text-sm">{editMode.bankId ? 'Cancel' : 'Edit'}</button></p>
+                            {editMode.bankId && (
+                                <div className="mt-2 space-y-2">
+                                    <input type="text" name="bankId" value={profile.bankId} onChange={handleProfileChange} placeholder="Bank ID" className="w-full p-2 bg-gray-700 text-gray-200 border border-gray-600 rounded-md" />
+                                    <button onClick={() => { handleUpdateProfile({ bankId: profile.bankId }); setEditMode(prev => ({...prev, bankId: false})); }} className="bg-green-600 hover:bg-green-700 text-white font-bold py-1 px-3 rounded-md">Save Bank ID</button>
+                                </div>
+                            )}
+                            <p className="text-gray-400"><strong>Edition:</strong> {currentUserAccount.edition} <button onClick={() => setEditMode(prev => ({...prev, edition: !prev.edition}))} className="ml-2 text-blue-400 hover:underline text-sm">{editMode.edition ? 'Cancel' : 'Edit'}</button></p>
+                            {editMode.edition && (
+                                <div className="mt-2 space-y-2">
+                                    <select name="edition" value={profile.edition} onChange={handleProfileChange} className="w-full p-2 bg-gray-700 text-gray-200 border border-gray-600 rounded-md">
+                                        <option value="java">Java</option>
+                                        <option value="bedrock">Bedrock</option>
+                                    </select>
+                                    <button onClick={() => { handleUpdateProfile({ edition: profile.edition }); setEditMode(prev => ({...prev, edition: false})); }} className="bg-green-600 hover:bg-green-700 text-white font-bold py-1 px-3 rounded-md">Save Edition</button>
+                                </div>
+                            )}
+                            <p className="text-gray-400"><strong>Bank Name:</strong> {currentUserAccount.bankName} <button onClick={() => setEditMode(prev => ({...prev, bankName: !prev.bankName}))} className="ml-2 text-blue-400 hover:underline text-sm">{editMode.bankName ? 'Cancel' : 'Edit'}</button></p>
+                            {editMode.bankName && (
+                                <div className="mt-2 space-y-2">
+                                    <input type="text" name="bankName" value={profile.bankName} onChange={handleProfileChange} placeholder="Bank Name" className="w-full p-2 bg-gray-700 text-gray-200 border border-gray-600 rounded-md" />
+                                    <button onClick={() => { handleUpdateProfile({ bankName: profile.bankName }); setEditMode(prev => ({...prev, bankName: false})); }} className="bg-green-600 hover:bg-green-700 text-white font-bold py-1 px-3 rounded-md">Save Bank Name</button>
+                                </div>
+                            )}
+                            <p className="text-gray-400"><strong>Minecraft Username:</strong> {currentUserAccount.accountId} <button onClick={() => setEditMode(prev => ({...prev, accountId: !prev.accountId}))} className="ml-2 text-blue-400 hover:underline text-sm">{editMode.accountId ? 'Cancel' : 'Edit'}</button></p>
+                            {editMode.accountId && (
+                                <div className="mt-2 space-y-2">
+                                    <input type="text" name="accountId" value={profile.accountId} onChange={handleProfileChange} placeholder="Minecraft Username" className="w-full p-2 bg-gray-700 text-gray-200 border border-gray-600 rounded-md" />
+                                    <button onClick={() => { handleUpdateProfile({ accountId: profile.accountId }); setEditMode(prev => ({...prev, accountId: false})); }} className="bg-green-600 hover:bg-green-700 text-white font-bold py-1 px-3 rounded-md">Save Username</button>
+                                </div>
+                            )}
                         </div>
+                        <div className="flex-1 space-y-6">
+                            <div className="bg-gray-800 p-6 rounded-lg shadow-minecraft">
+                                <h2 className="text-xl font-bold text-green-400 mb-4">Income Profile</h2>
+                                <form onSubmit={onProfileSubmit} className="space-y-4">
+                                    <div>
+                                        <label className="text-gray-300">Job Type: </label>
+                                        {editMode.job ? <input name="jobType" value={profile.jobType} onChange={handleProfileChange} className="w-full p-3 bg-gray-700 text-gray-200 border border-gray-600 rounded-md" /> : <span className="text-gray-200">{profile.jobType || 'N/A'}</span>}
+                                        <button type="button" onClick={() => setEditMode(prev => ({ ...prev, job: !prev.job }))} className="ml-2 bg-blue-600 hover:bg-blue-700 text-white font-bold py-1 px-2 rounded-md">{editMode.job ? 'Cancel' : 'Edit'}</button>
+                                    </div>
+                                    <div>
+                                        <label className="text-gray-300">Job Income per Day: </label>
+                                        {editMode.job ? <input name="jobPerDayIncome" type="number" value={profile.jobPerDayIncome} onChange={handleProfileChange} className="w-full p-3 bg-gray-700 text-gray-200 border border-gray-600 rounded-md" /> : <span className="text-gray-200">${profile.jobPerDayIncome || '0'}/day</span>}
+                                    </div>
+                                    <div className="flex items-center gap-4 mt-4"><label className="text-gray-300">Have a business?</label><input type="checkbox" checked={profile.hasBusiness} onChange={(e) => setProfile({...profile, hasBusiness: e.target.checked})} className="h-5 w-5 rounded bg-gray-700 border-gray-600 text-green-500 focus:ring-green-500" /></div>
+                                    {profile.hasBusiness && <>
+                                        <div>
+                                            <label className="text-gray-300">Business Type: </label>
+                                            {editMode.business ? <input name="businessType" value={profile.businessType} onChange={handleProfileChange} className="w-full p-3 bg-gray-700 text-gray-200 border border-gray-600 rounded-md" /> : <span className="text-gray-200">{profile.businessType || 'N/A'}</span>}
+                                            <button type="button" onClick={() => setEditMode(prev => ({ ...prev, business: !prev.business }))} className="ml-2 bg-blue-600 hover:bg-blue-700 text-white font-bold py-1 px-2 rounded-md">{editMode.business ? 'Cancel' : 'Edit'}</button>
+                                        </div>
+                                        <div>
+                                            <label className="text-gray-300">Business Income: </label>
+                                            {editMode.business ? <input name="businessPerDayIncome" type="number" value={profile.businessPerDayIncome} onChange={handleProfileChange} className="w-full p-3 bg-gray-700 text-gray-200 border border-gray-600 rounded-md" /> : <span className="text-gray-200">${profile.businessPerDayIncome || '0'}/{profile.businessIncomeUnit}</span>}
+                                        </div>
+                                        <div>
+                                            <label className="text-gray-300">Income Unit: </label>
+                                            {editMode.business ? <select name="businessIncomeUnit" value={profile.businessIncomeUnit} onChange={handleProfileChange} className="w-full p-3 bg-gray-700 text-gray-200 border border-gray-600 rounded-md"><option value="day">Per Day</option><option value="hour">Per Hour</option></select> : <span className="text-gray-200">{profile.businessIncomeUnit}</span>}
+                                        </div>
+                                    </>}<
+                                    {(editMode.job || editMode.business) && <button type="submit" className="bg-green-600 hover:bg-green-700 text-white font-bold py-2 px-4 rounded-md">Save Changes</button>}<
+                                </form>
+                            </div>
+                            <div className="bg-gray-800 p-6 rounded-lg shadow-minecraft"><h2 className="text-xl font-bold text-green-400 mb-4">Change Password</h2><form onSubmit={onPasswordSubmit} className="space-y-4 max-w-sm"><input type="password" value={oldPassword} onChange={(e) => setOldPassword(e.target.value)} placeholder="Old Password" required className="w-full p-3 bg-gray-700 text-gray-200 border border-gray-600 rounded-md" /><input type="password" value={newPassword} onChange={(e) => setNewPassword(e.target.value)} placeholder="New Password" required className="w-full p-3 bg-gray-700 text-gray-200 border border-gray-600 rounded-md" /><button type="submit" className="bg-green-600 text-white font-bold py-2 px-4 rounded-md hover:bg-green-700">Change Password</button></form></div>
+                        </div>
+                    </div>
+                </div>
+            );
                         <div className="flex-1 space-y-6">
                             <div className="bg-gray-800 p-6 rounded-lg shadow-minecraft">
                                 <h2 className="text-xl font-bold text-green-400 mb-4">Income Profile</h2>
@@ -613,7 +716,8 @@
                                     {(editMode.job || editMode.business) && <button type="submit" className="bg-green-600 hover:bg-green-700 text-white font-bold py-2 px-4 rounded-md">Save Changes</button>}
                                 </form>
                             </div>
-                            <div className="bg-gray-800 p-6 rounded-lg shadow-minecraft"><h2 className="text-xl font-bold text-green-400 mb-4">Change Password</h2><form onSubmit={onPasswordSubmit} className="space-y-4 max-w-sm"><input type="password" value={oldPassword} onChange={(e) => setOldPassword(e.target.value)} placeholder="Old Password" required className="w-full p-3 bg-gray-700 text-gray-200 border border-gray-600 rounded-md" /><input type="password" value={newPassword} onChange={(e) => setNewPassword(e.target.value)} placeholder="New Password" required className="w-full p-3 bg-gray-700 text-gray-200 border border-gray-600 rounded-md" /><button type="submit" className="bg-green-600 text-white font-bold py-2 px-4 rounded-md hover:bg-green-700">Change Password</button></form></div></div>
+                            <div className="bg-gray-800 p-6 rounded-lg shadow-minecraft"><h2 className="text-xl font-bold text-green-400 mb-4">Change Password</h2><form onSubmit={onPasswordSubmit} className="space-y-4 max-w-sm"><input type="password" value={oldPassword} onChange={(e) => setOldPassword(e.target.value)} placeholder="Old Password" required className="w-full p-3 bg-gray-700 text-gray-200 border border-gray-600 rounded-md" /><input type="password" value={newPassword} onChange={(e) => setNewPassword(e.target.value)} placeholder="New Password" required className="w-full p-3 bg-gray-700 text-gray-200 border border-gray-600 rounded-md" /><button type="submit" className="bg-green-600 text-white font-bold py-2 px-4 rounded-md hover:bg-green-700">Change Password</button></form></div>
+                        </div>
                     </div>
                 </div>
             );
@@ -914,6 +1018,40 @@
                 initializeApp();
             }, []);
 
+            // Polling for real-time updates (e.g., loan approvals)
+            useEffect(() => {
+                let intervalId;
+                if (currentUserAccount) {
+                    intervalId = setInterval(() => {
+                        // Re-fetch the current user's account data
+                        fetch(`${API_ENDPOINTS.ACCOUNTS}/accounts/${currentUserAccount.accountId}`)
+                            .then(response => {
+                                if (!response.ok) {
+                                    if (response.status === 404) {
+                                        console.warn(`Account ${currentUserAccount.accountId} not found during polling.`);
+                                    } else {
+                                        console.error(`Error fetching account ${currentUserAccount.accountId}: ${response.status}`);
+                                    }
+                                    throw new Error('Account not found or server error');
+                                }
+                                return response.json();
+                            })
+                            .then(data => {
+                                if (data.account) {
+                                    setCurrentUserAccount(data.account);
+                                }
+                            })
+                            .catch(error => console.error("Error polling for account updates:", error));
+                    }, 5000); // Poll every 5 seconds
+                }
+
+                return () => {
+                    if (intervalId) {
+                        clearInterval(intervalId);
+                    }
+                };
+            }, [currentUserAccount]);
+
             const handleLogin = async (identifier, password) => {
                 setLoading(true);
                 setLoginSuccess(false); 
@@ -1014,101 +1152,101 @@
             };
 
          const handlePayTax = async (amount, isFullTax = false) => {
-    if (currentUserAccount.balance < amount) {
-        showModal('Error', 'Insufficient balance.', 'error');
-        return;
-    }
+                if (currentUserAccount.balance < amount) {
+                    showModal('Error', 'Insufficient balance.', 'error');
+                    return;
+                }
 
-    setPaymentAnimationDetails({ show: true, amount: amount, status: 'processing', paymentType: isFullTax ? 'fullTax' : 'customTax' });
+                setPaymentAnimationDetails({ show: true, amount: amount, status: 'processing', paymentType: isFullTax ? 'fullTax' : 'customTax' });
 
-    try {
-        const response = await fetch(`${API_ENDPOINTS.TAX}/pay-tax`, {
-            method: 'POST',
-            headers: { 'Content-Type': 'application/json' },
-            body: JSON.stringify({
-                player: currentUserAccount.accountId,
-                amount
-            }),
-        });
+                try {
+                    const response = await fetch(`${API_ENDPOINTS.TAX}/pay-tax`, {
+                        method: 'POST',
+                        headers: { 'Content-Type': 'application/json' },
+                        body: JSON.stringify({
+                            player: currentUserAccount.accountId,
+                            amount
+                        }),
+                    });
 
-        if (response.ok) {
-            const data = await response.json();
-            const updatedAccount = {
-                ...currentUserAccount,
-                balance: currentUserAccount.balance - amount,
-                taxData: data.taxData,
-                transactions: [
-                    ...currentUserAccount.transactions,
-                    {
-                        type: 'debit',
-                        amount: -amount,
-                        date: new Date().toISOString(),
-                        description: `Tax payment`
+                    if (response.ok) {
+                        const data = await response.json();
+                        const updatedAccount = {
+                            ...currentUserAccount,
+                            balance: currentUserAccount.balance - amount,
+                            taxData: data.taxData,
+                            transactions: [
+                                ...currentUserAccount.transactions,
+                                {
+                                    type: 'debit',
+                                    amount: -amount,
+                                    date: new Date().toISOString(),
+                                    description: `Tax payment`
+                                }
+                            ]
+                        };
+                        setCurrentUserAccount(updatedAccount); // Immediately update the state
+                        setPaymentAnimationDetails({ show: true, amount: amount, status: 'success', paymentType: isFullTax ? 'fullTax' : 'customTax' });
+                    } else {
+                        const errorData = await response.json();
+                        setPaymentAnimationDetails({ show: true, amount: amount, status: 'error' });
+                        showModal('Error', errorData.message || 'Failed to pay tax.', 'error');
                     }
-                ]
+                } catch (error) {
+                    console.error("Pay tax API error:", error);
+                    setPaymentAnimationDetails({ show: true, amount: amount, status: 'error' });
+                    showModal('Error', 'Could not connect to the tax service.', 'error');
+                }
             };
-            setCurrentUserAccount(updatedAccount); // Immediately update the state
-            setPaymentAnimationDetails({ show: true, amount: amount, status: 'success', paymentType: isFullTax ? 'fullTax' : 'customTax' });
-        } else {
-            const errorData = await response.json();
-            setPaymentAnimationDetails({ show: true, amount: amount, status: 'error' });
-            showModal('Error', errorData.message || 'Failed to pay tax.', 'error');
-        }
-    } catch (error) {
-        console.error("Pay tax API error:", error);
-        setPaymentAnimationDetails({ show: true, amount: amount, status: 'error' });
-        showModal('Error', 'Could not connect to the tax service.', 'error');
-    }
-};
 
 
-const handleAdvanceTax = async (amount) => {
-    if (currentUserAccount.balance < amount) {
-        showModal('Error', 'Insufficient balance.', 'error');
-        return;
-    }
+            const handleAdvanceTax = async (amount) => {
+                if (currentUserAccount.balance < amount) {
+                    showModal('Error', 'Insufficient balance.', 'error');
+                    return;
+                }
 
-    setPaymentAnimationDetails({ show: true, amount: amount, status: 'processing', paymentType: 'advanceTax' });
+                setPaymentAnimationDetails({ show: true, amount: amount, status: 'processing', paymentType: 'advanceTax' });
 
-    try {
-        const response = await fetch(`${API_ENDPOINTS.TAX}/advance-tax`, {
-            method: 'POST',
-            headers: { 'Content-Type': 'application/json' },
-            body: JSON.stringify({
-                player: currentUserAccount.accountId,
-                amount
-            }),
-        });
+                try {
+                    const response = await fetch(`${API_ENDPOINTS.TAX}/advance-tax`, {
+                        method: 'POST',
+                        headers: { 'Content-Type': 'application/json' },
+                        body: JSON.stringify({
+                            player: currentUserAccount.accountId,
+                            amount
+                        }),
+                    });
 
-        if (response.ok) {
-            const data = await response.json();
-            const updatedAccount = {
-                ...currentUserAccount,
-                balance: currentUserAccount.balance - amount,
-                taxData: data.taxData,
-                transactions: [
-                    ...currentUserAccount.transactions,
-                    {
-                        type: 'debit',
-                        amount: -amount,
-                        date: new Date().toISOString(),
-                        description: `Advance tax payment`
+                    if (response.ok) {
+                        const data = await response.json();
+                        const updatedAccount = {
+                            ...currentUserAccount,
+                            balance: currentUserAccount.balance - amount,
+                            taxData: data.taxData,
+                            transactions: [
+                                ...currentUserAccount.transactions,
+                                {
+                                    type: 'debit',
+                                    amount: -amount,
+                                    date: new Date().toISOString(),
+                                    description: `Advance tax payment`
+                                }
+                            ]
+                        };
+                        setCurrentUserAccount(updatedAccount); // Immediately update the state
+                        setPaymentAnimationDetails({ show: true, amount: amount, status: 'success', paymentType: 'advanceTax' });
+                    } else {
+                        const errorData = await response.json();
+                        setPaymentAnimationDetails({ show: true, amount: amount, status: 'error' });
+                        showModal('Error', errorData.message || 'Failed to pay advance tax.', 'error');
                     }
-                ]
+                } catch (error) {
+                    console.error("Advance tax API error:", error);
+                    setPaymentAnimationDetails({ show: true, amount: amount, status: 'error' });
+                    showModal('Error', 'Could not connect to the tax service.', 'error');
+                }
             };
-            setCurrentUserAccount(updatedAccount); // Immediately update the state
-            setPaymentAnimationDetails({ show: true, amount: amount, status: 'success', paymentType: 'advanceTax' });
-        } else {
-            const errorData = await response.json();
-            setPaymentAnimationDetails({ show: true, amount: amount, status: 'error' });
-            showModal('Error', errorData.message || 'Failed to pay advance tax.', 'error');
-        }
-    } catch (error) {
-        console.error("Advance tax API error:", error);
-        setPaymentAnimationDetails({ show: true, amount: amount, status: 'error' });
-        showModal('Error', 'Could not connect to the tax service.', 'error');
-    }
-};
 
 
             const handleApplyLoan = async ({ amount, duration, type, ...details }) => {
@@ -1123,13 +1261,17 @@ const handleAdvanceTax = async (amount) => {
                 totalDue = amount * Math.pow(1 + dailyRate, duration * 7);
                 dailyRepayment = totalDue / (duration * 7);
 
-                const existingDailyRepayment = currentUserAccount.loans.reduce((sum, loan) => loan.loanStatus === 'active' ? sum + loan.dailyRepayment : sum, 0);
+                const existingDailyRepayment = (currentUserAccount.loans || []).reduce((sum, loan) => loan.loanStatus === 'active' ? sum + loan.dailyRepayment : sum, 0);
                 if (existingDailyRepayment + dailyRepayment > maxDailyRepayment) {
                     showModal('Loan Rejected', `Your income is too low. Your max daily repayment is ${maxDailyRepayment.toFixed(2)}, but this loan would bring it to ${(existingDailyRepayment + dailyRepayment).toFixed(2)}.`, 'error');
                     return;
                 }
                 const newLoan = { id: `LOAN${Date.now()}`, loanAmount: amount, loanAmountDue: totalDue, loanPaid: 0, dailyRepayment, durationWeeks: duration, loanType: type, loanStatus: 'pending', applicationDate: new Date().toISOString(), ...details };
-                const updatedAccount = { ...currentUserAccount, loans: [...currentUserAccount.loans, newLoan], transactions: [...currentUserAccount.transactions, { type: 'info', amount: 0, date: new Date().toISOString(), description: `Loan application for ${amount} submitted` }] };
+                const updatedAccount = {
+                    ...currentUserAccount,
+                    loans: [...(currentUserAccount.loans || []), newLoan],
+                    transactions: [...(currentUserAccount.transactions || []), { type: 'info', amount: 0, date: new Date().toISOString(), description: `Loan application for ${amount} submitted` }]
+                };
                 updateCurrentUser(updatedAccount);
                 showModal('Application Submitted', `Your ${type} loan application for ${amount.toFixed(2)} has been submitted. A bank employee will visit your area for verification.`, 'success');
             };
