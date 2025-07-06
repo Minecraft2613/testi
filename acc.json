@@ -6,7 +6,7 @@
     "password": "2",
     "edition": "java",
     "bankId": "BANK963231",
-    "balance": 989,
+    "balance": 990,
     "transactions": [
       {
         "type": "credit",
@@ -43,6 +43,12 @@
         "amount": 0,
         "date": "2025-07-06T05:59:50.916Z",
         "description": "Loan application for 1 submitted"
+      },
+      {
+        "type": "credit",
+        "amount": 1,
+        "date": "2025-07-06T06:00:21.441Z",
+        "description": "Loan LOAN1751781590915 approved by admin"
       }
     ],
     "taxData": {
@@ -74,7 +80,7 @@
         "dailyRepayment": 0.15142857142857133,
         "durationWeeks": 1,
         "loanType": "personal",
-        "loanStatus": "pending",
+        "loanStatus": "active",
         "applicationDate": "2025-07-06T05:59:50.915Z",
         "purpose": "1",
         "coord1": "1",
