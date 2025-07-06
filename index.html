@@ -930,7 +930,12 @@
 
                     if (response.ok) {
                         const data = await response.json();
-                        // Fetch tax data after successful login
+                        // Trigger tax processing in the worker
+                        const processTaxResponse = await fetch(`${API_ENDPOINTS.TAX}/process-tax`, { method: 'POST' });
+                        const processTaxData = await processTaxResponse.json();
+                        console.log("Processed Tax Data from Worker:", processTaxData);
+
+                        // Fetch tax data after successful login and processing
                         const taxResponse = await fetch(`${API_ENDPOINTS.TAX}/tax-data`);
                         const taxData = taxResponse.ok ? await taxResponse.json() : {};
 
