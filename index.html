@@ -292,7 +292,10 @@
 
             const totalTaxPaidTillYet = transactions.filter(tx => tx.description.includes('tax payment')).reduce((sum, tx) => sum + Math.abs(tx.amount), 0);
             
-            const sessionTaxData = taxData.players && taxData.players[accountId] && taxData.players[accountId].sessions[taxData.currentSession] ? taxData.players[accountId].sessions[taxData.currentSession] : { taxDue: 0, taxPaid: 0, advancePaid: 0, dailyCharges: [] };
+            // Get the current session from taxData, or default to 'unknown'
+            const currentSession = taxData.currentSession || 'unknown';
+
+            const sessionTaxData = taxData.players && taxData.players[accountId] && taxData.players[accountId].sessions[currentSession] ? taxData.players[accountId].sessions[currentSession] : { taxDue: 0, taxPaid: 0, advancePaid: 0, dailyCharges: [] };
 
             // Ensure dailyTaxCharges is an array of objects with date and amount
             const dailyCharges = sessionTaxData.dailyCharges || [];
@@ -409,7 +412,7 @@
                     return;
                 }
                 setIsPaying(true);
-                await handlePayTax(amount, isFullTax);
+                await handlePayTax(amount, isFullTax, currentSession);
                 setIsPaying(false);
             };
 
@@ -419,7 +422,7 @@
                     return;
                 }
                 setIsPaying(true);
-                await handleAdvanceTax(amount);
+                await handleAdvanceTax(amount, currentSession);
                 setIsPaying(false);
             };
 
@@ -434,7 +437,7 @@
                         />
                     )}
                     <div className="bg-gray-800 p-6 rounded-lg shadow-minecraft flex items-center justify-between">
-                        <div><h2 className="text-xl font-bold text-green-400 mb-2">Tax Summary</h2><p className="text-gray-300">Total Due: <span className="font-bold text-red-400">${sessionTaxData.taxDue?.toFixed(2) || '0.00'}</span></p><p className="text-gray-300">Current Session Paid: <span className="font-bold text-green-400">${sessionTaxData.taxPaid?.toFixed(2) || '0.00'}</span></p>
+                        <div><h2 className="text-xl font-bold text-green-400 mb-2">Tax Summary (Session: {currentSession})</h2><p className="text-gray-300">Total Due: <span className="font-bold text-red-400">${sessionTaxData.taxDue?.toFixed(2) || '0.00'}</span></p><p className="text-gray-300">Current Session Paid: <span className="font-bold text-green-400">${sessionTaxData.taxPaid?.toFixed(2) || '0.00'}</span></p>
 <p className="text-gray-300">Total Tax Paid (All Sessions): <span className="font-bold text-green-400">${totalTaxPaidTillYet.toFixed(2)}</span></p><p className="text-gray-300">Total Tax Paid: <span className="font-bold text-green-400">${totalTaxPaidTillYet.toFixed(2)}</span></p><p className="text-gray-300">Advance Paid: <span className="font-bold text-blue-400">${sessionTaxData.advancePaid?.toFixed(2) || '0.00'}</span></p>{sessionTaxData.taxDue > 0 ? (<><button onClick={() => onPayTax(sessionTaxData.taxDue, true)} disabled={isPaying} className="mt-4 bg-green-600 text-white font-bold py-2 px-4 rounded-md hover:bg-green-700 disabled:bg-gray-500"> {isPaying ? 'Paying...' : 'Pay Full Amount'}</button><input type="number" value={customTaxAmount} onChange={(e) => setCustomTaxAmount(e.target.value)} placeholder="Custom Amount" className="ml-2 p-2 bg-gray-700 border border-gray-600 rounded-md" /><button onClick={() => onPayTax(parseFloat(customTaxAmount), false)} disabled={isPaying} className="ml-2 bg-green-600 text-white font-bold py-2 px-4 rounded-md hover:bg-green-700 disabled:bg-gray-500"> {isPaying ? 'Paying...' : 'Make Custom Payment'}</button></>) : (<div className="mt-4"><input type="number" value={customTaxAmount} onChange={(e) => setCustomTaxAmount(e.target.value)} placeholder="Advance Amount" className="p-2 bg-gray-700 border border-gray-600 rounded-md" /><button onClick={() => onAdvanceTax(parseFloat(customTaxAmount))} disabled={isPaying} className="ml-2 bg-blue-600 text-white font-bold py-2 px-4 rounded-md hover:bg-blue-700 disabled:bg-gray-500"> {isPaying ? 'Paying...' : 'Pay Advance'}</button></div>)}</div>
                         <div className="w-24 h-24 rounded-full flex items-center justify-center text-white text-4xl font-bold shadow-md border-4 border-yellow-400 bg-minecraft-world overflow-hidden"><span className="relative z-10">{currentUserAccount.accountId.charAt(0).toUpperCase()}</span></div>
                     </div>
@@ -1157,21 +1160,30 @@ const handleAdvanceTax = async (amount) => {
                 const loan = currentUserAccount.loans.find(l => l.id === loanId);
                 if (!loan) return;
 
+                // Auto-cancel if 24 hours passed and loan is pending/active and not fully paid
+                const timeSinceApplication = Date.now() - new Date(loan.applicationDate).getTime();
+                const twentyFourHours = 24 * 3600 * 1000;
+
+                if (timeSinceApplication >= twentyFourHours && loan.loanStatus !== 'paid' && loan.loanPaid < loan.loanAmountDue) {
+                    const updatedLoans = currentUserAccount.loans.map(l => l.id === loanId ? { ...l, loanStatus: 'cancelled' } : l);
+                    const updatedAccount = { ...currentUserAccount, loans: updatedLoans, transactions: [...currentUserAccount.transactions, { type: 'info', amount: 0, date: new Date().toISOString(), description: `Loan ${loan.id} auto-cancelled after 24 hours due to non-payment` }] };
+                    await updateCurrentUser(updatedAccount);
+                    showModal('Loan Auto-Cancelled', `Loan ${loan.id} has been automatically cancelled as it was not fully paid within 24 hours.`, 'error');
+                    return; // Stop further processing for this loan
+                }
+
                 let amountToPay = customAmount !== null ? customAmount : (loan.loanAmountDue - loan.loanPaid);
                 if (amountToPay <= 0) { showModal('Info', 'No amount to pay for this loan.', 'info'); return; }
 
-                const timeSinceApplication = Date.now() - new Date(loan.applicationDate).getTime();
                 let effectiveAmountToPay = amountToPay;
 
                 // Apply interest reduction rules only if paying the full remaining amount
                 if (customAmount === null || customAmount >= (loan.loanAmountDue - loan.loanPaid)) {
                     if (timeSinceApplication < 6 * 3600 * 1000) { // 6 hours
                         effectiveAmountToPay = loan.loanAmount; // Only principal
-                        showModal('Interest Waived!', 'Paid within 6 hours! 0% interest applied.', 'success');
-                    } else if (timeSinceApplication < 2 * 24 * 3600 * 1000) { // 2 days
+                    } else if (timeSinceApplication < 24 * 3600 * 1000) { // 24 hours
                         const interest = loan.loanAmountDue - loan.loanAmount;
-                        effectiveAmountToPay = loan.loanAmount + (interest * 0.6); // 40% interest reduction
-                        showModal('Interest Reduced!', 'Paid within 2 days! Interest reduced by 40%.', 'success');
+                        effectiveAmountToPay = loan.loanAmount + (interest * 0.45); // 55% interest reduction
                     }
                 }
 
@@ -1187,7 +1199,7 @@ const handleAdvanceTax = async (amount) => {
                     showModal('Loan Paid!', 'Loan has been fully paid off!', 'success');
                 } else {
                     updatedLoans = currentUserAccount.loans.map(l => l.id === loanId ? { ...l, loanPaid: newLoanPaid } : l);
-                    showModal('Payment Successful!', `Paid $${effectiveAmountToPay.toFixed(2)} towards loan ${loan.id}.`, 'success');
+                    showModal('Payment Successful!', `Paid ${effectiveAmountToPay.toFixed(2)} towards loan ${loan.id}.`, 'success');
                 }
                 
                 const updatedAccount = { ...currentUserAccount, loans: updatedLoans, balance: currentUserAccount.balance - effectiveAmountToPay, transactions: [...currentUserAccount.transactions, { type: 'debit', amount: -effectiveAmountToPay, date: new Date().toISOString(), description: transactionDescription }] };
