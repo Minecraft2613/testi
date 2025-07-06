@@ -939,10 +939,19 @@
                         const taxResponse = await fetch(`${API_ENDPOINTS.TAX}/tax-data`);
                         const taxData = taxResponse.ok ? await taxResponse.json() : {};
 
+                        // Fetch loan data
+                        const loansResponse = await fetch(`${API_ENDPOINTS.ACCOUNTS}/admin`, { 
+                            method: 'POST', 
+                            headers: { 'Content-Type': 'application/json' }, 
+                            body: JSON.stringify({ action: 'get_all_data' })
+                        });
+                        const loansData = loansResponse.ok ? await loansResponse.json() : { loans: [] };
+                        const userLoans = loansData.loans.filter(loan => loan.accountId === data.account.accountId);
+
                         setLoginSuccess(true);
                         setTimeout(() => {
                             setLoading(false);
-                            setCurrentUserAccount({ ...data.account, taxData: taxData }); 
+                            setCurrentUserAccount({ ...data.account, taxData: taxData, loans: userLoans }); 
                             setCurrentPage('home');
                             setLoginSuccess(false);
                         }, 1500);
@@ -1131,15 +1140,47 @@ const handleAdvanceTax = async (amount) => {
                 totalDue = amount * Math.pow(1 + dailyRate, duration * 7);
                 dailyRepayment = totalDue / (duration * 7);
 
-                const existingDailyRepayment = currentUserAccount.loans.reduce((sum, loan) => loan.loanStatus === 'active' ? sum + loan.dailyRepayment : sum, 0);
+                // Fetch all loans to check against existing daily repayment
+                const allLoansResponse = await fetch(`${API_ENDPOINTS.ACCOUNTS}/admin`, { 
+                    method: 'POST', 
+                    headers: { 'Content-Type': 'application/json' }, 
+                    body: JSON.stringify({ action: 'get_all_data' })
+                });
+                const allLoansData = await allLoansResponse.json();
+                const allLoans = allLoansData.loans || [];
+
+                const existingDailyRepayment = allLoans.filter(loan => loan.accountId === currentUserAccount.accountId && loan.loanStatus === 'active').reduce((sum, loan) => sum + loan.dailyRepayment, 0);
+
                 if (existingDailyRepayment + dailyRepayment > maxDailyRepayment) {
                     showModal('Loan Rejected', `Your income is too low. Your max daily repayment is ${maxDailyRepayment.toFixed(2)}, but this loan would bring it to ${(existingDailyRepayment + dailyRepayment).toFixed(2)}.`, 'error');
                     return;
                 }
-                const newLoan = { id: `LOAN${Date.now()}`, loanAmount: amount, loanAmountDue: totalDue, loanPaid: 0, dailyRepayment, durationWeeks: duration, loanType: type, loanStatus: 'pending', applicationDate: new Date().toISOString(), ...details };
-                const updatedAccount = { ...currentUserAccount, loans: [...currentUserAccount.loans, newLoan], transactions: [...currentUserAccount.transactions, { type: 'info', amount: 0, date: new Date().toISOString(), description: `Loan application for ${amount} submitted` }] };
-                updateCurrentUser(updatedAccount);
-                showModal('Application Submitted', `Your ${type} loan application for ${amount.toFixed(2)} has been submitted. A bank employee will visit your area for verification.`, 'success');
+
+                const newLoan = { id: `LOAN${Date.now()}`, accountId: currentUserAccount.accountId, loanAmount: amount, loanAmountDue: totalDue, loanPaid: 0, dailyRepayment, durationWeeks: duration, loanType: type, loanStatus: 'pending', applicationDate: new Date().toISOString(), ...details };
+                
+                try {
+                    const response = await fetch(`${API_ENDPOINTS.ACCOUNTS}/apply-loan`, {
+                        method: 'POST',
+                        headers: { 'Content-Type': 'application/json' },
+                        body: JSON.stringify(newLoan),
+                    });
+
+                    if (response.ok) {
+                        showModal('Application Submitted', `Your ${type} loan application for ${amount.toFixed(2)} has been submitted. A bank employee will visit your area for verification.`, 'success');
+                        // Refresh current user account to reflect the new loan (status pending)
+                        const updatedAccountResponse = await fetch(`${API_ENDPOINTS.ACCOUNTS}/accounts/${currentUserAccount.accountId}`);
+                        if (updatedAccountResponse.ok) {
+                            const updatedAccountData = await updatedAccountResponse.json();
+                            setCurrentUserAccount(updatedAccountData.account);
+                        }
+                    } else {
+                        const errorData = await response.json();
+                        showModal('Error', errorData.message || 'Failed to submit loan application.', 'error');
+                    }
+                } catch (error) {
+                    console.error("Loan application API error:", error);
+                    showModal('Error', 'Could not connect to the loan service.', 'error');
+                }
             };
 
             const handleCancelLoan = async (loanId) => {
@@ -1170,10 +1211,19 @@ const handleAdvanceTax = async (amount) => {
                 const twentyFourHours = 24 * 3600 * 1000;
 
                 if (timeSinceApplication >= twentyFourHours && loan.loanStatus !== 'paid' && loan.loanPaid < loan.loanAmountDue) {
-                    const updatedLoans = currentUserAccount.loans.map(l => l.id === loanId ? { ...l, loanStatus: 'cancelled' } : l);
-                    const updatedAccount = { ...currentUserAccount, loans: updatedLoans, transactions: [...currentUserAccount.transactions, { type: 'info', amount: 0, date: new Date().toISOString(), description: `Loan ${loan.id} auto-cancelled after 24 hours due to non-payment` }] };
-                    await updateCurrentUser(updatedAccount);
+                    // Call worker to cancel loan
+                    await fetch(`${API_ENDPOINTS.ACCOUNTS}/admin`, {
+                        method: 'POST',
+                        headers: { 'Content-Type': 'application/json' },
+                        body: JSON.stringify({ action: 'cancel_loan', userAccountId: currentUserAccount.accountId, loanId: loan.id })
+                    });
                     showModal('Loan Auto-Cancelled', `Loan ${loan.id} has been automatically cancelled as it was not fully paid within 24 hours.`, 'error');
+                    // Refresh user data to reflect cancellation
+                    const updatedAccountResponse = await fetch(`${API_ENDPOINTS.ACCOUNTS}/accounts/${currentUserAccount.accountId}`);
+                    if (updatedAccountResponse.ok) {
+                        const updatedAccountData = await updatedAccountResponse.json();
+                        setCurrentUserAccount(updatedAccountData.account);
+                    }
                     return; // Stop further processing for this loan
                 }
 
@@ -1195,20 +1245,42 @@ const handleAdvanceTax = async (amount) => {
                 if (currentUserAccount.balance < effectiveAmountToPay) { showModal('Error', 'Insufficient balance to pay the loan.', 'error'); return; }
 
                 const newLoanPaid = loan.loanPaid + effectiveAmountToPay;
-                let updatedLoans;
+                let newLoanStatus = loan.loanStatus;
                 let transactionDescription = `Loan payment for ${loan.id}`; 
 
                 if (newLoanPaid >= loan.loanAmountDue) {
-                    updatedLoans = currentUserAccount.loans.filter(l => l.id !== loanId);
+                    newLoanStatus = 'closed';
                     transactionDescription = `Paid off loan ${loan.id}`; 
                     showModal('Loan Paid!', 'Loan has been fully paid off!', 'success');
                 } else {
-                    updatedLoans = currentUserAccount.loans.map(l => l.id === loanId ? { ...l, loanPaid: newLoanPaid } : l);
                     showModal('Payment Successful!', `Paid ${effectiveAmountToPay.toFixed(2)} towards loan ${loan.id}.`, 'success');
                 }
                 
-                const updatedAccount = { ...currentUserAccount, loans: updatedLoans, balance: currentUserAccount.balance - effectiveAmountToPay, transactions: [...currentUserAccount.transactions, { type: 'debit', amount: -effectiveAmountToPay, date: new Date().toISOString(), description: transactionDescription }] };
-                await updateCurrentUser(updatedAccount);
+                try {
+                    const response = await fetch(`${API_ENDPOINTS.ACCOUNTS}/pay-loan`, {
+                        method: 'POST',
+                        headers: { 'Content-Type': 'application/json' },
+                        body: JSON.stringify({
+                            userAccountId: currentUserAccount.accountId,
+                            loanId: loan.id,
+                            amountToPay: effectiveAmountToPay,
+                            newLoanPaid: newLoanPaid,
+                            newLoanStatus: newLoanStatus,
+                            transactionDescription: transactionDescription
+                        }),
+                    });
+
+                    if (response.ok) {
+                        const updatedData = await response.json();
+                        setCurrentUserAccount(updatedData.accounts.find(acc => acc.accountId === currentUserAccount.accountId));
+                    } else {
+                        const errorData = await response.json();
+                        showModal('Error', errorData.message || 'Failed to process loan payment.', 'error');
+                    }
+                } catch (error) {
+                    console.error("Pay loan API error:", error);
+                    showModal('Error', 'Could not connect to the loan payment service.', 'error');
+                }
             };
 
             const renderPage = () => {

@@ -106,6 +106,7 @@
                     const res = await fetch(API_URL, { method: 'POST', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify({ action: 'get_all_data' }) });
                     if(res.ok) {
                         const allData = await res.json();
+                        // Filter loans relevant to the current user if needed, or pass all loans
                         setData(allData);
                     }
                 } catch (e) { console.error("Failed to fetch data", e); } 
