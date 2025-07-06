@@ -6,7 +6,7 @@
     "password": "2",
     "edition": "java",
     "bankId": "BANK963231",
-    "balance": 990,
+    "balance": 979,
     "transactions": [
       {
         "type": "credit",
@@ -49,6 +49,12 @@
         "amount": 1,
         "date": "2025-07-06T06:00:21.441Z",
         "description": "Loan LOAN1751781590915 approved by admin"
+      },
+      {
+        "type": "debit",
+        "amount": -11,
+        "date": "2025-07-06T06:06:34.318Z",
+        "description": "Advance tax payment for session undefined"
       }
     ],
     "taxData": {
