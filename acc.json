@@ -37,6 +37,12 @@
         "amount": -11,
         "date": "2025-07-05T18:00:36.206Z",
         "description": "Paid off loan LOAN1751720756525"
+      },
+      {
+        "type": "info",
+        "amount": 0,
+        "date": "2025-07-06T05:59:50.916Z",
+        "description": "Loan application for 1 submitted"
       }
     ],
     "taxData": {
@@ -59,6 +65,22 @@
     "businessPerDayIncome": "",
     "businessIncomeUnit": "day",
     "hasBusiness": false,
-    "loans": []
+    "loans": [
+      {
+        "id": "LOAN1751781590915",
+        "loanAmount": 1,
+        "loanAmountDue": 1.0599999999999994,
+        "loanPaid": 0,
+        "dailyRepayment": 0.15142857142857133,
+        "durationWeeks": 1,
+        "loanType": "personal",
+        "loanStatus": "pending",
+        "applicationDate": "2025-07-06T05:59:50.915Z",
+        "purpose": "1",
+        "coord1": "1",
+        "coord2": "",
+        "repayment": "daily"
+      }
+    ]
   }
 ]
